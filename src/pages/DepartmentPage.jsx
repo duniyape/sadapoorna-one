@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Briefcase, User, Mail, CheckCircle, Save, Eye, Edit2, FileText, X, Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Briefcase, CheckCircle, Save, Eye, Edit2, X, Search } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 export default function DepartmentPage() {
@@ -7,50 +7,101 @@ export default function DepartmentPage() {
   const { showToast } = useOutletContext();
   
   const [formData, setFormData] = useState({
-    name: '',
-    hod: '',
-    email: '',
-    description: '',
-    status: 'Active'
+    name: ''
   });
 
-  const [departments, setDepartments] = useState([
-    { id: 1, name: 'Sales & Operations', hod: 'Ravi Kumar', email: 'sales@sadapoorna.com', description: 'Handles field sales and beat operations.', status: 'Active' },
-    { id: 2, name: 'Human Resources', hod: 'Priya Sharma', email: 'hr@sadapoorna.com', description: 'Staff, payroll, and fleet management.', status: 'Active' },
-    { id: 3, name: 'IT Support', hod: 'Vikram Singh', email: 'it@sadapoorna.com', description: 'Technical support and internal tooling.', status: 'Inactive' },
-  ]);
-
+  const [departments, setDepartments] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [viewingDept, setViewingDept] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/masters/v1/Department');
+      if (res.ok) {
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          const data = await res.json();
+          const items = Array.isArray(data) ? data : (data.data || data.masters || []);
+          setDepartments(items);
+        } else {
+          console.warn("API returned HTML instead of JSON. Check your proxy config.");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch departments", error);
+      showToast("Failed to connect to server");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredDepartments = departments.filter(dept => 
-    dept.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    dept.hod.toLowerCase().includes(searchQuery.toLowerCase())
+    dept.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      setDepartments(departments.map(d => d.id === editingId ? { ...formData, id: editingId } : d));
-      showToast(`Department '${formData.name}' updated successfully!`);
-      setEditingId(null);
-    } else {
-      const newDept = { ...formData, id: Date.now() };
-      setDepartments([...departments, newDept]);
-      showToast(`Department '${formData.name}' created successfully!`);
+    setIsLoading(true);
+
+    try {
+      const payload = {
+        master_type: 'Department',
+        name: formData.name
+      };
+
+      if (editingId) {
+        const res = await fetch(`/masters/v1/${editingId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (res.ok) {
+          showToast(`Department '${formData.name}' updated successfully!`);
+          fetchDepartments();
+          setEditingId(null);
+          setFormData({ name: '' });
+        } else {
+          showToast(`Failed to update department.`);
+        }
+      } else {
+        const res = await fetch('/masters/v1', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (res.ok) {
+          showToast(`Department '${formData.name}' created successfully!`);
+          fetchDepartments();
+          setFormData({ name: '' });
+        } else {
+          showToast(`Failed to create department.`);
+        }
+      }
+    } catch (error) {
+       console.error("API Error:", error);
+       showToast("Network error occurred.");
+    } finally {
+       setIsLoading(false);
     }
-    setFormData({ name: '', hod: '', email: '', description: '', status: 'Active' });
   };
 
   const handleEdit = (dept) => {
-    setFormData(dept);
-    setEditingId(dept.id);
+    setFormData({ name: dept.name || '' });
+    setEditingId(dept.master_id || dept.id || dept._id);
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
-    setFormData({ name: '', hod: '', email: '', description: '', status: 'Active' });
+    setFormData({ name: '' });
   };
 
   return (
@@ -89,60 +140,6 @@ export default function DepartmentPage() {
                   />
                 </div>
               </div>
-
-              {/* Head of Department */}
-              <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-700 uppercase tracking-wider">Head of Department *</label>
-                <div className="relative group">
-                  <User className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-orange-500 transition-colors pointer-events-none" />
-                  <input
-                    type="text" required placeholder="Manager Name"
-                    value={formData.hod} onChange={(e) => setFormData({ ...formData, hod: e.target.value })}
-                    className="w-full pl-8 pr-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-orange-500 focus:border-orange-500 focus:outline-none transition-all bg-slate-50 focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              {/* Email */}
-              <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-700 uppercase tracking-wider">Department Email *</label>
-                <div className="relative group">
-                  <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-orange-500 transition-colors pointer-events-none" />
-                  <input
-                    type="email" required placeholder="dept@sadapoorna.com"
-                    value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full pl-8 pr-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-orange-500 focus:border-orange-500 focus:outline-none transition-all bg-slate-50 focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-700 uppercase tracking-wider">Description</label>
-                <div className="relative group">
-                  <FileText className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-400 group-focus-within:text-orange-500 transition-colors pointer-events-none" />
-                  <textarea
-                    rows="3" placeholder="Brief role of the department..."
-                    value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full pl-8 pr-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-orange-500 focus:border-orange-500 focus:outline-none transition-all bg-slate-50 focus:bg-white resize-none"
-                  ></textarea>
-                </div>
-              </div>
-              
-              {/* Status */}
-              <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-700 uppercase tracking-wider">Status</label>
-                <div className="relative group">
-                  <CheckCircle className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-orange-500 transition-colors pointer-events-none" />
-                  <select
-                    value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full pl-8 pr-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-orange-500 focus:outline-none bg-slate-50 focus:bg-white transition-all appearance-none"
-                  >
-                    <option>Active</option>
-                    <option>Inactive</option>
-                  </select>
-                </div>
-              </div>
             </div>
 
             <div className="pt-2 mt-2 border-t border-slate-100 flex items-center justify-end gap-2">
@@ -157,10 +154,11 @@ export default function DepartmentPage() {
               )}
               <button
                 type="submit"
-                className="w-full sm:w-auto px-5 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-[10px] shadow-sm shadow-orange-500/20 transition-all flex items-center justify-center gap-1.5"
+                disabled={isLoading}
+                className="w-full sm:w-auto px-5 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold text-[10px] shadow-sm shadow-orange-500/20 transition-all flex items-center justify-center gap-1.5"
               >
                 <Save className="w-3.5 h-3.5" />
-                {editingId ? 'Update Department' : 'Save Department'}
+                {isLoading ? 'Processing...' : (editingId ? 'Update Department' : 'Save Department')}
               </button>
             </div>
           </form>
@@ -193,23 +191,15 @@ export default function DepartmentPage() {
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
                   <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider first:rounded-tl-lg">Department Name</th>
-                  <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Head of Dept</th>
-                  <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Email</th>
-                  <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Status</th>
                   <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider text-right last:rounded-tr-lg">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredDepartments.map((dept) => (
-                  <tr key={dept.id} className="hover:bg-slate-50/80 transition-colors group">
+                {filteredDepartments.map((dept) => {
+                  const deptId = dept.master_id || dept.id || dept._id;
+                  return (
+                  <tr key={deptId} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="py-3 px-3 text-[11px] font-bold text-slate-900">{dept.name}</td>
-                    <td className="py-3 px-3 text-[11px] text-slate-600 font-medium">{dept.hod}</td>
-                    <td className="py-3 px-3 text-[11px] text-slate-600 font-medium">{dept.email}</td>
-                    <td className="py-3 px-3">
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${dept.status === 'Active' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}`}>
-                        {dept.status}
-                      </span>
-                    </td>
                     <td className="py-3 px-3 flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                       <button 
                         onClick={() => setViewingDept(dept)}
@@ -227,11 +217,17 @@ export default function DepartmentPage() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
             
-            {filteredDepartments.length === 0 && (
+            {isLoading && departments.length === 0 && (
+              <div className="text-center py-8 text-slate-500 text-xs font-bold animate-pulse">
+                Loading departments...
+              </div>
+            )}
+            
+            {!isLoading && filteredDepartments.length === 0 && (
               <div className="text-center py-8 text-slate-500 text-xs">
                 {searchQuery ? 'No departments match your search.' : 'No departments found. Add a new department using the form.'}
               </div>
@@ -260,26 +256,6 @@ export default function DepartmentPage() {
               <div>
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Department Name</p>
                 <p className="text-sm font-bold text-slate-900">{viewingDept.name}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Head of Dept</p>
-                  <p className="text-xs font-semibold text-slate-700">{viewingDept.hod}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Contact Email</p>
-                  <p className="text-xs text-slate-700">{viewingDept.email}</p>
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Description</p>
-                <p className="text-xs text-slate-700">{viewingDept.description || 'No description provided.'}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Status</p>
-                <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${viewingDept.status === 'Active' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}`}>
-                  {viewingDept.status}
-                </span>
               </div>
             </div>
             <div className="p-3 border-t border-slate-100 bg-slate-50 flex justify-end">

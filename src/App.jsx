@@ -11,6 +11,7 @@ import StockInventoryPage from "./pages/StockInventoryPage";
 import AiSuitePage from "./pages/AiSuitePage";
 import BranchProfilePage from "./pages/BranchProfilePage";
 import DepartmentPage from "./pages/DepartmentPage";
+import DesignationPage from "./pages/DesignationPage";
 import GenericModulePage from "./pages/GenericModulePage";
 import AddProduct from "./pages/AddProduct";
 
@@ -28,6 +29,7 @@ const App = () => {
           <Route path="ai-suite" element={<AiSuitePage />} />
           <Route path="branch-profile" element={<BranchProfilePage />} />
           <Route path="department" element={<DepartmentPage />} />
+          <Route path="designation" element={<DesignationPage />} />
           <Route path="module/:id" element={<GenericModulePage />} />
         </Route>
         

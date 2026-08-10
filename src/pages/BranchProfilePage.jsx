@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Building2, MapPin, CheckCircle, Save, Eye, Edit2, Map, Globe, Hash, X, Search } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 export default function BranchProfilePage() {
   const navigate = useNavigate();
   const { showToast } = useOutletContext();
-  
+
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -13,46 +13,114 @@ export default function BranchProfilePage() {
     state: '',
     country: '',
     pincode: '',
-    status: 'Active'
+    status: 'active'
   });
 
-  const [branches, setBranches] = useState([
-    { id: 1, name: 'South Zone Hub', address: '123 South St, Tech Park', city: 'Bangalore', state: 'Karnataka', country: 'India', pincode: '560001', status: 'Active' },
-    { id: 2, name: 'North Market Branch', address: '456 North Ave, Plaza', city: 'Delhi', state: 'Delhi', country: 'India', pincode: '110001', status: 'Active' },
-    { id: 3, name: 'East Coast Depot', address: '789 East Blvd, Port', city: 'Kolkata', state: 'West Bengal', country: 'India', pincode: '700001', status: 'Inactive' },
-  ]);
-
+  const [branches, setBranches] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [viewingBranch, setViewingBranch] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filteredBranches = branches.filter(branch => 
+  useEffect(() => {
+    fetchBranches();
+  }, []);
+
+  const fetchBranches = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/branches/v1');
+      if (res.ok) {
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          const data = await res.json();
+          setBranches(Array.isArray(data) ? data : (data.data || data.branches || []));
+        } else {
+          console.warn("API returned HTML instead of JSON. Ensure your backend is running and proxy is configured.");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch branches", error);
+      showToast("Failed to connect to server");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredBranches = branches.filter(branch =>
     branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     branch.city.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      setBranches(branches.map(b => b.id === editingId ? { ...formData, id: editingId } : b));
-      showToast(`Branch '${formData.name}' updated successfully!`);
-      setEditingId(null);
-    } else {
-      const newBranch = { ...formData, id: Date.now() };
-      setBranches([...branches, newBranch]);
-      showToast(`Branch '${formData.name}' created successfully!`);
+    setIsLoading(true);
+
+    try {
+      const payload = {
+        name: formData.name,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        country: formData.country,
+        status: formData.status
+      };
+
+      if (editingId) {
+        const res = await fetch(`/branches/v1/${editingId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          showToast(`Branch '${formData.name}' updated successfully!`);
+          fetchBranches();
+          setEditingId(null);
+          setFormData({ name: '', address: '', city: '', state: '', country: '', pincode: '', status: 'active' });
+        } else {
+          showToast(`Failed to update branch.`);
+        }
+      } else {
+        const res = await fetch('/branches/v1', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          showToast(`Branch '${formData.name}' created successfully!`);
+          fetchBranches();
+          setFormData({ name: '', address: '', city: '', state: '', country: '', pincode: '', status: 'active' });
+        } else {
+          showToast(`Failed to create branch.`);
+        }
+      }
+    } catch (error) {
+      console.error("API Error:", error);
+      showToast("Network error occurred.");
+    } finally {
+      setIsLoading(false);
     }
-    setFormData({ name: '', address: '', city: '', state: '', country: '', pincode: '', status: 'Active' });
   };
 
   const handleEdit = (branch) => {
-    setFormData(branch);
-    setEditingId(branch.id);
+    setFormData({
+      name: branch.name || '',
+      address: branch.address || '',
+      city: branch.city || '',
+      state: branch.state || '',
+      country: branch.country || '',
+      pincode: branch.pincode || '',
+      status: branch.status || 'active'
+    });
+    setEditingId(branch.branch_id || branch.id || branch._id);
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
-    setFormData({ name: '', address: '', city: '', state: '', country: '', pincode: '', status: 'Active' });
+    setFormData({ name: '', address: '', city: '', state: '', country: '', pincode: '', status: 'active' });
   };
 
   return (
@@ -68,7 +136,7 @@ export default function BranchProfilePage() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-4">
-        
+
         {/* Left Side: Creation Form */}
         <div className="lg:w-[35%] xl:w-[30%] bg-white rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm relative overflow-hidden h-fit">
           <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none opacity-50"></div>
@@ -152,7 +220,7 @@ export default function BranchProfilePage() {
                   />
                 </div>
               </div>
-              
+
               {/* Status */}
               <div className="space-y-1 col-span-2">
                 <label className="text-[9px] font-bold text-slate-700 uppercase tracking-wider">Status</label>
@@ -162,8 +230,8 @@ export default function BranchProfilePage() {
                     value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     className="w-full pl-8 pr-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none bg-slate-50 focus:bg-white transition-all appearance-none"
                   >
-                    <option>Active</option>
-                    <option>Inactive</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                   </select>
                 </div>
               </div>
@@ -181,10 +249,11 @@ export default function BranchProfilePage() {
               )}
               <button
                 type="submit"
-                className="w-full sm:w-auto px-5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[10px] shadow-sm shadow-amber-500/20 transition-all flex items-center justify-center gap-1.5"
+                disabled={isLoading}
+                className="w-full sm:w-auto px-5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-bold text-[10px] shadow-sm shadow-amber-500/20 transition-all flex items-center justify-center gap-1.5"
               >
                 <Save className="w-3.5 h-3.5" />
-                {editingId ? 'Update Branch' : 'Save Branch'}
+                {isLoading ? 'Processing...' : (editingId ? 'Update Branch' : 'Save Branch')}
               </button>
             </div>
           </form>
@@ -199,7 +268,7 @@ export default function BranchProfilePage() {
                 {branches.length}
               </div>
             </div>
-            
+
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
               <input
@@ -223,37 +292,46 @@ export default function BranchProfilePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredBranches.map((branch) => (
-                  <tr key={branch.id} className="hover:bg-slate-50/80 transition-colors group">
-                    <td className="py-3 px-3 text-[11px] font-bold text-slate-900">{branch.name}</td>
-                    <td className="py-3 px-3 text-[11px] text-slate-600 font-medium">{branch.city}</td>
-                    <td className="py-3 px-3">
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${branch.status === 'Active' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}`}>
-                        {branch.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={() => setViewingBranch(branch)}
-                        className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded border border-blue-100 transition-colors" 
-                        title="View Details"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => handleEdit(branch)}
-                        className="p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded border border-amber-100 transition-colors" 
-                        title="Update"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredBranches.map((branch) => {
+                  const branchId = branch.branch_id || branch.id || branch._id;
+                  return (
+                    <tr key={branchId} className="hover:bg-slate-50/80 transition-colors group">
+                      <td className="py-3 px-3 text-[11px] font-bold text-slate-900">{branch.name}</td>
+                      <td className="py-3 px-3 text-[11px] text-slate-600 font-medium">{branch.city}</td>
+                      <td className="py-3 px-3">
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${branch.status === 'active' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}`}>
+                          {branch.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => setViewingBranch(branch)}
+                          className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded border border-blue-100 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleEdit(branch)}
+                          className="p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded border border-amber-100 transition-colors"
+                          title="Update"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
-            
-            {filteredBranches.length === 0 && (
+
+            {isLoading && branches.length === 0 && (
+              <div className="text-center py-8 text-slate-500 text-xs font-bold animate-pulse">
+                Loading branches...
+              </div>
+            )}
+
+            {!isLoading && filteredBranches.length === 0 && (
               <div className="text-center py-8 text-slate-500 text-xs">
                 {searchQuery ? 'No branches match your search.' : 'No branches found. Add a new branch using the form.'}
               </div>
@@ -292,16 +370,16 @@ export default function BranchProfilePage() {
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Status</p>
-                  <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${viewingBranch.status === 'Active' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}`}>
+                  <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${viewingBranch.status === 'active' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}`}>
                     {viewingBranch.status}
                   </span>
                 </div>
               </div>
             </div>
             <div className="p-3 border-t border-slate-100 bg-slate-50 flex justify-end">
-               <button onClick={() => setViewingBranch(null)} className="px-4 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-[11px] font-bold text-slate-700 transition-colors shadow-sm">
-                 Close
-               </button>
+              <button onClick={() => setViewingBranch(null)} className="px-4 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-[11px] font-bold text-slate-700 transition-colors shadow-sm">
+                Close
+              </button>
             </div>
           </div>
         </div>
