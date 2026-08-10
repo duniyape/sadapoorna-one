@@ -1,9 +1,8 @@
 import React from 'react';
-import { Menu, Home } from 'lucide-react';
+import { Menu, Home, Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import SadapoornaLogo from './SadapoornaLogo';
 
-export default function Navbar({ sidebarCollapsed, setMobileMenuOpen }) {
+export default function Navbar({ sidebarCollapsed, setMobileMenuOpen, searchQuery, setSearchQuery }) {
   const navigate = useNavigate();
 
   return (
@@ -19,9 +18,21 @@ export default function Navbar({ sidebarCollapsed, setMobileMenuOpen }) {
         </button>
       </div>
 
-      <div className="flex-1 flex justify-center items-center">
-        <div onClick={() => navigate('/')} className="cursor-pointer">
-          <SadapoornaLogo size="normal" />
+      <div className="flex-1 flex justify-center items-center px-2 sm:px-6 max-w-xl mx-auto">
+        <div className="relative w-full max-w-md">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery || ''}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search modules..."
+            className="w-full pl-9 pr-8 py-1.5 sm:py-2 bg-slate-100 rounded-full border border-transparent shadow-xs hover:bg-slate-200/50 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

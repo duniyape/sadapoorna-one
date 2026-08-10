@@ -8,6 +8,7 @@ export default function DashboardLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -53,10 +54,12 @@ export default function DashboardLayout() {
         <Navbar 
           sidebarCollapsed={sidebarCollapsed} 
           setMobileMenuOpen={setMobileMenuOpen} 
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
         />
 
         <div className="pt-16 sm:pt-20 p-3 sm:p-6 max-w-7xl mx-auto w-full space-y-4">
-          <Outlet context={{ showToast }} />
+          <Outlet context={{ showToast, searchQuery }} />
         </div>
       </main>
     </div>

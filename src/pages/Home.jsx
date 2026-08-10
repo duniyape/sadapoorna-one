@@ -1,12 +1,11 @@
-import React, { useState, useMemo } from 'react';
-import { Search, X, Users, ShieldCheck } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Users, ShieldCheck } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { SALES_OPERATIONS, HR_FLEET_MODULES } from '../utils/constants';
 
 export default function Home() {
-  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
-  const { showToast } = useOutletContext();
+  const { showToast, searchQuery = '' } = useOutletContext();
 
   const filteredSalesOps = useMemo(() => {
     if (!searchQuery.trim()) return SALES_OPERATIONS;
@@ -38,34 +37,7 @@ export default function Home() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="text-center space-y-1 py-1 px-3">
-        <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
-          Trusted partner in rice, grains, and essential commodities.
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-500 font-medium max-w-2xl mx-auto">
-          Click any module below to launch its dedicated full page workspace, powered by Sadapoorna Enterprise.
-        </p>
-      </div>
-
-      <div className="max-w-2xl mx-auto relative px-1">
-        <div className="relative flex items-center">
-          <Search className="w-4 h-4 sm:w-5 sm:h-5 absolute left-4 text-slate-400 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search modules (e.g. Orders, Stock, AI, Customer)..."
-            className="w-full pl-11 sm:pl-12 pr-10 py-3 sm:py-3.5 bg-white rounded-full border border-slate-200/90 shadow-2xs hover:shadow-md text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-4 p-1 text-slate-400 hover:text-slate-600">
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      </div>
-
+    <div className="space-y-4 pt-2">
       {/* Sales Operations Section */}
       <section className="bg-white/95 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-indigo-200/60 shadow-sm relative overflow-hidden transition-all">
         <div className="flex items-center justify-between mb-3 sm:mb-4 pb-2 border-b border-indigo-50/50">
