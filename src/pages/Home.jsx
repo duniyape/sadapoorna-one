@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { Users, ShieldCheck } from 'lucide-react';
+import { Users, ShieldCheck, Building2 } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { SALES_OPERATIONS, HR_FLEET_MODULES } from '../utils/constants';
+import { SALES_OPERATIONS, HR_FLEET_MODULES, MASTER_MODULES } from '../utils/constants';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -23,8 +23,16 @@ export default function Home() {
     );
   }, [searchQuery]);
 
+  const filteredMasterModules = useMemo(() => {
+    if (!searchQuery.trim()) return MASTER_MODULES;
+    return MASTER_MODULES.filter(item =>
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.desc.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
+
   const getRoute = (id) => {
-    const directRoutes = ['add-customer', 'orders', 'customers', 'inventory-stock', 'ai-suite'];
+    const directRoutes = ['add-customer', 'orders', 'customers', 'inventory-stock', 'ai-suite', 'branch-profile', 'department'];
     if (directRoutes.includes(id)) {
       return `/${id}`;
     }
@@ -114,6 +122,48 @@ export default function Home() {
                   <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors line-clamp-2 leading-tight">
+                  {item.title}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Master Configurations Section */}
+      <section className="bg-white/95 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-amber-200/60 shadow-sm relative overflow-hidden transition-all">
+        <div className="flex items-center justify-between mb-3 sm:mb-4 pb-2 border-b border-amber-50/50">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="p-1.5 sm:p-2 bg-amber-50 text-amber-600 rounded-lg sm:rounded-xl border border-amber-100">
+              <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight">
+              Master Configurations
+            </h2>
+          </div>
+          <span className="bg-amber-50 text-amber-700 text-[10px] sm:text-xs font-bold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full border border-amber-100 shrink-0">
+            {filteredMasterModules.length} Modules
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 min-[480px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-2 sm:gap-3">
+          {filteredMasterModules.map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleCardClick(item)}
+                className="group relative flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl bg-white border border-slate-200/60 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-center min-h-[85px] sm:min-h-[100px]"
+              >
+                {item.badge && (
+                  <span className="absolute top-1.5 right-1.5 bg-amber-500 text-white text-[7px] sm:text-[8px] font-bold px-1.5 py-0.5 rounded shadow-xs">
+                    {item.badge}
+                  </span>
+                )}
+                <div className={`p-2 sm:p-2.5 rounded-xl ${item.color} mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform shadow-xs border`}>
+                  <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 group-hover:text-amber-600 transition-colors line-clamp-2 leading-tight">
                   {item.title}
                 </span>
               </button>

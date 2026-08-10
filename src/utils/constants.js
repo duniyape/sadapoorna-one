@@ -23,6 +23,9 @@ import {
   CheckSquare,
   Bot,
   Home,
+  Building2,
+  Briefcase,
+  BadgeCheck,
 } from 'lucide-react';
 
 export const SALES_OPERATIONS = [
@@ -51,6 +54,12 @@ export const HR_FLEET_MODULES = [
   { id: 'payroll', title: 'Payroll Slips', icon: DollarSign, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: null, desc: 'Salary disbursement & slips' },
   { id: 'inventory-stock', title: 'Stock Inventory', icon: Package, color: 'bg-teal-100 text-teal-600 border-teal-200', badge: null, desc: 'Warehouse inventory count' },
   { id: 'reports', title: 'Financial Audit', icon: TrendingUp, color: 'bg-violet-100 text-violet-600 border-violet-200', badge: null, desc: 'P&L and ledger reports' },
+];
+
+export const MASTER_MODULES = [
+  { id: 'branch-profile', title: 'Branch Profile', icon: Building2, color: 'bg-amber-100 text-amber-600 border-amber-200', badge: null, desc: 'Manage company branches' },
+  { id: 'department', title: 'Department', icon: Briefcase, color: 'bg-orange-100 text-orange-600 border-orange-200', badge: null, desc: 'Organizational departments' },
+  { id: 'designation', title: 'Designation', icon: BadgeCheck, color: 'bg-rose-100 text-rose-600 border-rose-200', badge: null, desc: 'Employee roles & designations' },
 ];
 
 export const CATEGORIZED_SIDEBAR = [

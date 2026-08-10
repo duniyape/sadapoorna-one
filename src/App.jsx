@@ -9,6 +9,8 @@ import OrdersPage from "./pages/OrdersPage";
 import CustomersDirectoryPage from "./pages/CustomersDirectoryPage";
 import StockInventoryPage from "./pages/StockInventoryPage";
 import AiSuitePage from "./pages/AiSuitePage";
+import BranchProfilePage from "./pages/BranchProfilePage";
+import DepartmentPage from "./pages/DepartmentPage";
 import GenericModulePage from "./pages/GenericModulePage";
 import AddProduct from "./pages/AddProduct";
 
@@ -24,6 +26,8 @@ const App = () => {
           <Route path="customers" element={<CustomersDirectoryPage />} />
           <Route path="inventory-stock" element={<StockInventoryPage />} />
           <Route path="ai-suite" element={<AiSuitePage />} />
+          <Route path="branch-profile" element={<BranchProfilePage />} />
+          <Route path="department" element={<DepartmentPage />} />
           <Route path="module/:id" element={<GenericModulePage />} />
         </Route>
         
