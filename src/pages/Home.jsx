@@ -38,8 +38,8 @@ export default function Home() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-1.5 py-2 px-3">
+    <div className="space-y-4">
+      <div className="text-center space-y-1 py-1 px-3">
         <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
           Trusted partner in rice, grains, and essential commodities.
         </h1>
@@ -67,11 +67,11 @@ export default function Home() {
       </div>
 
       {/* Sales Operations Section */}
-      <section className="bg-white/95 backdrop-blur rounded-2xl sm:rounded-3xl p-4 sm:p-6 border-2 border-indigo-200/60 shadow-xs relative overflow-hidden transition-all">
-        <div className="flex items-center justify-between mb-4 sm:mb-6 pb-2.5 border-b border-indigo-50">
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="p-2 sm:p-2.5 bg-indigo-50 text-indigo-600 rounded-xl sm:rounded-2xl border border-indigo-100">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6" />
+      <section className="bg-white/95 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-indigo-200/60 shadow-sm relative overflow-hidden transition-all">
+        <div className="flex items-center justify-between mb-3 sm:mb-4 pb-2 border-b border-indigo-50/50">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="p-1.5 sm:p-2 bg-indigo-50 text-indigo-600 rounded-lg sm:rounded-xl border border-indigo-100">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight">
               Customer &amp; Sales Operations
@@ -82,24 +82,24 @@ export default function Home() {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 min-[480px]:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2.5 sm:gap-4">
+        <div className="grid grid-cols-2 min-[480px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-2 sm:gap-3">
           {filteredSalesOps.map((item) => {
             const IconComponent = item.icon;
             return (
               <button
                 key={item.id}
                 onClick={() => handleCardClick(item)}
-                className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center min-h-[110px] sm:min-h-[125px]"
+                className="group relative flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl bg-white border border-slate-200/60 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-center min-h-[85px] sm:min-h-[100px]"
               >
                 {item.badge && (
-                  <span className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-md shadow-2xs">
+                  <span className="absolute top-1.5 right-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white text-[7px] sm:text-[8px] font-bold px-1.5 py-0.5 rounded shadow-xs">
                     {item.badge}
                   </span>
                 )}
-                <div className={`p-2.5 sm:p-3.5 rounded-2xl ${item.color} mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-2xs border`}>
-                  <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
+                <div className={`p-2 sm:p-2.5 rounded-xl ${item.color} mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform shadow-xs border`}>
+                  <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <span className="text-[11px] sm:text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-2 leading-tight">
+                <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors line-clamp-2 leading-tight">
                   {item.title}
                 </span>
               </button>
@@ -109,11 +109,11 @@ export default function Home() {
       </section>
 
       {/* HR & Fleet Section */}
-      <section className="bg-white/95 backdrop-blur rounded-2xl sm:rounded-3xl p-4 sm:p-6 border-2 border-emerald-200/60 shadow-xs relative overflow-hidden transition-all">
-        <div className="flex items-center justify-between mb-4 sm:mb-6 pb-2.5 border-b border-emerald-50">
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="p-2 sm:p-2.5 bg-emerald-50 text-emerald-600 rounded-xl sm:rounded-2xl border border-emerald-100">
-              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
+      <section className="bg-white/95 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-emerald-200/60 shadow-sm relative overflow-hidden transition-all">
+        <div className="flex items-center justify-between mb-3 sm:mb-4 pb-2 border-b border-emerald-50/50">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="p-1.5 sm:p-2 bg-emerald-50 text-emerald-600 rounded-lg sm:rounded-xl border border-emerald-100">
+              <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight">
               HR, Staff &amp; Fleet Management
@@ -124,24 +124,24 @@ export default function Home() {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 min-[480px]:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2.5 sm:gap-4">
+        <div className="grid grid-cols-2 min-[480px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-2 sm:gap-3">
           {filteredHrModules.map((item) => {
             const IconComponent = item.icon;
             return (
               <button
                 key={item.id}
                 onClick={() => handleCardClick(item)}
-                className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center min-h-[110px] sm:min-h-[125px]"
+                className="group relative flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl bg-white border border-slate-200/60 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-center min-h-[85px] sm:min-h-[100px]"
               >
                 {item.badge && (
-                  <span className="absolute top-2 right-2 bg-emerald-500 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-md shadow-2xs">
+                  <span className="absolute top-1.5 right-1.5 bg-emerald-500 text-white text-[7px] sm:text-[8px] font-bold px-1.5 py-0.5 rounded shadow-xs">
                     {item.badge}
                   </span>
                 )}
-                <div className={`p-2.5 sm:p-3.5 rounded-2xl ${item.color} mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-2xs border`}>
-                  <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
+                <div className={`p-2 sm:p-2.5 rounded-xl ${item.color} mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform shadow-xs border`}>
+                  <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <span className="text-[11px] sm:text-xs font-bold text-slate-800 group-hover:text-emerald-600 transition-colors line-clamp-2 leading-tight">
+                <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors line-clamp-2 leading-tight">
                   {item.title}
                 </span>
               </button>
