@@ -7,8 +7,8 @@ export default function Navbar({ sidebarCollapsed, setMobileMenuOpen }) {
   const navigate = useNavigate();
 
   return (
-    <header className={`fixed top-0 right-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3 flex items-center justify-between gap-4 shadow-xs transition-all duration-300 left-0 ${
-      sidebarCollapsed ? 'md:left-20' : 'md:left-64'
+    <header className={`fixed top-0 right-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-3 sm:px-4 py-2 flex items-center justify-between gap-3 shadow-xs transition-all duration-300 left-0 ${
+      sidebarCollapsed ? 'md:left-16' : 'md:left-56'
     }`}>
       <div className="flex items-center gap-2">
         <button onClick={() => setMobileMenuOpen(true)} className="md:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">

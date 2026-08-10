@@ -48,14 +48,14 @@ export default function DashboardLayout() {
 
       {/* Header and Content Area */}
       <main className={`flex-1 min-w-0 flex flex-col min-h-screen transition-all duration-300 ${
-        sidebarCollapsed ? 'md:ml-20' : 'md:ml-64'
+        sidebarCollapsed ? 'md:ml-16' : 'md:ml-56'
       }`}>
         <Navbar 
           sidebarCollapsed={sidebarCollapsed} 
           setMobileMenuOpen={setMobileMenuOpen} 
         />
 
-        <div className="pt-20 sm:pt-24 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
+        <div className="pt-16 sm:pt-20 p-3 sm:p-6 max-w-7xl mx-auto w-full space-y-4">
           <Outlet context={{ showToast }} />
         </div>
       </main>
