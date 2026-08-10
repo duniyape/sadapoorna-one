@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import DashboardLayout from "./layouts/DashboardLayout";
+import LoginPage from "./pages/LoginPage";
 import Home from "./pages/Home";
 import AddCustomerPage from "./pages/AddCustomerPage";
 import OrdersPage from "./pages/OrdersPage";
@@ -15,6 +16,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<DashboardLayout />}>
           <Route index element={<Home />} />
           <Route path="add-customer" element={<AddCustomerPage />} />
