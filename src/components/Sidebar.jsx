@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { CATEGORIZED_SIDEBAR } from '../utils/constants';
 import SadapoornaLogo from './SadapoornaLogo';
 
-export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, mobileMenuOpen, setMobileMenuOpen, showToast }) {
+export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, mobileMenuOpen, setMobileMenuOpen, showToast, user }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -39,13 +39,31 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, mobileM
       </div>
 
       <div className="flex-1 overflow-y-auto py-2 px-2 space-y-3 custom-scrollbar">
-        {CATEGORIZED_SIDEBAR.map((group, idx) => (
-          <div key={idx} className="space-y-1">
-            {!sidebarCollapsed && (
-              <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400/80 mb-1.5 flex items-center justify-between">
-                <span>{group.category}</span>
-              </div>
-            )}
+        {(() => {
+          const allowedIcons = user?.access?.frontend_icons || user?.designation?.frontend_icons || [];
+          const isAllowed = (item) => {
+            if (!user) return false;
+            // 'home' route is normally always allowed
+            if (item.id === 'home' || item.id === 'ai-suite') return true; 
+            return allowedIcons.some(iconData => {
+              if (typeof iconData === 'string') return iconData === item.id;
+              if (typeof iconData === 'object') return iconData.icon === item.id;
+              return false;
+            });
+          };
+
+          const filteredSidebar = CATEGORIZED_SIDEBAR.map(group => ({
+            ...group,
+            items: group.items.filter(isAllowed)
+          })).filter(group => group.items.length > 0);
+
+          return filteredSidebar.map((group, idx) => (
+            <div key={idx} className="space-y-1">
+              {!sidebarCollapsed && (
+                <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400/80 mb-1.5 flex items-center justify-between">
+                  <span>{group.category}</span>
+                </div>
+              )}
             {group.items.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.route;
@@ -72,7 +90,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, mobileM
               );
             })}
           </div>
-        ))}
+        ))})()}
       </div>
 
       <div className="p-2 border-t border-slate-800/80 shrink-0 space-y-2">

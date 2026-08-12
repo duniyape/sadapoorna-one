@@ -5,34 +5,47 @@ import { SALES_OPERATIONS, HR_FLEET_MODULES, MASTER_MODULES } from '../utils/con
 
 export default function Home() {
   const navigate = useNavigate();
-  const { showToast, searchQuery = '' } = useOutletContext();
+  const { showToast, searchQuery = '', user } = useOutletContext();
+
+  const allowedIcons = user?.access?.frontend_icons || user?.designation?.frontend_icons || [];
+  const isAllowed = (item) => {
+    if (!user) return false; // Hide modules until user is loaded
+    return allowedIcons.some(iconData => {
+      if (typeof iconData === 'string') return iconData === item.id;
+      if (typeof iconData === 'object') return iconData.icon === item.id;
+      return false;
+    });
+  };
 
   const filteredSalesOps = useMemo(() => {
-    if (!searchQuery.trim()) return SALES_OPERATIONS;
-    return SALES_OPERATIONS.filter(item =>
+    let items = SALES_OPERATIONS.filter(isAllowed);
+    if (!searchQuery.trim()) return items;
+    return items.filter(item =>
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.desc.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [searchQuery, user]);
 
   const filteredHrModules = useMemo(() => {
-    if (!searchQuery.trim()) return HR_FLEET_MODULES;
-    return HR_FLEET_MODULES.filter(item =>
+    let items = HR_FLEET_MODULES.filter(isAllowed);
+    if (!searchQuery.trim()) return items;
+    return items.filter(item =>
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.desc.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [searchQuery, user]);
 
   const filteredMasterModules = useMemo(() => {
-    if (!searchQuery.trim()) return MASTER_MODULES;
-    return MASTER_MODULES.filter(item =>
+    let items = MASTER_MODULES.filter(isAllowed);
+    if (!searchQuery.trim()) return items;
+    return items.filter(item =>
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.desc.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [searchQuery, user]);
 
   const getRoute = (id) => {
-    const directRoutes = ['add-customer', 'orders', 'customers', 'inventory-stock', 'ai-suite', 'branch-profile', 'department', 'designation'];
+    const directRoutes = ['add-customer', 'orders', 'customers', 'inventory-stock', 'ai-suite', 'branch-profile', 'department', 'designation', 'users', 'accessibility'];
     if (directRoutes.includes(id)) {
       return `/${id}`;
     }
@@ -47,7 +60,8 @@ export default function Home() {
   return (
     <div className="space-y-4 pt-2">
       {/* Sales Operations Section */}
-      <section className="bg-white/95 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-indigo-200/60 shadow-sm relative overflow-hidden transition-all">
+      {filteredSalesOps.length > 0 && (
+        <section className="bg-white/95 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-indigo-200/60 shadow-sm relative overflow-hidden transition-all">
         <div className="flex items-center justify-between mb-3 sm:mb-4 pb-2 border-b border-indigo-50/50">
           <div className="flex items-center gap-2 sm:gap-2.5">
             <div className="p-1.5 sm:p-2 bg-indigo-50 text-indigo-600 rounded-lg sm:rounded-xl border border-indigo-100">
@@ -86,10 +100,12 @@ export default function Home() {
             );
           })}
         </div>
-      </section>
+        </section>
+      )}
 
       {/* HR & Fleet Section */}
-      <section className="bg-white/95 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-emerald-200/60 shadow-sm relative overflow-hidden transition-all">
+      {filteredHrModules.length > 0 && (
+        <section className="bg-white/95 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-emerald-200/60 shadow-sm relative overflow-hidden transition-all">
         <div className="flex items-center justify-between mb-3 sm:mb-4 pb-2 border-b border-emerald-50/50">
           <div className="flex items-center gap-2 sm:gap-2.5">
             <div className="p-1.5 sm:p-2 bg-emerald-50 text-emerald-600 rounded-lg sm:rounded-xl border border-emerald-100">
@@ -128,10 +144,12 @@ export default function Home() {
             );
           })}
         </div>
-      </section>
+        </section>
+      )}
 
       {/* Master Configurations Section */}
-      <section className="bg-white/95 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-amber-200/60 shadow-sm relative overflow-hidden transition-all">
+      {filteredMasterModules.length > 0 && (
+        <section className="bg-white/95 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-amber-200/60 shadow-sm relative overflow-hidden transition-all">
         <div className="flex items-center justify-between mb-3 sm:mb-4 pb-2 border-b border-amber-50/50">
           <div className="flex items-center gap-2 sm:gap-2.5">
             <div className="p-1.5 sm:p-2 bg-amber-50 text-amber-600 rounded-lg sm:rounded-xl border border-amber-100">
@@ -170,7 +188,8 @@ export default function Home() {
             );
           })}
         </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }

@@ -9,10 +9,47 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    navigate('/');
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ login: email, password })
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        // If there's a token, you could store it in localStorage here:
+        if (data.access_token) localStorage.setItem('token', data.access_token);
+        else if (data.token) localStorage.setItem('token', data.token);
+        navigate('/');
+      } else {
+        let errMsg = 'Invalid email or password';
+        if (data.detail) {
+          if (typeof data.detail === 'string') errMsg = data.detail;
+          else if (Array.isArray(data.detail)) errMsg = data.detail.map(e => `${e.loc?.join('.')} — ${e.msg}`).join('; ');
+          else errMsg = JSON.stringify(data.detail);
+        } else if (data.message) {
+          errMsg = data.message;
+        }
+        setError(errMsg);
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Network error. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -142,6 +179,12 @@ export default function LoginPage() {
             <p className="text-slate-500 mt-1.5 text-xs font-medium">Sign in to continue to your dashboard</p>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-center">
+              <p className="text-[11px] font-bold text-red-600">{error}</p>
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-4">
             {/* Email Input */}
             <div className="space-y-1.5">
@@ -208,10 +251,15 @@ export default function LoginPage() {
             {/* Submit Button */}
             <button 
               type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 hover:from-red-700 hover:via-pink-700 hover:to-purple-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 group mt-3"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 hover:from-red-700 hover:via-pink-700 hover:to-purple-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 group mt-3 disabled:opacity-70 disabled:hover:translate-y-0"
             >
-              <Lock className="w-4 h-4" />
-              Sign In
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                <Lock className="w-4 h-4" />
+              )}
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
         </div>

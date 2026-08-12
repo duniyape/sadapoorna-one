@@ -26,6 +26,7 @@ import {
   Building2,
   Briefcase,
   BadgeCheck,
+  UserCog,
 } from 'lucide-react';
 
 export const SALES_OPERATIONS = [
@@ -60,6 +61,8 @@ export const MASTER_MODULES = [
   { id: 'branch-profile', title: 'Branch Profile', icon: Building2, color: 'bg-amber-100 text-amber-600 border-amber-200', badge: null, desc: 'Manage company branches' },
   { id: 'department', title: 'Department', icon: Briefcase, color: 'bg-orange-100 text-orange-600 border-orange-200', badge: null, desc: 'Organizational departments' },
   { id: 'designation', title: 'Designation', icon: BadgeCheck, color: 'bg-rose-100 text-rose-600 border-rose-200', badge: null, desc: 'Employee roles & designations' },
+  { id: 'users', title: 'Users', icon: UserCog, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Create & manage staff users', key:['Create','Edit','View'] },
+  { id: 'accessibility', title: 'Accessibility', icon: ShieldCheck, color: 'bg-teal-100 text-teal-600 border-teal-200', badge: 'Admin', desc: 'Manage access controls' },
 ];
 
 export const CATEGORIZED_SIDEBAR = [
@@ -91,6 +94,16 @@ export const CATEGORIZED_SIDEBAR = [
       { id: 'leave-mgmt', label: 'Leave Requests', icon: Calendar, route: '/module/leave-mgmt' },
       { id: 'fleet-mgmt', label: 'Fleet & Vehicles', icon: Truck, route: '/module/fleet-mgmt' },
       { id: 'reports', label: 'Financial Audit', icon: TrendingUp, route: '/module/reports' },
+    ]
+  },
+  {
+    category: 'Master Configuration',
+    items: [
+      { id: 'branch-profile', label: 'Branch Profile', icon: Building2, route: '/branch-profile' },
+      { id: 'department', label: 'Department', icon: Briefcase, route: '/department' },
+      { id: 'designation', label: 'Designation', icon: BadgeCheck, route: '/designation' },
+      { id: 'users', label: 'Users', icon: UserCog, badge: 'New', route: '/users' },
+      { id: 'accessibility', label: 'Accessibility', icon: ShieldCheck, route: '/accessibility' },
     ]
   }
 ];

@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import DashboardLayout from "./layouts/DashboardLayout";
 import LoginPage from "./pages/LoginPage";
@@ -14,13 +14,26 @@ import DepartmentPage from "./pages/DepartmentPage";
 import DesignationPage from "./pages/DesignationPage";
 import GenericModulePage from "./pages/GenericModulePage";
 import AddProduct from "./pages/AddProduct";
+import UserPage from "./pages/UserPage";
+import ProfilePage from "./pages/ProfilePage";
+import AccessibilityPage from "./pages/AccessibilityPage";
+
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
+};
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<DashboardLayout />}>
+        <Route path="/" element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
           <Route index element={<Home />} />
           <Route path="add-customer" element={<AddCustomerPage />} />
           <Route path="orders" element={<OrdersPage />} />
@@ -30,6 +43,9 @@ const App = () => {
           <Route path="branch-profile" element={<BranchProfilePage />} />
           <Route path="department" element={<DepartmentPage />} />
           <Route path="designation" element={<DesignationPage />} />
+          <Route path="users" element={<UserPage />} />
+          <Route path="accessibility" element={<AccessibilityPage />} />
+          <Route path="profile" element={<ProfilePage />} />
           <Route path="module/:id" element={<GenericModulePage />} />
         </Route>
         

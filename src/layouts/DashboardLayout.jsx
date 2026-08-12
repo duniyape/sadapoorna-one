@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { CheckCircle2, X } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
@@ -9,6 +9,29 @@ export default function DashboardLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await fetch('/auth/profile', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user || data.data || data);
+        } else if (res.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
+      } catch (err) {
+        console.error("Failed to fetch layout user", err);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -45,6 +68,7 @@ export default function DashboardLayout() {
         mobileMenuOpen={mobileMenuOpen} 
         setMobileMenuOpen={setMobileMenuOpen}
         showToast={showToast}
+        user={user}
       />
 
       {/* Header and Content Area */}
@@ -59,7 +83,7 @@ export default function DashboardLayout() {
         />
 
         <div className="pt-16 sm:pt-20 p-3 sm:p-6 max-w-7xl mx-auto w-full space-y-4">
-          <Outlet context={{ showToast, searchQuery }} />
+          <Outlet context={{ showToast, searchQuery, user }} />
         </div>
       </main>
     </div>
