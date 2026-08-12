@@ -17,6 +17,7 @@ import AddProduct from "./pages/AddProduct";
 import UserPage from "./pages/UserPage";
 import ProfilePage from "./pages/ProfilePage";
 import AccessibilityPage from "./pages/AccessibilityPage";
+import DataAccessPage from "./pages/DataAccessPage";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -45,6 +46,7 @@ const App = () => {
           <Route path="designation" element={<DesignationPage />} />
           <Route path="users" element={<UserPage />} />
           <Route path="accessibility" element={<AccessibilityPage />} />
+          <Route path="data-access" element={<DataAccessPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="module/:id" element={<GenericModulePage />} />
         </Route>

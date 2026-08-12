@@ -27,6 +27,7 @@ import {
   Briefcase,
   BadgeCheck,
   UserCog,
+  FolderLock,
 } from 'lucide-react';
 
 export const SALES_OPERATIONS = [
@@ -63,6 +64,7 @@ export const MASTER_MODULES = [
   { id: 'designation', title: 'Designation', icon: BadgeCheck, color: 'bg-rose-100 text-rose-600 border-rose-200', badge: null, desc: 'Employee roles & designations' },
   { id: 'users', title: 'Users', icon: UserCog, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Create & manage staff users', key:['Create','Edit','View'] },
   { id: 'accessibility', title: 'Accessibility', icon: ShieldCheck, color: 'bg-teal-100 text-teal-600 border-teal-200', badge: 'Admin', desc: 'Manage access controls' },
+  { id: 'data-access', title: 'Data Access', icon: FolderLock, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: 'New', desc: 'Manage reporting hierarchy', route: '/data-access' },
 ];
 
 export const CATEGORIZED_SIDEBAR = [
@@ -104,6 +106,7 @@ export const CATEGORIZED_SIDEBAR = [
       { id: 'designation', label: 'Designation', icon: BadgeCheck, route: '/designation' },
       { id: 'users', label: 'Users', icon: UserCog, badge: 'New', route: '/users' },
       { id: 'accessibility', label: 'Accessibility', icon: ShieldCheck, route: '/accessibility' },
+      { id: 'data-access', label: 'Data Access', icon: FolderLock, badge: 'New', route: '/data-access' },
     ]
   }
 ];
