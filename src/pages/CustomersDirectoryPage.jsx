@@ -1,16 +1,40 @@
-import React from 'react';
-import { ArrowLeft, UserPlus, Phone, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, UserPlus, Phone, FileText, Edit2 } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 export default function CustomersDirectoryPage() {
   const navigate = useNavigate();
   const { showToast } = useOutletContext();
-  const customers = [
-    { name: 'Laxmi Supermarket', owner: 'Rajesh Patel', beat: 'Beat 1 - Central', phone: '+91 98765 43210', limit: '₹2,00,000', balance: '₹1,42,000', status: 'Overdue' },
-    { name: 'Apex Wholesale Traders', owner: 'Suresh Gowda', beat: 'Beat 2 - North', phone: '+91 98440 12345', limit: '₹5,00,000', balance: '₹45,000', status: 'Good Standing' },
-    { name: 'Shree Balaji Kirana Store', owner: 'Anil Kumar', beat: 'Beat 1 - Central', phone: '+91 97312 88900', limit: '₹1,00,000', balance: '₹0', status: 'Clear' },
-    { name: 'Karnataka Grain Hub', owner: 'Mahesh Reddy', beat: 'Beat 3 - West', phone: '+91 99001 55443', limit: '₹3,50,000', balance: '₹88,000', status: 'Active' },
-  ];
+  const [customers, setCustomers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const res = await fetch('/customer/list?limit=100');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.status && json.data) {
+            setCustomers(json.data.map(c => ({
+              id: c.id || c.mongo_id,
+              name: c.company_name || c.name || 'Unknown',
+              owner: c.name || 'N/A',
+              beat: c.branch_id || 'N/A', 
+              phone: c.mobile || 'N/A',
+              limit: '₹0', 
+              balance: '₹0',
+              status: c.status || 'Active'
+            })));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch customers", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCustomers();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -32,9 +56,14 @@ export default function CustomersDirectoryPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {customers.map((c, i) => (
-          <div key={i} className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-2xs hover:shadow-md transition-shadow">
+      {isLoading ? (
+        <div className="py-10 text-center text-slate-500 font-bold text-sm">Loading customers...</div>
+      ) : customers.length === 0 ? (
+        <div className="py-10 text-center text-slate-500 font-bold text-sm bg-slate-50 rounded-2xl border border-slate-200">No customers found.</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {customers.map((c, i) => (
+            <div key={c.id || i} className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-2xs hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-3">
               <div className="w-10 h-10 rounded-2xl bg-red-100 text-red-600 font-bold flex items-center justify-center text-base">
                 {c.name.charAt(0)}
@@ -64,13 +93,19 @@ export default function CustomersDirectoryPage() {
               <button onClick={() => showToast(`Dialed ${c.phone}`)} className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1">
                 <Phone className="w-3.5 h-3.5" /> Call Client
               </button>
-              <button onClick={() => showToast(`Viewing ledger for ${c.name}`)} className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600">
-                <FileText className="w-4 h-4" />
-              </button>
+              <div className="flex gap-2">
+                <button onClick={() => navigate(`/edit-customer/${c.id}`)} className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors" title="Edit Customer">
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button onClick={() => navigate(`/edit-customer/${c.id}?view=true`)} className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600" title="View Details">
+                  <FileText className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

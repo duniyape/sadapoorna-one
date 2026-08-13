@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Save, UserCircle, MapPin, Briefcase, CreditCard, Layers, FileText, X, Plus, Users, Building2 } from 'lucide-react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import indiaData from '../utils/indiaStatesCities.json';
 
 export default function AddCustomerPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const isViewMode = searchParams.get('view') === 'true';
+  const isEditMode = !!id;
   const { showToast, user } = useOutletContext();
 
   const [formData, setFormData] = useState({
@@ -64,12 +68,38 @@ export default function AddCustomerPage() {
           const userData = await userRes.json();
           setEmployees(userData.data || userData || []);
         }
+
+        if (isEditMode) {
+          const custRes = await fetch(`/customer/${id}`);
+          if (custRes.ok) {
+            const custData = await custRes.json();
+            if (custData.status && custData.data) {
+              const c = custData.data;
+              setFormData(prev => ({
+                ...prev,
+                customer_type: c.customer_type || 'business',
+                name: c.name || '',
+                email: c.email || '',
+                mobile: c.mobile || '',
+                alternate_mobile: c.alternate_mobile || '',
+                billing_address: c.billing_address || prev.billing_address,
+                shipping_address: c.shipping_address || prev.shipping_address,
+                sameAsBilling: c.sameAsBilling ?? prev.sameAsBilling,
+                company_name: c.company_name || '',
+                business_type: c.business_type || '',
+                gst_number: c.gst_number || '',
+                branch_id: c.branch_id || prev.branch_id,
+                assigned_employee_id: c.assigned_employee_id || prev.assigned_employee_id
+              }));
+            }
+          }
+        }
       } catch (err) {
-        console.error("Error fetching branches/employees:", err);
+        console.error("Error fetching data:", err);
       }
     };
     fetchData();
-  }, []);
+  }, [id, isEditMode]);
 
   // Set default values from logged-in user profile whenever it becomes available
   useEffect(() => {
@@ -108,23 +138,74 @@ export default function AddCustomerPage() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSaving(true);
-    const payload = { ...formData };
-    if (payload.sameAsBilling) {
-      payload.shipping_address = { ...payload.billing_address };
-    }
     
-    // Console log the complete payload as JSON string for verification
+    if (!formData.branch_id || !formData.assigned_employee_id) {
+      showToast("Please select Branch and Assigned Employee in the Assignment section.");
+      return;
+    }
+
+    setIsSaving(true);
+    
+    // Construct clean payload matching Pydantic model
+    const payload = {
+      customer_type: formData.customer_type,
+      name: formData.name,
+      email: formData.email || null,
+      mobile: formData.mobile,
+      alternate_mobile: formData.alternate_mobile || null,
+      billing_address: {
+        address: formData.billing_address.address || null,
+        city: formData.billing_address.city || null,
+        state: formData.billing_address.state || null,
+        pincode: formData.billing_address.pincode || null,
+      },
+      shipping_address: formData.sameAsBilling ? {
+        address: formData.billing_address.address || null,
+        city: formData.billing_address.city || null,
+        state: formData.billing_address.state || null,
+        pincode: formData.billing_address.pincode || null,
+      } : {
+        address: formData.shipping_address.address || null,
+        city: formData.shipping_address.city || null,
+        state: formData.shipping_address.state || null,
+        pincode: formData.shipping_address.pincode || null,
+      },
+      sameAsBilling: formData.sameAsBilling,
+      company_name: formData.company_name || null,
+      business_type: formData.business_type || null,
+      gst_number: formData.gst_number || null,
+      branch_id: formData.branch_id,
+      assigned_employee_id: formData.assigned_employee_id
+    };
+
     console.log("Customer JSON Payload:");
     console.log(JSON.stringify(payload, null, 2));
 
-    setTimeout(() => {
-      showToast(`Customer account '${formData.name}' created successfully!`);
+    try {
+      const endpoint = isEditMode ? `/customer/update/${id}` : '/customer/create';
+      // Most of these API structures use POST for updates, but we'll use PUT if the user's FastAPI uses PUT. Since not specified, POST is safer if it's named update. We will use POST.
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await res.json().catch(() => ({}));
+      
+      if (res.ok && data.status) {
+        showToast(`Customer account '${formData.name}' ${isEditMode ? 'updated' : 'created'} successfully!`);
+        navigate('/customers'); 
+      } else {
+        showToast(data.detail || data.message || `Failed to ${isEditMode ? 'update' : 'create'} customer`);
+      }
+    } catch (err) {
+      console.error("API error:", err);
+      showToast("An error occurred while saving.");
+    } finally {
       setIsSaving(false);
-      navigate('/');
-    }, 600);
+    }
   };
 
   const inputClass = "w-full px-2.5 py-1.5 rounded border border-slate-200 text-[12px] font-semibold text-slate-800 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors bg-white hover:bg-slate-50 placeholder:text-slate-400";
@@ -153,17 +234,20 @@ export default function AddCustomerPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-3 sticky top-0 bg-white/90 backdrop-blur-md z-10 py-1.5 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <button onClick={() => navigate('/')} type="button" className="p-1 rounded bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors">
+          <button onClick={() => navigate('/customers')} type="button" className="p-1 rounded bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors">
             <ArrowLeft className="w-3.5 h-3.5" />
           </button>
           <div className="flex items-baseline gap-2">
-            <h1 className="text-base font-bold text-slate-900 leading-tight">Add Customer Account</h1>
+            <h1 className="text-base font-bold text-slate-900 leading-tight">
+              {isViewMode ? 'Customer Profile' : (isEditMode ? 'Edit Customer Account' : 'Add Customer Account')}
+            </h1>
             <p className="text-[9px] text-indigo-600 font-bold uppercase tracking-widest bg-indigo-50 px-1.5 py-0.5 rounded">Master Directory</p>
           </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
+        <fieldset disabled={isViewMode} className={isViewMode ? "opacity-90" : ""}>
 
         {/* Customer Type Selector */}
         <div className="bg-white rounded-xl p-3 border border-slate-200 flex flex-col sm:flex-row gap-3 items-center justify-between">
@@ -213,22 +297,6 @@ export default function AddCustomerPage() {
               <label className={labelClass}>Alternate Mobile</label>
               <input type="tel" value={formData.alternate_mobile} onChange={e => handleChange('alternate_mobile', e.target.value)} placeholder="Optional" className={inputClass} />
             </div>
-            {formData.customer_type === 'individual' && (
-              <>
-                {/* <div>
-                  <label className={labelClass}>Date of Birth</label>
-                  <input type="date" value={formData.date_of_birth} onChange={e => handleChange('date_of_birth', e.target.value)} className={inputClass} />
-                </div> */}
-                {/* <div>
-                  <label className={labelClass}>Gender</label>
-                  <select value={formData.gender} onChange={e => handleChange('gender', e.target.value)} className={inputClass}>
-                    <option>Male</option>
-                    <option>Female</option>
-                    <option>Other</option>
-                  </select>
-                </div> */}
-              </>
-            )}
           </div>
         </div>
 
@@ -253,9 +321,6 @@ export default function AddCustomerPage() {
                 <label className={labelClass}>GST Number</label>
                 <input type="text" value={formData.gst_number} onChange={e => handleChange('gst_number', e.target.value)} placeholder="GSTIN" className={inputClass} />
               </div>
-
-
-
             </div>
           </div>
         )}
@@ -289,10 +354,6 @@ export default function AddCustomerPage() {
                   <label className={labelClass}>City *</label>
                   <input list="billing-cities" type="text" required value={formData.billing_address.city} onChange={e => handleAddressChange('billing_address', 'city', e.target.value)} placeholder="Search City..." className={inputClass} />
                 </div>
-                {/* <div>
-                  <label className={labelClass}>Country</label>
-                  <input type="text" value={formData.billing_address.country} onChange={e => handleAddressChange('billing_address', 'country', e.target.value)} className={inputClass} />
-                </div> */}
                 <div>
                   <label className={labelClass}>Pincode </label>
                   <input type="text" value={formData.billing_address.pincode} onChange={e => handleAddressChange('billing_address', 'pincode', e.target.value)} className={inputClass} />
@@ -317,10 +378,6 @@ export default function AddCustomerPage() {
                     <label className={labelClass}>City *</label>
                     <input list="shipping-cities" type="text" required value={formData.shipping_address.city} onChange={e => handleAddressChange('shipping_address', 'city', e.target.value)} placeholder="Search City..." className={inputClass} />
                   </div>
-                  {/* <div>
-                    <label className={labelClass}>Country</label>
-                    <input type="text" value={formData.shipping_address.country} onChange={e => handleAddressChange('shipping_address', 'country', e.target.value)} className={inputClass} />
-                  </div> */}
                   <div>
                     <label className={labelClass}>Pincode </label>
                     <input type="text" value={formData.shipping_address.pincode} onChange={e => handleAddressChange('shipping_address', 'pincode', e.target.value)} className={inputClass} />
@@ -332,9 +389,6 @@ export default function AddCustomerPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Section 5: Financial */}
-
-
           {/* Section 6 & 7: Categorization & Assignment */}
           {hasAssignmentPermission && (
             <div className={`${cardClass} flex flex-col`}>
@@ -368,26 +422,27 @@ export default function AddCustomerPage() {
           )}
         </div>
 
-        {/* Section 8: Documents */}
-
         {/* Action Bar (Fixed Bottom) */}
-        <div className="fixed bottom-0 left-0 right-0 sm:left-64 p-2 bg-white/90 backdrop-blur-md border-t border-slate-200 flex items-center justify-end gap-2 z-50">
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="px-5 py-2 rounded border border-slate-200 font-bold text-[11px] text-slate-600 hover:bg-slate-50 bg-white shadow-sm transition-all"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="px-6 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5"
-          >
-            <Save className="w-3.5 h-3.5" />
-            {isSaving ? 'Saving...' : 'Save Customer'}
-          </button>
-        </div>
+        {!isViewMode && (
+          <div className="fixed bottom-0 left-0 right-0 sm:left-64 p-2 bg-white/90 backdrop-blur-md border-t border-slate-200 flex items-center justify-end gap-2 z-50">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="px-5 py-2 rounded border border-slate-200 font-bold text-[11px] text-slate-600 hover:bg-slate-50 bg-white shadow-sm transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="px-6 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5"
+            >
+              <Save className="w-3.5 h-3.5" />
+              {isSaving ? 'Saving...' : 'Save Customer'}
+            </button>
+          </div>
+        )}
+        </fieldset>
       </form >
     </div >
   );

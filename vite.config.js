@@ -30,6 +30,10 @@ export default defineConfig({
       '^/access/': {
         target: 'http://192.168.29.8:8000',
         changeOrigin: true,
+      },
+      '^/customer/': {
+        target: 'http://192.168.29.8:8000',
+        changeOrigin: true,
       }
     }
   }

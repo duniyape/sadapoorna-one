@@ -37,6 +37,7 @@ const App = () => {
         }>
           <Route index element={<Home />} />
           <Route path="add-customer" element={<AddCustomerPage />} />
+          <Route path="edit-customer/:id" element={<AddCustomerPage />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="customers" element={<CustomersDirectoryPage />} />
           <Route path="inventory-stock" element={<StockInventoryPage />} />
