@@ -1,6 +1,40 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, FolderLock, Save, Users, CheckSquare, Search, Briefcase, ChevronRight, UserCog } from 'lucide-react';
+import { ArrowLeft, FolderLock, Save, Users, CheckSquare, Search, Briefcase, ChevronRight, UserCog, Network } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+
+const TreeNode = ({ node, designationMap, isRoot = false }) => {
+  const desigId = typeof node.designation === 'object' ? (node.designation?.id || node.designation?._id) : node.designation;
+  const desig = designationMap ? designationMap.get(desigId) : null;
+  const roleName = desig ? (desig.name || desig.title) : (node.designation || 'No Role');
+
+  return (
+    <div className={`${!isRoot ? 'ml-6 mt-4 border-l-2 border-indigo-200 pl-6' : ''} relative`}>
+      {!isRoot && <div className="absolute w-6 h-0.5 bg-indigo-200 -left-0.5 top-6"></div>}
+      <div className={`flex items-center gap-3 p-3 bg-white border ${isRoot ? 'border-indigo-400 shadow-md ring-2 ring-indigo-50' : 'border-slate-200 shadow-sm'} rounded-xl w-[250px] hover:border-indigo-300 transition-all`}>
+        {node.profile_photo ? (
+          <img src={node.profile_photo} alt={node.name} className="w-10 h-10 rounded-full object-cover shrink-0 border border-slate-200" />
+        ) : (
+          <div className={`w-10 h-10 rounded-full ${isRoot ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-700'} flex items-center justify-center font-bold text-sm shrink-0 shadow-inner`}>
+            {(node.name || '?')[0].toUpperCase()}
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-extrabold text-slate-800 truncate">{node.name}</p>
+          {node.email && <p className="text-[10px] text-slate-500 truncate">{node.email}</p>}
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">{roleName}</span>
+            {desig && <span className="text-[9px] font-extrabold bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded shrink-0">Lvl {desig.level}</span>}
+          </div>
+        </div>
+      </div>
+      {node.children && node.children.length > 0 && (
+        <div className="mt-1 relative">
+          {node.children.map(child => <TreeNode key={child.id || child._id} node={child} designationMap={designationMap} />)}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function DataAccessPage() {
   const navigate = useNavigate();
@@ -15,6 +49,7 @@ export default function DataAccessPage() {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [selectedSubordinates, setSelectedSubordinates] = useState({});
   const [searchSubordinates, setSearchSubordinates] = useState('');
+  const [hierarchyTree, setHierarchyTree] = useState(null);
 
   // Fallback mock data in case API is not available
   const MOCK_DESIGNATIONS = [
@@ -85,6 +120,11 @@ export default function DataAccessPage() {
   }, [designations]);
 
   // Derived data
+  const selectedUserManager = useMemo(() => {
+    if (!selectedUserId) return null;
+    return allUsers.find(u => (u.user_id || u.id || u._id) === selectedUserId);
+  }, [selectedUserId, allUsers]);
+
   const usersForSelectedDesignation = useMemo(() => {
     if (!selectedDesignationId) return [];
     return allUsers.filter(u => {
@@ -135,10 +175,29 @@ export default function DataAccessPage() {
     setSelectedUserId(null); // Reset user when designation changes
   };
 
-  const handleSelectUser = (id) => {
+  const handleSelectUser = async (id) => {
     setSelectedUserId(id);
-    // Ideally we would fetch existing mapped subordinates here
     setSelectedSubordinates({}); 
+    setHierarchyTree(null);
+
+    // Fetch existing hierarchy mapping so we can view tree without saving
+    try {
+      const res = await fetch(`/data-access-hierarchy/tree/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status && Array.isArray(data.access)) {
+          const preSelected = {};
+          data.access.forEach(sub => {
+            preSelected[sub.id] = true;
+          });
+          setSelectedSubordinates(preSelected);
+          setHierarchyTree(data.access);
+        }
+      }
+    } catch (err) {
+      // Silently ignore if no hierarchy exists yet (e.g. 404)
+      console.log("No existing hierarchy found for this user");
+    }
   };
 
   const toggleSubordinate = (id) => {
@@ -173,18 +232,31 @@ export default function DataAccessPage() {
       
       console.log("Saving hierarchy payload:", payload);
 
-      // Attempt to save to API. Since endpoint might not exist yet, we catch errors gracefully.
-      const res = await fetch('/access/hierarchy', {
+      // Attempt to save to API.
+      const res = await fetch('/data-access-hierarchy/hierarchy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      }).catch(() => ({ ok: true, isMock: true })); 
+      }); 
 
       if (res.ok) {
-        showToast(res.isMock ? "Mock Saved! Subordinates assigned successfully." : "Hierarchy saved successfully!");
+        showToast("Hierarchy saved successfully!");
+        
+        // As requested: Call GET API after submit
+        try {
+          const getRes = await fetch(`/data-access-hierarchy/tree/${selectedUserId}`);
+          if (getRes.ok) {
+            const treeData = await getRes.json();
+            console.log("Tree fetched after submit:", treeData);
+            setHierarchyTree(treeData.access || []);
+          }
+        } catch (getErr) {
+          console.error("Failed to fetch GET API after submit", getErr);
+        }
+        
       } else {
         const errData = await res.json().catch(() => ({}));
-        showToast(`Error: ${errData.message || 'Failed to save hierarchy'}`);
+        showToast(`Error: ${errData.detail || errData.message || 'Failed to save hierarchy'}`);
       }
     } catch (error) {
       console.error("Save error:", error);
@@ -212,7 +284,7 @@ export default function DataAccessPage() {
           </div>
         </div>
         
-        {selectedUserId && subordinateCandidates.length > 0 && (
+        {selectedUserId && (
           <button
             onClick={handleSaveMapping}
             disabled={isSaving}
@@ -384,6 +456,27 @@ export default function DataAccessPage() {
             )}
           </div>
         </div>
+        
+        {/* Panel 4: Saved Hierarchy Tree View */}
+        {hierarchyTree !== null && selectedUserManager && (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6">
+             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+               <Network className="w-6 h-6 text-indigo-500" />
+               <div>
+                 <h2 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Access Hierarchy</h2>
+                 <p className="text-[10px] text-slate-500 font-bold mt-0.5">Live view of data access chain</p>
+               </div>
+             </div>
+             <div className="p-2 overflow-x-auto custom-scrollbar">
+                <TreeNode 
+                  node={{ ...selectedUserManager, children: hierarchyTree }} 
+                  designationMap={designationMap} 
+                  isRoot={true} 
+                />
+             </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
