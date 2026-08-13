@@ -1,483 +1,401 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, FolderLock, Save, Users, CheckSquare, Search, Briefcase, ChevronRight, UserCog, Network } from 'lucide-react';
+import { ArrowLeft, Save, UserCog, Layers, CheckSquare, ShieldCheck, Search } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-
-const TreeNode = ({ node, designationMap, isRoot = false }) => {
-  const desigId = typeof node.designation === 'object' ? (node.designation?.id || node.designation?._id) : node.designation;
-  const desig = designationMap ? designationMap.get(desigId) : null;
-  const roleName = desig ? (desig.name || desig.title) : (node.designation || 'No Role');
-
-  return (
-    <div className={`${!isRoot ? 'ml-6 mt-4 border-l-2 border-indigo-200 pl-6' : ''} relative`}>
-      {!isRoot && <div className="absolute w-6 h-0.5 bg-indigo-200 -left-0.5 top-6"></div>}
-      <div className={`flex items-center gap-3 p-3 bg-white border ${isRoot ? 'border-indigo-400 shadow-md ring-2 ring-indigo-50' : 'border-slate-200 shadow-sm'} rounded-xl w-[250px] hover:border-indigo-300 transition-all`}>
-        {node.profile_photo ? (
-          <img src={node.profile_photo} alt={node.name} className="w-10 h-10 rounded-full object-cover shrink-0 border border-slate-200" />
-        ) : (
-          <div className={`w-10 h-10 rounded-full ${isRoot ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-700'} flex items-center justify-center font-bold text-sm shrink-0 shadow-inner`}>
-            {(node.name || '?')[0].toUpperCase()}
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-extrabold text-slate-800 truncate">{node.name}</p>
-          {node.email && <p className="text-[10px] text-slate-500 truncate">{node.email}</p>}
-          <div className="flex items-center gap-1.5 mt-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">{roleName}</span>
-            {desig && <span className="text-[9px] font-extrabold bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded shrink-0">Lvl {desig.level}</span>}
-          </div>
-        </div>
-      </div>
-      {node.children && node.children.length > 0 && (
-        <div className="mt-1 relative">
-          {node.children.map(child => <TreeNode key={child.id || child._id} node={child} designationMap={designationMap} />)}
-        </div>
-      )}
-    </div>
-  );
-};
 
 export default function DataAccessPage() {
   const navigate = useNavigate();
   const { showToast } = useOutletContext();
   
-  const [designations, setDesignations] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const [designations, setDesignations] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
-  const [selectedDesignationId, setSelectedDesignationId] = useState(null);
-  const [selectedUserId, setSelectedUserId] = useState(null);
-  const [selectedSubordinates, setSelectedSubordinates] = useState({});
-  const [searchSubordinates, setSearchSubordinates] = useState('');
-  const [hierarchyTree, setHierarchyTree] = useState(null);
+  // States for the 3-Dropdown Flow
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedLevelFilter, setSelectedLevelFilter] = useState('');
+  
+  // Stores ALL assigned subordinate IDs for the selected user across ALL designations
+  const [assignedSubordinates, setAssignedSubordinates] = useState([]);
+  
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Fallback mock data in case API is not available
-  const MOCK_DESIGNATIONS = [
-    { master_id: 'd1', title: 'Super Admin', level: 5 },
-    { master_id: 'd2', title: 'Admin', level: 4 },
-    { master_id: 'd3', title: 'Manager', level: 3 },
-    { master_id: 'd4', title: 'Staff', level: 2 },
-  ];
-
-  const MOCK_USERS = [
-    { user_id: 'u1', name: 'Alice Founder', email: 'alice@corp.com', designation: 'd1' },
-    { user_id: 'u2', name: 'Bob Director', email: 'bob@corp.com', designation: 'd2' },
-    { user_id: 'u3', name: 'Charlie Lead', email: 'charlie@corp.com', designation: 'd2' },
-    { user_id: 'u4', name: 'Dave Manager', email: 'dave@corp.com', designation: 'd3' },
-    { user_id: 'u5', name: 'Eve Manager', email: 'eve@corp.com', designation: 'd3' },
-    { user_id: 'u6', name: 'Frank Worker', email: 'frank@corp.com', designation: 'd4' },
-    { user_id: 'u7', name: 'Grace Worker', email: 'grace@corp.com', designation: 'd4' },
-  ];
-
+  // Fetch initial data
   useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [usersRes, desigRes] = await Promise.all([
+          fetch('/users/get').catch(() => null),
+          fetch('/masters/v1/Designation').catch(() => null)
+        ]);
+
+        if (usersRes && usersRes.ok) {
+          const uData = await usersRes.json();
+          const parsed = Array.isArray(uData) ? uData : (uData.data || uData.users || []);
+          setAllUsers(parsed);
+        }
+
+        if (desigRes && desigRes.ok) {
+          const dData = await desigRes.json();
+          const parsed = Array.isArray(dData) ? dData : (dData.data || dData.masters || []);
+          setDesignations(parsed);
+        }
+      } catch (err) {
+        console.error("Failed to fetch data", err);
+        showToast("Error loading users and designations.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
     fetchData();
-  }, []);
+  }, [showToast]);
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const [desigRes, usersRes] = await Promise.all([
-        fetch('/masters/v1/Designation').catch(() => null),
-        fetch('/users/get').catch(() => null)
-      ]);
+  // Compute Target User's Level
+  const targetLevel = useMemo(() => {
+    if (!selectedUserId) return 0;
+    const targetUser = allUsers.find(u => String(u.user_id || u.id || u._id) === String(selectedUserId));
+    if (!targetUser) return 0;
+    
+    const targetDesigId = typeof targetUser.designation === 'object' && targetUser.designation !== null
+      ? (targetUser.designation.master_id || targetUser.designation.id || targetUser.designation._id)
+      : targetUser.designation;
+      
+    const d = designations.find(des => String(des.master_id || des.id || des._id) === String(targetDesigId));
+    if (!d) return 0;
+    
+    return parseInt(d.grade || d.level || 0, 10);
+  }, [selectedUserId, allUsers, designations]);
 
-      if (desigRes && desigRes.ok) {
-        const dData = await desigRes.json();
-        const parsed = Array.isArray(dData) ? dData : (dData.data || dData.masters || []);
-        setDesignations(parsed.length > 0 ? parsed : MOCK_DESIGNATIONS);
-      } else {
-        setDesignations(MOCK_DESIGNATIONS);
-      }
-
-      if (usersRes && usersRes.ok) {
-        const uData = await usersRes.json();
-        const parsed = Array.isArray(uData) ? uData : (uData.data || uData.users || []);
-        setAllUsers(parsed.length > 0 ? parsed : MOCK_USERS);
-      } else {
-        setAllUsers(MOCK_USERS);
-      }
-    } catch (err) {
-      console.error("Failed to fetch data", err);
-      // Fallback to mock data on error
-      setDesignations(MOCK_DESIGNATIONS);
-      setAllUsers(MOCK_USERS);
-      showToast("Using local mock data (API unavailable)");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Helper map for designation levels
-  const designationMap = useMemo(() => {
-    const map = new Map();
+  // Derived state: Unique Levels (Strictly less than Target User's Level)
+  const uniqueLevels = useMemo(() => {
+    if (!selectedUserId || targetLevel === 0) return [];
+    
+    const levels = new Set();
     designations.forEach(d => {
-      const id = d.master_id || d.id || d._id;
-      // Extract numeric grade/level, defaulting to 0
       const level = parseInt(d.grade || d.level || 0, 10);
-      map.set(id, { ...d, level: isNaN(level) ? 0 : level });
+      if (!isNaN(level) && level < targetLevel) levels.add(level);
     });
-    return map;
-  }, [designations]);
+    return Array.from(levels).sort((a, b) => b - a); // Highest level first
+  }, [designations, selectedUserId, targetLevel]);
 
-  // Derived data
-  const selectedUserManager = useMemo(() => {
-    if (!selectedUserId) return null;
-    return allUsers.find(u => (u.user_id || u.id || u._id) === selectedUserId);
-  }, [selectedUserId, allUsers]);
-
-  const usersForSelectedDesignation = useMemo(() => {
-    if (!selectedDesignationId) return [];
+  // Derived state: Users that belong to the selected level (excluding the target user)
+  const thirdDropdownOptions = useMemo(() => {
+    if (selectedLevelFilter === '') return [];
+    
     return allUsers.filter(u => {
-      const uDesigId = typeof u.designation === 'object' ? (u.designation?.id || u.designation?._id) : u.designation;
-      return uDesigId === selectedDesignationId;
+      const uId = u.user_id || u.id || u._id;
+      // Exclude target user
+      if (String(uId) === String(selectedUserId)) return false;
+      
+      const uDesigId = typeof u.designation === 'object' && u.designation !== null
+        ? (u.designation.master_id || u.designation.id || u.designation._id) 
+        : u.designation;
+        
+      const d = designations.find(des => String(des.master_id || des.id || des._id) === String(uDesigId));
+      if (!d) return false;
+      
+      const level = parseInt(d.grade || d.level || 0, 10);
+      return level === parseInt(selectedLevelFilter, 10);
+    }).filter(u => {
+      if (!searchQuery) return true;
+      const search = searchQuery.toLowerCase();
+      return (u.name || '').toLowerCase().includes(search) || (u.email || '').toLowerCase().includes(search);
     });
-  }, [selectedDesignationId, allUsers]);
+  }, [selectedLevelFilter, allUsers, selectedUserId, searchQuery, designations]);
 
-  const subordinateCandidates = useMemo(() => {
-    if (!selectedUserId) return [];
-    const manager = allUsers.find(u => (u.user_id || u.id || u._id) === selectedUserId);
-    if (!manager) return [];
+  // Handle Fetching API and Updating Graph
+  const handleSelectUser = async (userId) => {
+    setSelectedUserId(userId);
+    setSelectedLevelFilter('');
+    setAssignedSubordinates([]);
+    setSearchQuery('');
 
-    const managerDesigId = typeof manager.designation === 'object' ? (manager.designation?.id || manager.designation?._id) : manager.designation;
-    const managerDesig = designationMap.get(managerDesigId);
-    if (!managerDesig) return [];
+    if (!userId) return;
 
-    const managerLevel = managerDesig.level;
-
-    // Find all users strictly below this level
-    const lowerLevelUsers = allUsers.filter(u => {
-      // Don't include the manager themselves
-      if ((u.user_id || u.id || u._id) === selectedUserId) return false;
-      const uDesigId = typeof u.designation === 'object' ? (u.designation?.id || u.designation?._id) : u.designation;
-      const uDesig = designationMap.get(uDesigId);
-      if (!uDesig) return false;
-      return uDesig.level < managerLevel;
-    });
-
-    if (lowerLevelUsers.length === 0) return [];
-
-    // Find the next highest available level among these lower users
-    const maxLowerLevel = Math.max(...lowerLevelUsers.map(u => {
-      const uDesigId = typeof u.designation === 'object' ? (u.designation?.id || u.designation?._id) : u.designation;
-      return designationMap.get(uDesigId).level;
-    }));
-
-    // Return only the users at that exact next highest level
-    return lowerLevelUsers.filter(u => {
-      const uDesigId = typeof u.designation === 'object' ? (u.designation?.id || u.designation?._id) : u.designation;
-      return designationMap.get(uDesigId).level === maxLowerLevel;
-    });
-  }, [selectedUserId, allUsers, designationMap]);
-
-  // Handle Designation Click
-  const handleSelectDesignation = (id) => {
-    setSelectedDesignationId(id);
-    setSelectedUserId(null); // Reset user when designation changes
-  };
-
-  const handleSelectUser = async (id) => {
-    setSelectedUserId(id);
-    setSelectedSubordinates({}); 
-    setHierarchyTree(null);
-
-    // Fetch existing hierarchy mapping so we can view tree without saving
     try {
-      const res = await fetch(`/data-access-hierarchy/tree/${id}`);
+      const res = await fetch(`/data-access-hierarchy/tree/${userId}`);
       if (res.ok) {
         const data = await res.json();
         if (data.status && Array.isArray(data.access)) {
-          const preSelected = {};
-          data.access.forEach(sub => {
-            preSelected[sub.id] = true;
-          });
-          setSelectedSubordinates(preSelected);
-          setHierarchyTree(data.access);
+          const existingIds = data.access.map(sub => String(sub.id));
+          setAssignedSubordinates(existingIds);
         }
       }
     } catch (err) {
-      // Silently ignore if no hierarchy exists yet (e.g. 404)
-      console.log("No existing hierarchy found for this user");
+      console.log("No existing hierarchy found or API failed", err);
     }
   };
 
-  const toggleSubordinate = (id) => {
-    setSelectedSubordinates(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
-
-  const toggleAllSubordinates = (selectAll) => {
-    const updated = {};
-    subordinateCandidates.forEach(u => {
-      updated[u.user_id || u.id || u._id] = selectAll;
+  // Group Assigned Subordinates for the Hierarchy Graph View
+  const hierarchyGraph = useMemo(() => {
+    if (assignedSubordinates.length === 0) return null;
+    
+    const grouped = {};
+    assignedSubordinates.forEach(subId => {
+      const u = allUsers.find(user => String(user.user_id || user.id || user._id) === String(subId));
+      if (!u) return;
+      
+      const uDesigId = typeof u.designation === 'object' && u.designation !== null
+        ? (u.designation.master_id || u.designation.id || u.designation._id)
+        : u.designation;
+        
+      const d = designations.find(des => String(des.master_id || des.id || des._id) === String(uDesigId));
+      const level = d ? parseInt(d.grade || d.level || 0, 10) : 0;
+      
+      if (!grouped[level]) grouped[level] = [];
+      grouped[level].push({ ...u, desigName: d ? (d.name || d.title) : 'Unknown Role' });
     });
-    setSelectedSubordinates(prev => ({ ...prev, ...updated }));
+    
+    const sortedLevels = Object.keys(grouped).sort((a, b) => b - a);
+    return { grouped, sortedLevels };
+  }, [assignedSubordinates, allUsers, designations]);
+
+  // Handle Select/Deselect all for the CURRENT designation level view
+  const handleToggleSelectAll = (selectAll) => {
+    const currentViewIds = thirdDropdownOptions.map(opt => String(opt.user_id || opt.id || opt._id));
+    
+    setAssignedSubordinates(prev => {
+      if (selectAll) {
+        // Add all currentViewIds to assignedSubordinates
+        const newSet = new Set([...prev, ...currentViewIds]);
+        return Array.from(newSet);
+      } else {
+        // Remove all currentViewIds from assignedSubordinates
+        return prev.filter(id => !currentViewIds.includes(id));
+      }
+    });
   };
 
+  const handleToggleValue = (id) => {
+    const strId = String(id);
+    setAssignedSubordinates(prev => {
+      if (prev.includes(strId)) {
+        return prev.filter(val => val !== strId);
+      }
+      return [...prev, strId];
+    });
+  };
+
+  // Handle Save
   const handleSaveMapping = async () => {
     if (!selectedUserId) {
-      showToast("Please select a manager first");
+      showToast("Please select a target user first.");
       return;
     }
 
-    const assignedIds = Object.keys(selectedSubordinates).filter(k => selectedSubordinates[k]);
-    
     try {
       setIsSaving(true);
       const payload = {
         manager_id: selectedUserId,
-        subordinate_ids: assignedIds
+        subordinate_ids: assignedSubordinates
       };
       
-      console.log("Saving hierarchy payload:", payload);
+      console.log("Saving real hierarchy payload:", JSON.stringify(payload, null, 2));
 
-      // Attempt to save to API.
       const res = await fetch('/data-access-hierarchy/hierarchy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      }); 
+      });
 
       if (res.ok) {
-        showToast("Hierarchy saved successfully!");
-        
-        // As requested: Call GET API after submit
-        try {
-          const getRes = await fetch(`/data-access-hierarchy/tree/${selectedUserId}`);
-          if (getRes.ok) {
-            const treeData = await getRes.json();
-            console.log("Tree fetched after submit:", treeData);
-            setHierarchyTree(treeData.access || []);
-          }
-        } catch (getErr) {
-          console.error("Failed to fetch GET API after submit", getErr);
-        }
-        
+        showToast("Access mapped successfully!");
       } else {
         const errData = await res.json().catch(() => ({}));
-        showToast(`Error: ${errData.detail || errData.message || 'Failed to save hierarchy'}`);
+        showToast(`Failed to save access mapping: ${errData.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Save error:", error);
-      showToast("Failed to save data access mapping.");
+      showToast("An error occurred while saving.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const filteredCandidates = subordinateCandidates.filter(u => 
-    (u.name || '').toLowerCase().includes(searchSubordinates.toLowerCase()) || 
-    (u.email || '').toLowerCase().includes(searchSubordinates.toLowerCase())
-  );
+  const getDesignationName = (id) => {
+    const d = designations.find(des => String(des.master_id || des.id || des._id) === String(id));
+    if (!d) return 'Unknown Role';
+    const level = parseInt(d.grade || d.level || 0, 10);
+    return `${d.name || d.title} (Level ${level})`;
+  };
 
   return (
-    <div className="max-w-5xl mx-auto mt-2">
+    <div className="max-w-4xl mx-auto mt-4 pb-20">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/')} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm transition-all">
+          <button onClick={() => navigate('/')} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-xl font-extrabold text-slate-900 leading-tight">Data Access & Hierarchy</h1>
-            <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Master Configuration</p>
+            <h1 className="text-xl font-extrabold text-slate-900 leading-tight">Data Access Allocation</h1>
+            <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-widest">Employee Data Visibility</p>
           </div>
         </div>
         
-        {selectedUserId && (
-          <button
-            onClick={handleSaveMapping}
-            disabled={isSaving}
-            className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 whitespace-nowrap"
-          >
-            <Save className="w-4 h-4" />
-            {isSaving ? 'Saving...' : 'Save Mapping'}
-          </button>
-        )}
+        <button
+          onClick={handleSaveMapping}
+          disabled={isSaving || !selectedUserId}
+          className="px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 whitespace-nowrap"
+        >
+          <Save className="w-4 h-4" />
+          {isSaving ? 'Saving...' : 'Save Allocation'}
+        </button>
       </div>
 
-      <div className="space-y-6">
-        {/* Top Controls: Dropdowns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          {/* Designation Dropdown */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Briefcase className="w-3.5 h-3.5 text-blue-500" />
-              1. Select Role
-            </label>
-            <select
-              className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all cursor-pointer"
-              value={selectedDesignationId || ''}
-              onChange={(e) => handleSelectDesignation(e.target.value)}
-            >
-              <option value="" disabled>-- Choose a Designation --</option>
-              {designations.map(d => {
-                const dId = d.master_id || d.id || d._id;
-                const level = parseInt(d.grade || d.level || 0, 10);
-                return (
-                  <option key={dId} value={dId}>
-                    {d.name || d.title} (Level {level})
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-
-          {/* User Dropdown */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-              <UserCog className="w-3.5 h-3.5 text-blue-500" />
-              2. Select Manager
-            </label>
-            <select
-              className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              value={selectedUserId || ''}
-              onChange={(e) => handleSelectUser(e.target.value)}
-              disabled={!selectedDesignationId}
-            >
-              <option value="" disabled>
-                {!selectedDesignationId ? 'Select a role first...' : '-- Choose a Manager --'}
-              </option>
-              {usersForSelectedDesignation.map(u => {
-                const uId = u.user_id || u.id || u._id;
-                return (
-                  <option key={uId} value={uId}>
-                    {u.name} ({u.email || u.employee_id})
-                  </option>
-                );
-              })}
-            </select>
-            {selectedDesignationId && usersForSelectedDesignation.length === 0 && (
-              <p className="text-[10px] text-rose-500 font-semibold mt-1">No users found for this role.</p>
-            )}
-          </div>
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-6">
+        
+        {/* Dropdown 1: Select User */}
+        <div>
+          <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+            <UserCog className="w-4 h-4 text-indigo-500" />
+            1. Target Employee (Who gets access?)
+          </label>
+          <p className="text-[11px] text-slate-400 mb-2">Select the employee who will be granted data visibility over others.</p>
+          <select
+            className="w-full p-2.5 rounded border border-slate-200 text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors cursor-pointer"
+            value={selectedUserId}
+            onChange={(e) => handleSelectUser(e.target.value)}
+          >
+            <option value="" disabled>-- Choose Target Employee --</option>
+            {allUsers.map(u => {
+              const uDesigId = typeof u.designation === 'object' && u.designation !== null
+                ? (u.designation.master_id || u.designation.id || u.designation._id) 
+                : u.designation;
+              return (
+                <option key={u.user_id || u.id || u._id} value={u.user_id || u.id || u._id}>
+                  {u.name} {u.email ? `(${u.email})` : ''} - {getDesignationName(uDesigId)}
+                </option>
+              );
+            })}
+          </select>
         </div>
 
-        {/* Panel 3: Subordinates Mapping */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden min-h-[400px]">
-          <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-            <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
-              <Users className="w-4 h-4 text-blue-500" />
-              3. Map Subordinates
-            </h2>
-            <p className="text-[10px] text-slate-500 font-semibold mt-1 ml-6">
-              Automatically shows users from the next highest available level below the manager.
-            </p>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar relative">
-            {!selectedUserId ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center opacity-50 px-4">
-                <FolderLock className="w-12 h-12 text-slate-300 mb-4" />
-                <p className="text-[13px] text-slate-600 font-bold uppercase tracking-widest">Select a manager first</p>
-                <p className="text-xs text-slate-400 mt-2 max-w-[250px]">Choose a user from the dropdown above to view and map their direct subordinates.</p>
-              </div>
-            ) : subordinateCandidates.length === 0 ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-                <FolderLock className="w-12 h-12 text-blue-200 mb-4" />
-                <p className="text-[13px] text-slate-600 font-bold">No Lower Levels Found</p>
-                <p className="text-xs text-slate-400 mt-2 max-w-[300px]">There are no users in the system with a designation level strictly lower than this manager.</p>
-              </div>
-            ) : (
-              <div className="space-y-5">
-                {/* Search & Bulk Actions */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="relative w-full sm:w-72">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <hr className="border-slate-100" />
+
+        {/* Dropdown 2: Select Role/Level */}
+        <div>
+          <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+            <Layers className="w-4 h-4 text-indigo-500" />
+            2. Designation Level (Whose data will they access?)
+          </label>
+          <p className="text-[11px] text-slate-400 mb-2">Select the role/level of the users you want to grant access to.</p>
+          <select
+            className="w-full p-2.5 rounded border border-slate-200 text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors cursor-pointer disabled:opacity-50"
+            value={selectedLevelFilter}
+            onChange={(e) => {
+              setSelectedLevelFilter(e.target.value);
+              setSearchQuery('');
+            }}
+            disabled={!selectedUserId}
+          >
+            <option value="" disabled>-- Choose a Level --</option>
+            {uniqueLevels.map(lvl => (
+              <option key={lvl} value={lvl}>
+                Level {lvl}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Dropdown 3: Multi-Select Values */}
+        {selectedLevelFilter !== '' && (
+          <>
+            <hr className="border-slate-100" />
+            <div>
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-3">
+                <div>
+                  <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-indigo-500" />
+                    3. Select Specific Employees
+                  </label>
+                  <p className="text-[11px] text-slate-400 mt-1">Select the employees from this level to grant access.</p>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="Search subordinates..."
-                      value={searchSubordinates}
-                      onChange={(e) => setSearchSubordinates(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all bg-white shadow-sm"
+                      placeholder="Search name/email..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-8 pr-3 py-1.5 border border-slate-200 rounded text-xs focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => toggleAllSubordinates(true)} className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-100 transition-colors">Select All</button>
-                    <button onClick={() => toggleAllSubordinates(false)} className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-200 transition-colors">Clear</button>
+                    <button onClick={() => handleToggleSelectAll(true)} className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded border border-indigo-100 transition-colors">Select All</button>
+                    <button onClick={() => handleToggleSelectAll(false)} className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 transition-colors">Clear</button>
                   </div>
                 </div>
+              </div>
 
-                {/* Subordinates Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {filteredCandidates.map(u => {
-                    const uId = u.user_id || u.id || u._id;
-                    const uDesigId = typeof u.designation === 'object' ? (u.designation?.id || u.designation?._id) : u.designation;
-                    const uDesig = designationMap.get(uDesigId);
-                    const isChecked = selectedSubordinates[uId] || false;
-                    
+              {thirdDropdownOptions.length === 0 ? (
+                <div className="p-6 text-center bg-slate-50 border border-slate-200 rounded-lg">
+                  <p className="text-sm font-semibold text-slate-500">
+                    {searchQuery ? 'No employees match your search.' : 'No available employees found for this designation.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[350px] overflow-y-auto p-2 border border-slate-100 rounded-lg bg-slate-50/50 custom-scrollbar">
+                  {thirdDropdownOptions.map(opt => {
+                    const uId = String(opt.user_id || opt.id || opt._id);
+                    const isSelected = assignedSubordinates.includes(uId);
                     return (
-                      <label 
+                      <div
                         key={uId}
-                        className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-all group ${
-                          isChecked 
-                            ? 'bg-blue-50/80 border-blue-300 shadow-sm ring-2 ring-blue-500/20' 
-                            : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm'
-                        }`}
+                        onClick={() => handleToggleValue(uId)}
+                        className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-indigo-50 border-indigo-300 shadow-sm ring-1 ring-indigo-500/20' : 'bg-white border-slate-200 hover:border-indigo-200 hover:bg-slate-50'}`}
                       >
-                        <div className="relative flex items-center justify-center shrink-0">
-                          <input 
-                            type="checkbox" 
-                            checked={isChecked} 
-                            onChange={() => toggleSubordinate(uId)} 
-                            className="w-5 h-5 appearance-none border-2 border-slate-300 rounded-[6px] checked:bg-blue-600 checked:border-blue-600 transition-colors group-hover:border-blue-400" 
-                          />
-                          {isChecked && (
-                            <CheckSquare className="absolute w-3.5 h-3.5 text-white pointer-events-none" />
-                          )}
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 mt-0.5 transition-colors ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-slate-300'}`}>
+                          {isSelected && <CheckSquare className="w-3.5 h-3.5 text-white" />}
                         </div>
-                        
-                        {u.profile_photo ? (
-                          <img src={u.profile_photo} alt={u.name} className="w-10 h-10 rounded-full object-cover shrink-0 border border-slate-200" />
-                        ) : (
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 ${isChecked ? 'bg-blue-200 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
-                            {(u.name || '?')[0].toUpperCase()}
-                          </div>
-                        )}
-                        
-                        <div className="flex-1 min-w-0">
-                          <h4 className={`text-xs font-extrabold truncate ${isChecked ? 'text-blue-900' : 'text-slate-800'}`}>
-                            {u.name}
-                          </h4>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <span className="text-[10px] font-semibold text-slate-500 truncate">{uDesig?.name || 'No Role'}</span>
-                            <span className="text-[9px] font-extrabold bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded shrink-0">Lvl {uDesig?.level}</span>
-                          </div>
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-xs font-bold truncate ${isSelected ? 'text-indigo-900' : 'text-slate-800'}`}>
+                            {opt.name}
+                          </p>
+                          <p className="text-[10px] text-slate-500 truncate mt-0.5">{opt.email}</p>
                         </div>
-                      </label>
+                      </div>
                     );
                   })}
                 </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Hierarchy Graph Section */}
+      {selectedUserId && hierarchyGraph && (
+        <div className="mt-6 bg-white rounded-xl border border-slate-200 shadow-sm p-6 transition-all">
+          <h2 className="text-xs font-extrabold text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-wider">
+            <Layers className="w-4 h-4 text-indigo-500" />
+            Active Hierarchy Graph
+          </h2>
+          
+          <div className="space-y-6 relative before:absolute before:inset-y-2 before:left-[15px] before:w-[2px] before:bg-slate-200">
+            {hierarchyGraph.sortedLevels.map(level => (
+              <div key={level} className="relative pl-12">
+                <div className="absolute left-0 top-0 w-[32px] h-[32px] rounded-full bg-white border-[3px] border-indigo-500 flex items-center justify-center z-10 shadow-sm">
+                  <span className="text-[10px] font-bold text-indigo-700">L{level}</span>
+                </div>
                 
-                {filteredCandidates.length === 0 && searchSubordinates && (
-                  <p className="text-center text-sm font-semibold text-slate-400 py-12">No subordinates match your search.</p>
-                )}
+                <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-1.5">Level {level} Access</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {hierarchyGraph.grouped[level].map(emp => (
+                    <div key={emp.user_id || emp.id || emp._id} className="bg-slate-50 border border-slate-200 rounded-lg p-3 hover:border-indigo-300 hover:shadow-md transition-all">
+                      <p className="text-xs font-bold text-slate-800 truncate">{emp.name}</p>
+                      <p className="text-[10px] font-semibold text-indigo-600 mt-1 truncate">{emp.desigName}</p>
+                      <p className="text-[9px] text-slate-400 truncate mt-0.5">{emp.email}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
-        
-        {/* Panel 4: Saved Hierarchy Tree View */}
-        {hierarchyTree !== null && selectedUserManager && (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6">
-             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-               <Network className="w-6 h-6 text-indigo-500" />
-               <div>
-                 <h2 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Access Hierarchy</h2>
-                 <p className="text-[10px] text-slate-500 font-bold mt-0.5">Live view of data access chain</p>
-               </div>
-             </div>
-             <div className="p-2 overflow-x-auto custom-scrollbar">
-                <TreeNode 
-                  node={{ ...selectedUserManager, children: hierarchyTree }} 
-                  designationMap={designationMap} 
-                  isRoot={true} 
-                />
-             </div>
-          </div>
-        )}
-
-      </div>
+      )}
     </div>
   );
 }
