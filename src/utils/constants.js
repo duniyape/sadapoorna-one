@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 
 export const SALES_OPERATIONS = [
-  { id: 'add-customer', title: 'Add Customer', icon: UserPlus, color: 'bg-pink-100 text-pink-600 border-pink-200', badge: 'Hot', desc: 'Register a new customer account' },
+  { id: 'add-customer', title: 'Add Customer', icon: UserPlus, color: 'bg-pink-100 text-pink-600 border-pink-200', badge: 'Hot', desc: 'Register a new customer account', key: ['Assignment'] },
   { id: 'beat-mgmt', title: 'Beat Management', icon: RouteIcon, color: 'bg-amber-100 text-amber-600 border-amber-200', badge: null, desc: 'Manage sales beats and territories' },
   { id: 'collection', title: 'Collection', icon: FileText, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: null, desc: 'Record cash & cheque payments' },
   { id: 'credit-approval', title: 'Credit Approval', icon: ShieldCheck, color: 'bg-emerald-100 text-emerald-600 border-emerald-200', badge: '3 Pending', desc: 'Approve customer credit limits' },
@@ -62,7 +62,7 @@ export const MASTER_MODULES = [
   { id: 'branch-profile', title: 'Branch Profile', icon: Building2, color: 'bg-amber-100 text-amber-600 border-amber-200', badge: null, desc: 'Manage company branches' },
   { id: 'department', title: 'Department', icon: Briefcase, color: 'bg-orange-100 text-orange-600 border-orange-200', badge: null, desc: 'Organizational departments' },
   { id: 'designation', title: 'Designation', icon: BadgeCheck, color: 'bg-rose-100 text-rose-600 border-rose-200', badge: null, desc: 'Employee roles & designations' },
-  { id: 'users', title: 'Users', icon: UserCog, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Create & manage staff users', key:['Create','Edit','View'] },
+  { id: 'users', title: 'Users', icon: UserCog, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Create & manage staff users', key: ['Create', 'Edit', 'View'] },
   { id: 'accessibility', title: 'Accessibility', icon: ShieldCheck, color: 'bg-teal-100 text-teal-600 border-teal-200', badge: 'Admin', desc: 'Manage access controls' },
   { id: 'data-access', title: 'Data Access', icon: FolderLock, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: 'New', desc: 'Manage reporting hierarchy', route: '/data-access' },
 ];
