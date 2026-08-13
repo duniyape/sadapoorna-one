@@ -45,7 +45,7 @@ export default function Home() {
   }, [searchQuery, user]);
 
   const getRoute = (id) => {
-    const directRoutes = ['add-customer', 'orders', 'customers', 'inventory-stock', 'ai-suite', 'branch-profile', 'department', 'designation', 'users', 'accessibility'];
+    const directRoutes = ['add-customer', 'orders', 'customers', 'inventory-stock', 'ai-suite', 'branch-profile', 'department', 'designation', 'users', 'accessibility', 'data-access'];
     if (directRoutes.includes(id)) {
       return `/${id}`;
     }
