@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Save, UserCircle, MapPin, Briefcase, CreditCard, Layers, FileText, X, Plus, Users, Building2 } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import indiaData from '../utils/indiaStatesCities.json';
 
 export default function AddCustomerPage() {
   const navigate = useNavigate();
-  const { showToast } = useOutletContext();
+  const { showToast, user } = useOutletContext();
 
   const [formData, setFormData] = useState({
-    customer_type: 'individual',
+    customer_type: 'business', // Default to business since it's the first option now
     name: '',
     display_name: '',
     email: '',
@@ -40,6 +41,46 @@ export default function AddCustomerPage() {
 
   const [docInput, setDocInput] = useState({ type: 'PAN', document_number: '' });
   const [isSaving, setIsSaving] = useState(false);
+  const [branches, setBranches] = useState([]);
+  const [employees, setEmployees] = useState([]);
+
+  // Check if the user has Assignment permission for add-customer
+  const hasAssignmentPermission = user?.access?.frontend_icons?.find(
+    (item) => item.icon === 'add-customer'
+  )?.buttons?.includes('Assignment') || false;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [branchRes, userRes] = await Promise.all([
+          fetch('/branches/v1').catch(() => null),
+          fetch('/users/get').catch(() => null)
+        ]);
+        if (branchRes && branchRes.ok) {
+          const branchData = await branchRes.json();
+          setBranches(branchData.data || branchData || []);
+        }
+        if (userRes && userRes.ok) {
+          const userData = await userRes.json();
+          setEmployees(userData.data || userData || []);
+        }
+      } catch (err) {
+        console.error("Error fetching branches/employees:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Set default values from logged-in user profile whenever it becomes available
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        branch_id: user.branch?.id || user.branch?._id || prev.branch_id,
+        assigned_employee_id: user.id || user._id || prev.assigned_employee_id
+      }));
+    }
+  }, [user]);
 
   const handleDocAdd = () => {
     if (!docInput.type || !docInput.document_number) return;
@@ -74,56 +115,76 @@ export default function AddCustomerPage() {
     if (payload.sameAsBilling) {
       payload.shipping_address = { ...payload.billing_address };
     }
-    console.log("Customer Payload Submitted:", payload);
+    
+    // Console log the complete payload as JSON string for verification
+    console.log("Customer JSON Payload:");
+    console.log(JSON.stringify(payload, null, 2));
+
     setTimeout(() => {
       showToast(`Customer account '${formData.name}' created successfully!`);
       setIsSaving(false);
-      navigate('/customers');
+      navigate('/');
     }, 600);
   };
 
-  const inputClass = "w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:outline-none transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white placeholder:text-slate-400";
-  const labelClass = "block text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-1";
-  const cardClass = "bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md";
-  const cardHeaderClass = "px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center gap-2";
+  const inputClass = "w-full px-2.5 py-1.5 rounded border border-slate-200 text-[12px] font-semibold text-slate-800 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors bg-white hover:bg-slate-50 placeholder:text-slate-400";
+  const labelClass = "block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-0.5";
+  const cardClass = "bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden";
+  const cardHeaderClass = "px-3 py-2 border-b border-slate-100 bg-slate-50/50 flex items-center gap-1.5";
+
+  // Derive available cities based on selected state
+  const billingCities = useMemo(() => indiaData[formData.billing_address.state] || [], [formData.billing_address.state]);
+  const shippingCities = useMemo(() => indiaData[formData.shipping_address.state] || [], [formData.shipping_address.state]);
+  const allStates = Object.keys(indiaData);
 
   return (
-    <div className="max-w-6xl mx-auto pb-20">
+    <div className="max-w-6xl mx-auto pb-16">
+      {/* Global Datalists for Searchable Dropdowns */}
+      <datalist id="india-states">
+        {allStates.map(state => <option key={state} value={state} />)}
+      </datalist>
+      <datalist id="billing-cities">
+        {billingCities.map(city => <option key={city} value={city} />)}
+      </datalist>
+      <datalist id="shipping-cities">
+        {shippingCities.map(city => <option key={city} value={city} />)}
+      </datalist>
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 sticky top-0 bg-slate-50/80 backdrop-blur-md z-10 py-2 border-b border-transparent">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/customers')} type="button" className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 shadow-sm transition-all">
-            <ArrowLeft className="w-4 h-4" />
+      <div className="flex items-center justify-between mb-3 sticky top-0 bg-white/90 backdrop-blur-md z-10 py-1.5 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <button onClick={() => navigate('/')} type="button" className="p-1 rounded bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors">
+            <ArrowLeft className="w-3.5 h-3.5" />
           </button>
-          <div>
-            <h1 className="text-lg font-extrabold text-slate-900 leading-tight">Add Customer Account</h1>
-            <p className="text-[9px] text-indigo-600 font-bold uppercase tracking-widest">Master Directory</p>
+          <div className="flex items-baseline gap-2">
+            <h1 className="text-base font-bold text-slate-900 leading-tight">Add Customer Account</h1>
+            <p className="text-[9px] text-indigo-600 font-bold uppercase tracking-widest bg-indigo-50 px-1.5 py-0.5 rounded">Master Directory</p>
           </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
 
         {/* Customer Type Selector */}
-        <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3 items-center justify-between">
+        <div className="bg-white rounded-xl p-3 border border-slate-200 flex flex-col sm:flex-row gap-3 items-center justify-between">
           <div className="flex-1 text-center sm:text-left">
             <h3 className="text-[13px] font-bold text-slate-800">Registration Type</h3>
-            <p className="text-[11px] text-slate-500">Is this an individual customer or a registered business?</p>
+            <p className="text-[11px] text-slate-500">Is this a registered business or an individual customer?</p>
           </div>
           <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 w-full sm:w-auto">
             <button
               type="button"
-              onClick={() => handleChange('customer_type', 'individual')}
-              className={`flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${formData.customer_type === 'individual' ? 'bg-white text-indigo-700 shadow-sm border border-slate-200/60' : 'text-slate-500 hover:text-slate-700'}`}
+              onClick={() => handleChange('customer_type', 'business')}
+              className={`flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${formData.customer_type === 'business' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-200'}`}
             >
-              <Users className="w-3.5 h-3.5" /> Individual
+              <Building2 className="w-3.5 h-3.5" /> Business
             </button>
             <button
               type="button"
-              onClick={() => handleChange('customer_type', 'business')}
-              className={`flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${formData.customer_type === 'business' ? 'bg-white text-indigo-700 shadow-sm border border-slate-200/60' : 'text-slate-500 hover:text-slate-700'}`}
+              onClick={() => handleChange('customer_type', 'individual')}
+              className={`flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${formData.customer_type === 'individual' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-200'}`}
             >
-              <Building2 className="w-3.5 h-3.5" /> Business
+              <Users className="w-3.5 h-3.5" /> Individual
             </button>
           </div>
         </div>
@@ -134,15 +195,12 @@ export default function AddCustomerPage() {
             <div className="p-1 bg-indigo-100 rounded-md"><UserCircle className="w-4 h-4 text-indigo-600" /></div>
             <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">1. Basic Details</h2>
           </div>
-          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             <div className="sm:col-span-2 lg:col-span-1">
               <label className={labelClass}>Full Name *</label>
               <input type="text" required value={formData.name} onChange={e => handleChange('name', e.target.value)} placeholder="e.g. John Doe" className={inputClass} />
             </div>
-            <div>
-              <label className={labelClass}>Display Name</label>
-              <input type="text" value={formData.display_name} onChange={e => handleChange('display_name', e.target.value)} placeholder="e.g. John D" className={inputClass} />
-            </div>
+
             <div>
               <label className={labelClass}>Email Address</label>
               <input type="email" value={formData.email} onChange={e => handleChange('email', e.target.value)} placeholder="john@example.com" className={inputClass} />
@@ -181,42 +239,23 @@ export default function AddCustomerPage() {
               <div className="p-1 bg-indigo-100 rounded-md"><Briefcase className="w-4 h-4 text-indigo-600" /></div>
               <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Business & Contact Details</h2>
             </div>
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="sm:col-span-2">
-                <label className={labelClass}>Company Name *</label>
+                <label className={labelClass}>Shop Name *</label>
                 <input type="text" required value={formData.company_name} onChange={e => handleChange('company_name', e.target.value)} placeholder="e.g. Acme Corp Pvt Ltd" className={inputClass} />
               </div>
               <div>
                 <label className={labelClass}>Business Type</label>
                 <input type="text" value={formData.business_type} onChange={e => handleChange('business_type', e.target.value)} placeholder="e.g. Retailer" className={inputClass} />
               </div>
-              <div>
-                <label className={labelClass}>Registration No.</label>
-                <input type="text" value={formData.registration_number} onChange={e => handleChange('registration_number', e.target.value)} placeholder="CIN / Udyam" className={inputClass} />
-              </div>
+
               <div>
                 <label className={labelClass}>GST Number</label>
                 <input type="text" value={formData.gst_number} onChange={e => handleChange('gst_number', e.target.value)} placeholder="GSTIN" className={inputClass} />
               </div>
-              <div>
-                <label className={labelClass}>PAN Number</label>
-                <input type="text" value={formData.pan_number} onChange={e => handleChange('pan_number', e.target.value)} placeholder="PAN" className={inputClass} />
-              </div>
 
-              <div className="col-span-1 sm:col-span-2 lg:col-span-4 mt-2 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className={labelClass}>Contact Person *</label>
-                  <input type="text" required value={formData.contact_person_name} onChange={e => handleChange('contact_person_name', e.target.value)} placeholder="Manager's Name" className={inputClass} />
-                </div>
-                <div>
-                  <label className={labelClass}>Contact Mobile *</label>
-                  <input type="tel" required value={formData.contact_person_mobile} onChange={e => handleChange('contact_person_mobile', e.target.value)} placeholder="+91..." className={inputClass} />
-                </div>
-                <div>
-                  <label className={labelClass}>Contact Email</label>
-                  <input type="email" value={formData.contact_person_email} onChange={e => handleChange('contact_person_email', e.target.value)} placeholder="email@company.com" className={inputClass} />
-                </div>
-              </div>
+
+
             </div>
           </div>
         )}
@@ -233,7 +272,7 @@ export default function AddCustomerPage() {
               <span className="text-[11px] font-bold text-slate-700">Shipping same as Billing</span>
             </label>
           </div>
-          <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+          <div className="p-3 grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
             {/* Billing */}
             <div className="space-y-3">
               <h3 className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded w-fit uppercase tracking-wider">Billing Address</h3>
@@ -243,12 +282,12 @@ export default function AddCustomerPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={labelClass}>City *</label>
-                  <input type="text" required value={formData.billing_address.city} onChange={e => handleAddressChange('billing_address', 'city', e.target.value)} className={inputClass} />
+                  <label className={labelClass}>State *</label>
+                  <input list="india-states" type="text" required value={formData.billing_address.state} onChange={e => handleAddressChange('billing_address', 'state', e.target.value)} placeholder="Search State..." className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>State *</label>
-                  <input type="text" required value={formData.billing_address.state} onChange={e => handleAddressChange('billing_address', 'state', e.target.value)} className={inputClass} />
+                  <label className={labelClass}>City *</label>
+                  <input list="billing-cities" type="text" required value={formData.billing_address.city} onChange={e => handleAddressChange('billing_address', 'city', e.target.value)} placeholder="Search City..." className={inputClass} />
                 </div>
                 {/* <div>
                   <label className={labelClass}>Country</label>
@@ -271,12 +310,12 @@ export default function AddCustomerPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className={labelClass}>City *</label>
-                    <input type="text" required value={formData.shipping_address.city} onChange={e => handleAddressChange('shipping_address', 'city', e.target.value)} className={inputClass} />
+                    <label className={labelClass}>State *</label>
+                    <input list="india-states" type="text" required value={formData.shipping_address.state} onChange={e => handleAddressChange('shipping_address', 'state', e.target.value)} placeholder="Search State..." className={inputClass} />
                   </div>
                   <div>
-                    <label className={labelClass}>State *</label>
-                    <input type="text" required value={formData.shipping_address.state} onChange={e => handleAddressChange('shipping_address', 'state', e.target.value)} className={inputClass} />
+                    <label className={labelClass}>City *</label>
+                    <input list="shipping-cities" type="text" required value={formData.shipping_address.city} onChange={e => handleAddressChange('shipping_address', 'city', e.target.value)} placeholder="Search City..." className={inputClass} />
                   </div>
                   {/* <div>
                     <label className={labelClass}>Country</label>
@@ -297,44 +336,46 @@ export default function AddCustomerPage() {
 
 
           {/* Section 6 & 7: Categorization & Assignment */}
-          <div className={`${cardClass} flex flex-col`}>
-            <div className={cardHeaderClass}>
-              <div className="p-1 bg-indigo-100 rounded-md"><Layers className="w-4 h-4 text-indigo-600" /></div>
-              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Category & Assignment</h2>
-            </div>
-            <div className="p-4 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 content-start">
-
-
-              <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1 border-t border-slate-100 pt-4">
-                <div>
-                  <label className={labelClass}>Branch / Hub</label>
-                  <select value={formData.branch_id} onChange={e => handleChange('branch_id', e.target.value)} className={inputClass}>
-                    <option value="">-- Select Branch --</option>
-                    <option value="b1">Headquarters</option>
-                    <option value="b2">North Zone Hub</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>Assigned Employee</label>
-                  <select value={formData.assigned_employee_id} onChange={e => handleChange('assigned_employee_id', e.target.value)} className={inputClass}>
-                    <option value="">-- Select Employee --</option>
-                    <option value="u1">Indrajeet (Sales)</option>
-                    <option value="u2">Rahul (Admin)</option>
-                  </select>
+          {hasAssignmentPermission && (
+            <div className={`${cardClass} flex flex-col`}>
+              <div className={cardHeaderClass}>
+                <div className="p-1 bg-indigo-100 rounded-md"><Layers className="w-4 h-4 text-indigo-600" /></div>
+                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Assignment</h2>
+              </div>
+              <div className="p-3 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 content-start">
+                <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1 border-t border-slate-100 pt-3">
+                  <div>
+                    <label className={labelClass}>Branch / Hub</label>
+                    <select value={formData.branch_id} onChange={e => handleChange('branch_id', e.target.value)} className={inputClass}>
+                      <option value="">-- Select Branch --</option>
+                      {branches.map(b => (
+                        <option key={b.id || b._id} value={b.id || b._id}>{b.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Assigned Employee</label>
+                    <select value={formData.assigned_employee_id} onChange={e => handleChange('assigned_employee_id', e.target.value)} className={inputClass}>
+                      <option value="">-- Select Employee --</option>
+                      {employees.map(emp => (
+                        <option key={emp.id || emp._id} value={emp.id || emp._id}>{emp.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Section 8: Documents */}
 
         {/* Action Bar (Fixed Bottom) */}
-        <div className="fixed bottom-0 left-0 right-0 sm:left-64 p-3 bg-white/90 backdrop-blur-md border-t border-slate-200 flex items-center justify-end gap-3 z-50">
+        <div className="fixed bottom-0 left-0 right-0 sm:left-64 p-2 bg-white/90 backdrop-blur-md border-t border-slate-200 flex items-center justify-end gap-2 z-50">
           <button
             type="button"
-            onClick={() => navigate('/customers')}
-            className="px-5 py-2 rounded-lg border border-slate-200 font-bold text-xs text-slate-600 hover:bg-slate-50 bg-white shadow-sm transition-all"
+            onClick={() => navigate('/')}
+            className="px-5 py-2 rounded border border-slate-200 font-bold text-[11px] text-slate-600 hover:bg-slate-50 bg-white shadow-sm transition-all"
           >
             Cancel
           </button>
