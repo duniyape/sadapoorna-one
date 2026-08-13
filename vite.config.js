@@ -8,23 +8,27 @@ export default defineConfig({
   server: {
     proxy: {
       '/branches': {
-        target: 'http://192.168.29.39:8000',
+        target: 'http://192.168.29.8:8000',
         changeOrigin: true,
       },
       '/masters': {
-        target: 'http://192.168.29.39:8000',
+        target: 'http://192.168.29.8:8000',
         changeOrigin: true,
       },
       '^/users/(create|get|get-one|update|v1)': {
-        target: 'http://192.168.29.39:8000',
+        target: 'http://192.168.29.8:8000',
         changeOrigin: true,
       },
       '/auth': {
-        target: 'http://192.168.29.39:8000',
+        target: 'http://192.168.29.8:8000',
+        changeOrigin: true,
+      },
+      '^/data-access-hierarchy/': {
+        target: 'http://192.168.29.8:8000',
         changeOrigin: true,
       },
       '^/access/': {
-        target: 'http://192.168.29.39:8000',
+        target: 'http://192.168.29.8:8000',
         changeOrigin: true,
       }
     }
