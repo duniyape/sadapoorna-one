@@ -2,36 +2,13 @@ import React from 'react';
 import { Menu, Home, Search, X, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function Navbar({ sidebarCollapsed, setMobileMenuOpen, searchQuery, setSearchQuery }) {
+export default function Navbar({ sidebarCollapsed, setMobileMenuOpen, searchQuery, setSearchQuery, user }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
   };
-
-  const [userProfile, setUserProfile] = React.useState(null);
-
-  React.useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        const res = await fetch('/auth/profile', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setUserProfile(data.user || data.data || data); // handle different response structures
-        }
-      } catch (err) {
-        console.error('Failed to fetch profile', err);
-      }
-    };
-    fetchProfile();
-  }, []);
 
   return (
     <header className={`fixed top-0 right-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-3 sm:px-4 py-2 flex items-center justify-between gap-3 shadow-xs transition-all duration-300 left-0 ${
@@ -69,16 +46,16 @@ export default function Navbar({ sidebarCollapsed, setMobileMenuOpen, searchQuer
           onClick={() => navigate('/profile')}
           className="flex items-center gap-2 p-1 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
         >
-          {userProfile?.profile_photo ? (
-            <img src={userProfile.profile_photo} alt={userProfile.name} className="w-8 h-8 rounded-full object-cover shadow-sm bg-white" />
+          {user?.profile_photo ? (
+            <img src={user.profile_photo} alt={user.name} className="w-8 h-8 rounded-full object-cover shadow-sm bg-white" />
           ) : (
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
-              {(userProfile?.name || 'U')[0].toUpperCase()}
+              {(user?.name || 'U')[0].toUpperCase()}
             </div>
           )}
           <div className="hidden sm:block text-left pr-2">
-            <div className="font-bold text-xs text-slate-900 truncate max-w-[120px]">{userProfile?.name || 'Loading...'}</div>
-            <div className="text-[10px] text-slate-500 capitalize">{userProfile?.designation?.name || userProfile?.role || 'Staff'}</div>
+            <div className="font-bold text-xs text-slate-900 truncate max-w-[120px]">{user?.name || 'Loading...'}</div>
+            <div className="text-[10px] text-slate-500 capitalize">{user?.designation?.name || user?.role || 'Staff'}</div>
           </div>
         </div>
         

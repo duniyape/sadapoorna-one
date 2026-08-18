@@ -80,6 +80,7 @@ export default function DashboardLayout() {
           setMobileMenuOpen={setMobileMenuOpen} 
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          user={user}
         />
 
         <div className="pt-16 sm:pt-20 p-3 sm:p-6 max-w-7xl mx-auto w-full space-y-4">
