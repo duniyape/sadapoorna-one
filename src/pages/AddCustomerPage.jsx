@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Save, UserCircle, MapPin, Briefcase, CreditCard, Layers, FileText, X, Plus, Users, Building2 } from 'lucide-react';
 import { useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import indiaData from '../utils/indiaStatesCities.json';
+import OtpVerificationModal from '../components/OtpVerificationModal';
 
 export default function AddCustomerPage() {
   const navigate = useNavigate();
@@ -47,6 +48,8 @@ export default function AddCustomerPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [branches, setBranches] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [createdCustomer, setCreatedCustomer] = useState(null);
 
   // Check if the user has Assignment permission for add-customer
   const hasAssignmentPermission = user?.access?.frontend_icons?.find(
@@ -56,9 +59,11 @@ export default function AddCustomerPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+        
         const [branchRes, userRes] = await Promise.all([
-          fetch('/branches/v1').catch(() => null),
-          fetch('/users/get').catch(() => null)
+          fetch('/branches/v1', { headers }).catch(() => null),
+          fetch('/users/get', { headers }).catch(() => null)
         ]);
         if (branchRes && branchRes.ok) {
           const branchData = await branchRes.json();
@@ -70,7 +75,7 @@ export default function AddCustomerPage() {
         }
 
         if (isEditMode) {
-          const custRes = await fetch(`/customer/${id}`);
+          const custRes = await fetch(`/customer/${id}`, { headers });
           if (custRes.ok) {
             const custData = await custRes.json();
             if (custData.status && custData.data) {
@@ -89,7 +94,10 @@ export default function AddCustomerPage() {
                 business_type: c.business_type || '',
                 gst_number: c.gst_number || '',
                 branch_id: c.branch_id || prev.branch_id,
-                assigned_employee_id: c.assigned_employee_id || prev.assigned_employee_id
+                assigned_employee_id: c.assigned_employee_id || prev.assigned_employee_id,
+                created_at: c.created_at,
+                updated_at: c.updated_at,
+                status: c.status
               }));
             }
           }
@@ -188,15 +196,23 @@ export default function AddCustomerPage() {
       // Most of these API structures use POST for updates, but we'll use PUT if the user's FastAPI uses PUT. Since not specified, POST is safer if it's named update. We will use POST.
       const res = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: JSON.stringify(payload)
       });
       
       const data = await res.json().catch(() => ({}));
       
       if (res.ok && data.status) {
-        showToast(`Customer account '${formData.name}' ${isEditMode ? 'updated' : 'created'} successfully!`);
-        navigate('/customers'); 
+        if (!isEditMode && data.data) {
+          setCreatedCustomer(data.data);
+          setShowOtpModal(true);
+        } else {
+          showToast(`Customer account '${formData.name}' ${isEditMode ? 'updated' : 'created'} successfully!`);
+          navigate('/customers'); 
+        }
       } else {
         showToast(data.detail || data.message || `Failed to ${isEditMode ? 'update' : 'create'} customer`);
       }
@@ -239,7 +255,7 @@ export default function AddCustomerPage() {
           </button>
           <div className="flex items-baseline gap-2">
             <h1 className="text-base font-bold text-slate-900 leading-tight">
-              {isViewMode ? 'Customer Profile' : (isEditMode ? 'Edit Customer Account' : 'Add Customer Account')}
+              {isViewMode ? 'Customer Profile' : (isEditMode ? 'Edit Customer Account' : 'Create Customer Account')}
             </h1>
             <p className="text-[9px] text-indigo-600 font-bold uppercase tracking-widest bg-indigo-50 px-1.5 py-0.5 rounded">Master Directory</p>
           </div>
@@ -390,33 +406,65 @@ export default function AddCustomerPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Section 6 & 7: Categorization & Assignment */}
-          {hasAssignmentPermission && (
+          <div className={`${cardClass} flex flex-col`}>
+            <div className={cardHeaderClass}>
+              <div className="p-1 bg-indigo-100 rounded-md"><Layers className="w-4 h-4 text-indigo-600" /></div>
+              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Assignment</h2>
+            </div>
+            <div className="p-3 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 content-start">
+              <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1 border-t border-slate-100 pt-3">
+                <div>
+                  <label className={labelClass}>Branch / Hub *</label>
+                  <select required value={formData.branch_id} onChange={e => handleChange('branch_id', e.target.value)} className={inputClass}>
+                    <option value="">-- Select Branch --</option>
+                    {branches.map(b => (
+                      <option key={b.id || b._id} value={b.id || b._id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Assigned Employee *</label>
+                  <select required value={formData.assigned_employee_id} onChange={e => handleChange('assigned_employee_id', e.target.value)} className={inputClass}>
+                    <option value="">-- Select Employee --</option>
+                    {employees.map(emp => (
+                      <option key={emp.id || emp._id} value={emp.id || emp._id}>{emp.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Audit Section (Only visible in View/Edit mode) */}
+          {(isViewMode || isEditMode) && formData.created_at && (
             <div className={`${cardClass} flex flex-col`}>
               <div className={cardHeaderClass}>
-                <div className="p-1 bg-indigo-100 rounded-md"><Layers className="w-4 h-4 text-indigo-600" /></div>
-                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Assignment</h2>
+                <div className="p-1 bg-slate-100 rounded-md"><FileText className="w-4 h-4 text-slate-600" /></div>
+                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">System Information</h2>
               </div>
-              <div className="p-3 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 content-start">
-                <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1 border-t border-slate-100 pt-3">
-                  <div>
-                    <label className={labelClass}>Branch / Hub</label>
-                    <select value={formData.branch_id} onChange={e => handleChange('branch_id', e.target.value)} className={inputClass}>
-                      <option value="">-- Select Branch --</option>
-                      {branches.map(b => (
-                        <option key={b.id || b._id} value={b.id || b._id}>{b.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelClass}>Assigned Employee</label>
-                    <select value={formData.assigned_employee_id} onChange={e => handleChange('assigned_employee_id', e.target.value)} className={inputClass}>
-                      <option value="">-- Select Employee --</option>
-                      {employees.map(emp => (
-                        <option key={emp.id || emp._id} value={emp.id || emp._id}>{emp.name}</option>
-                      ))}
-                    </select>
+              <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-3 content-start">
+                <div>
+                  <label className={labelClass}>Status</label>
+                  <div className="mt-1">
+                    <span className={`px-2 py-1 rounded-md text-[11px] font-bold ${formData.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>
+                      {formData.status?.toUpperCase() || 'UNKNOWN'}
+                    </span>
                   </div>
                 </div>
+                <div>
+                  <label className={labelClass}>Created At</label>
+                  <p className="text-sm font-medium text-slate-800">
+                    {new Date(formData.created_at).toLocaleString()}
+                  </p>
+                </div>
+                {formData.updated_at && (
+                  <div>
+                    <label className={labelClass}>Last Updated At</label>
+                    <p className="text-sm font-medium text-slate-800">
+                      {new Date(formData.updated_at).toLocaleString()}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -444,6 +492,15 @@ export default function AddCustomerPage() {
         )}
         </fieldset>
       </form >
+
+      {/* OTP Verification Modal */}
+      {showOtpModal && createdCustomer && (
+        <OtpVerificationModal 
+          createdCustomer={createdCustomer}
+          showToast={showToast}
+          onClose={() => navigate('/customers')}
+        />
+      )}
     </div >
   );
 }
