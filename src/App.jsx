@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import AddCustomerPage from "./pages/AddCustomerPage";
 import OrdersPage from "./pages/OrdersPage";
 import CustomersDirectoryPage from "./pages/CustomersDirectoryPage";
+import CustomerProfilePage from "./pages/CustomerProfilePage";
 import StockInventoryPage from "./pages/StockInventoryPage";
 import AiSuitePage from "./pages/AiSuitePage";
 import BranchProfilePage from "./pages/BranchProfilePage";
@@ -38,6 +39,7 @@ const App = () => {
           <Route index element={<Home />} />
           <Route path="add-customer" element={<AddCustomerPage />} />
           <Route path="edit-customer/:id" element={<AddCustomerPage />} />
+          <Route path="view-customer/:id" element={<CustomerProfilePage />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="customers" element={<CustomersDirectoryPage />} />
           <Route path="inventory-stock" element={<StockInventoryPage />} />

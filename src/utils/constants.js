@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 
 export const SALES_OPERATIONS = [
-  { id: 'add-customer', title: 'Add Customer', icon: UserPlus, color: 'bg-pink-100 text-pink-600 border-pink-200', badge: 'Hot', desc: 'Register a new customer account', key: ['Assignment'] },
+  { id: 'add-customer', title: 'Create Customer', icon: UserPlus, color: 'bg-pink-100 text-pink-600 border-pink-200', badge: 'Hot', desc: 'Register a new customer account', key: ['Assignment'] },
   { id: 'beat-mgmt', title: 'Beat Management', icon: RouteIcon, color: 'bg-amber-100 text-amber-600 border-amber-200', badge: null, desc: 'Manage sales beats and territories' },
   { id: 'collection', title: 'Collection', icon: FileText, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: null, desc: 'Record cash & cheque payments' },
   { id: 'credit-approval', title: 'Credit Approval', icon: ShieldCheck, color: 'bg-emerald-100 text-emerald-600 border-emerald-200', badge: '3 Pending', desc: 'Approve customer credit limits' },
@@ -78,9 +78,9 @@ export const CATEGORIZED_SIDEBAR = [
   {
     category: 'Sales & Billing',
     items: [
-      { id: 'add-customer', label: 'Add Customer', icon: UserPlus, badge: 'New', route: '/add-customer' },
+      { id: 'add-customer', label: 'Create Customer', icon: UserPlus, badge: 'New', route: '/add-customer' },
       { id: 'orders', label: 'Orders & Bills', icon: ShoppingBag, badge: '12', route: '/orders' },
-      { id: 'customers', label: 'Customer Directory', icon: Users, route: '/customers' },
+      { id: 'customers', label: 'Customer List', icon: Users, route: '/customers' },
       { id: 'collection', label: 'Cash Collection', icon: Wallet, route: '/module/collection' },
       { id: 'due-collection', label: 'Due Collections', icon: Clock, badge: 'Alert', route: '/module/due-collection' },
       { id: 'credit-approval', label: 'Credit Approvals', icon: ShieldCheck, badge: '3', route: '/module/credit-approval' },
