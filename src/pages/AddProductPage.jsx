@@ -222,7 +222,16 @@ function ProductForm({ initial, onSave, isSaving, onCancel }) {
 // VARIANT FORM
 // ═══════════════════════════════════════════════════════════════════════════════
 function VariantForm({ initial, baseUnit, onSave, isSaving, onCancel }) {
-  const [form, setForm] = useState(initial || { ...EMPTY_VARIANT, unit: baseUnit || '' });
+  const getInitialForm = () => {
+    if (!initial) return { ...EMPTY_VARIANT, unit: baseUnit || '' };
+    return {
+      ...initial,
+      packaging_type_id: initial.packaging_type_id || (initial.packaging_type && initial.packaging_type.id) || '',
+      unit: (initial.unit && typeof initial.unit === 'object' ? (initial.unit.name || initial.unit.symbol) : initial.unit) || baseUnit || ''
+    };
+  };
+
+  const [form, setForm] = useState(getInitialForm());
   const [packingTypes, setPackingTypes] = useState([]);
   const [productUnits, setProductUnits] = useState([]);
   const [attrLoading, setAttrLoading]   = useState(true);
@@ -240,15 +249,7 @@ function VariantForm({ initial, baseUnit, onSave, isSaving, onCancel }) {
   }, []);
 
   useEffect(() => {
-    if (initial) {
-      setForm({
-        ...initial,
-        packaging_type_id: initial.packaging_type_id || initial.packaging_type || '',
-        unit: initial.unit || baseUnit || ''
-      });
-    } else {
-      setForm({ ...EMPTY_VARIANT, unit: baseUnit || '' });
-    }
+    setForm(getInitialForm());
   }, [initial, baseUnit]);
 
   const handle = (field, val) => setForm(p => ({ ...p, [field]: val }));
@@ -519,7 +520,7 @@ function ProductsList({ showToast, onAddVariant, onEditProduct }) {
                           <p className="text-[11px] font-bold text-slate-800 truncate">{v.name}</p>
                           <p className="text-[10px] text-slate-500 flex flex-wrap gap-2">
                             <span>SKU: <b>{v.sku}</b></span>
-                            <span>Qty: <b>{v.quantity} {v.unit}</b></span>
+                            <span>Qty: <b>{v.quantity} {v.unit?.name || v.unit}</b></span>
                             <span>₹{v.selling_price}</span>
                             <span>GST: {v.gst_percent}%</span>
                             <span className="text-emerald-600 font-bold">Stock: {v.stock_quantity}</span>
@@ -611,7 +612,7 @@ export default function AddProductPage() {
     const isEdit = !!variant?.id;
     try {
       const url = isEdit
-        ? `/products/get/${product.id}/variants/${variant.id}`
+        ? `/products/products/${product.id}/variants/${variant.id}`
         : `/products/products/${product.id}/variants`;
       const res = await fetch(url, {
         method: 'POST',
