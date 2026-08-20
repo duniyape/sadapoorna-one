@@ -8,6 +8,31 @@ export default function CustomerProfilePage() {
   const { showToast } = useOutletContext();
   const [customer, setCustomer] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [branches, setBranches] = useState([]);
+  const [employees, setEmployees] = useState([]);
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+        const [branchRes, empRes] = await Promise.all([
+          fetch('/branches/v1', { headers }).catch(() => null),
+          fetch('/users/get', { headers }).catch(() => null)
+        ]);
+        if (branchRes && branchRes.ok) {
+          const data = await branchRes.json();
+          setBranches(data.data || data || []);
+        }
+        if (empRes && empRes.ok) {
+          const data = await empRes.json();
+          setEmployees(data.data || data.users || data || []);
+        }
+      } catch (e) {
+        console.error("Failed to fetch metadata", e);
+      }
+    };
+    fetchMetadata();
+  }, []);
 
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -42,6 +67,18 @@ export default function CustomerProfilePage() {
 
   const isBusiness = customer.customer_type === 'business';
   const initial = customer.name ? customer.name.charAt(0).toUpperCase() : '?';
+
+  const getBranchName = (id) => {
+    if (!id) return 'N/A';
+    const branch = branches.find(b => (b.id === id || b._id === id));
+    return branch ? branch.name : id;
+  };
+
+  const getEmployeeName = (id) => {
+    if (!id) return 'N/A';
+    const emp = employees.find(e => (e.id === id || e._id === id));
+    return emp ? emp.name : id;
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-4 pb-10">
@@ -175,12 +212,16 @@ export default function CustomerProfilePage() {
                 <p className="text-[11px] font-bold text-slate-800 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100 font-mono w-fit">{customer.id}</p>
               </div>
               <div>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Branch / Hub ID</p>
-                <p className="text-[11px] font-bold text-slate-800 truncate" title={customer.branch_id}>{customer.branch_id || 'N/A'}</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Branch / Hub</p>
+                <p className="text-[11px] font-bold text-slate-800 truncate" title={getBranchName(customer.branch_id)}>
+                  {getBranchName(customer.branch_id)}
+                </p>
               </div>
               <div>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Assigned Employee ID</p>
-                <p className="text-[11px] font-bold text-slate-800 truncate" title={customer.assigned_employee_id}>{customer.assigned_employee_id || 'N/A'}</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Assigned Employee</p>
+                <p className="text-[11px] font-bold text-slate-800 truncate" title={getEmployeeName(customer.assigned_employee_id)}>
+                  {getEmployeeName(customer.assigned_employee_id)}
+                </p>
               </div>
             </div>
           </div>
