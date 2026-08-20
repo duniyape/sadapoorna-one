@@ -28,6 +28,10 @@ import {
   BadgeCheck,
   UserCog,
   FolderLock,
+  Tags,
+  Tag,
+  ShoppingCart,
+  BoxSelect,
 } from 'lucide-react';
 
 export const SALES_OPERATIONS = [
@@ -36,7 +40,7 @@ export const SALES_OPERATIONS = [
   { id: 'collection', title: 'Collection', icon: FileText, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: null, desc: 'Record cash & cheque payments' },
   { id: 'credit-approval', title: 'Credit Approval', icon: ShieldCheck, color: 'bg-emerald-100 text-emerald-600 border-emerald-200', badge: '3 Pending', desc: 'Approve customer credit limits' },
   { id: 'analytics', title: 'Customer Analytics', icon: BarChart2, color: 'bg-purple-100 text-purple-600 border-purple-200', badge: null, desc: 'Insights on buyer behavior' },
-  { id: 'customers', title: 'Customers Directory', icon: Users, color: 'bg-orange-100 text-orange-600 border-orange-200', badge: null, desc: 'View complete client directory' },
+  { id: 'customers', title: 'Customers Directory', icon: Users, color: 'bg-orange-100 text-orange-600 border-orange-200', badge: null, desc: 'View complete client directory', key: ['Edit', 'View', 'Phone', 'Branch Filter', 'Employee Filter'] },
   { id: 'daily-route', title: 'Daily Route', icon: MapPin, color: 'bg-teal-100 text-teal-600 border-teal-200', badge: null, desc: 'Optimized delivery paths' },
   { id: 'due-collection', title: 'Due Collection', icon: Clock, color: 'bg-rose-100 text-rose-600 border-rose-200', badge: 'Action Required', desc: 'Track pending payments' },
   { id: 'follow-ups', title: 'Follow Ups', icon: Handshake, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: null, desc: 'Manage client tasks & calls' },
@@ -65,6 +69,10 @@ export const MASTER_MODULES = [
   { id: 'users', title: 'Users', icon: UserCog, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Create & manage staff users', key: ['Create', 'Edit', 'View'] },
   { id: 'accessibility', title: 'Accessibility', icon: ShieldCheck, color: 'bg-teal-100 text-teal-600 border-teal-200', badge: 'Admin', desc: 'Manage access controls' },
   { id: 'data-access', title: 'Data Access', icon: FolderLock, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: 'New', desc: 'Manage reporting hierarchy', route: '/data-access' },
+  { id: 'product-units', title: 'Product Units', icon: Package, color: 'bg-emerald-100 text-emerald-600 border-emerald-200', desc: 'Manage product measurement units', route: '/product-units' },
+  { id: 'product-attributes', title: 'Product Attributes', icon: Tags, badge: 'New', desc: 'Categories, Sub-Categories, and Brands', route: '/product-attributes' },
+  { id: 'packing-types', title: 'Packing Types', icon: BoxSelect, color: 'bg-fuchsia-100 text-fuchsia-600 border-fuchsia-200', badge: 'New', desc: 'Manage packing types for products', route: '/packing-types' },
+  { id: 'products', title: 'Products', icon: ShoppingCart, color: 'bg-sky-100 text-sky-600 border-sky-200', badge: 'New', desc: 'Create products & manage variants', route: '/products' },
 ];
 
 export const CATEGORIZED_SIDEBAR = [
@@ -107,6 +115,10 @@ export const CATEGORIZED_SIDEBAR = [
       { id: 'users', label: 'Users', icon: UserCog, badge: 'New', route: '/users' },
       { id: 'accessibility', label: 'Accessibility', icon: ShieldCheck, route: '/accessibility' },
       { id: 'data-access', label: 'Data Access', icon: FolderLock, badge: 'New', route: '/data-access' },
+      { id: 'product-units', label: 'Product Units', icon: Package, route: '/product-units' },
+      { id: 'product-attributes', label: 'Product Attributes', icon: Tags, badge: 'New', route: '/product-attributes' },
+      { id: 'packing-types', label: 'Packing Types', icon: BoxSelect, badge: 'New', route: '/packing-types' },
+      { id: 'products', label: 'Products', icon: ShoppingCart, badge: 'New', route: '/products' },
     ]
   }
 ];

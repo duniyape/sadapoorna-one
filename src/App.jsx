@@ -14,11 +14,14 @@ import BranchProfilePage from "./pages/BranchProfilePage";
 import DepartmentPage from "./pages/DepartmentPage";
 import DesignationPage from "./pages/DesignationPage";
 import GenericModulePage from "./pages/GenericModulePage";
-import AddProduct from "./pages/AddProduct";
+import AddProductPage from "./pages/AddProductPage";
 import UserPage from "./pages/UserPage";
 import ProfilePage from "./pages/ProfilePage";
 import AccessibilityPage from "./pages/AccessibilityPage";
 import DataAccessPage from "./pages/DataAccessPage";
+import ProductUnitPage from "./pages/ProductUnitPage";
+import ProductAttributesPage from "./pages/ProductAttributesPage";
+import PackingTypePage from "./pages/PackingTypePage";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -50,12 +53,14 @@ const App = () => {
           <Route path="users" element={<UserPage />} />
           <Route path="accessibility" element={<AccessibilityPage />} />
           <Route path="data-access" element={<DataAccessPage />} />
+          <Route path="product-units" element={<ProductUnitPage />} />
+          <Route path="product-attributes" element={<ProductAttributesPage />} />
+          <Route path="packing-types" element={<PackingTypePage />} />
+          <Route path="products" element={<AddProductPage />} />
+          <Route path="add-product" element={<AddProductPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="module/:id" element={<GenericModulePage />} />
         </Route>
-        
-        {/* Legacy route */}
-        <Route path="/add" element={<AddProduct />} />
       </Routes>
     </BrowserRouter>
   );

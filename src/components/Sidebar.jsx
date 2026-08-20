@@ -44,7 +44,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, mobileM
           const isAllowed = (item) => {
             if (!user) return false;
             // 'home' route is normally always allowed
-            if (item.id === 'home' || item.id === 'ai-suite') return true; 
+            if (['home', 'ai-suite', 'product-units', 'product-attributes', 'packing-types', 'products'].includes(item.id)) return true; 
             return allowedIcons.some(iconData => {
               if (typeof iconData === 'string') return iconData === item.id;
               if (typeof iconData === 'object') return iconData.icon === item.id;
