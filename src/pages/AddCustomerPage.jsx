@@ -3,6 +3,49 @@ import { ArrowLeft, Save, UserCircle, MapPin, Briefcase, CreditCard, Layers, Fil
 import { useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import indiaData from '../utils/indiaStatesCities.json';
 import OtpVerificationModal from '../components/OtpVerificationModal';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+});
+
+function LocationMarker({ location, setLocation }) {
+  useMapEvents({
+    click(e) {
+      setLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
+    },
+  });
+
+  const map = useMap();
+  useEffect(() => {
+    if (location && location.lat !== undefined && location.lng !== undefined) {
+      map.flyTo([location.lat, location.lng], map.getZoom() < 13 ? 15 : map.getZoom());
+    }
+  }, [location, map]);
+
+  return (!location || location.lat === undefined || location.lng === undefined) ? null : (
+    <Marker 
+      position={[location.lat, location.lng]} 
+      draggable={true}
+      eventHandlers={{
+        dragend: (e) => {
+          const marker = e.target;
+          const pos = marker.getLatLng();
+          setLocation({ lat: pos.lat, lng: pos.lng });
+        }
+      }}
+    />
+  );
+}
 
 export default function AddCustomerPage() {
   const navigate = useNavigate();
@@ -41,7 +84,8 @@ export default function AddCustomerPage() {
     price_category: '',
     branch_id: '',
     assigned_employee_id: '',
-    documents: []
+    documents: [],
+    location: null
   });
 
   const [docInput, setDocInput] = useState({ type: 'PAN', document_number: '' });
@@ -50,6 +94,7 @@ export default function AddCustomerPage() {
   const [employees, setEmployees] = useState([]);
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [createdCustomer, setCreatedCustomer] = useState(null);
+  const [originalMobile, setOriginalMobile] = useState('');
 
   // Check if the user has Assignment permission for add-customer
   const hasAssignmentPermission = user?.access?.frontend_icons?.find(
@@ -80,6 +125,7 @@ export default function AddCustomerPage() {
             const custData = await custRes.json();
             if (custData.status && custData.data) {
               const c = custData.data;
+              setOriginalMobile(c.mobile || '');
               setFormData(prev => ({
                 ...prev,
                 customer_type: c.customer_type || 'business',
@@ -185,7 +231,8 @@ export default function AddCustomerPage() {
       business_type: formData.business_type || null,
       gst_number: formData.gst_number || null,
       branch_id: formData.branch_id,
-      assigned_employee_id: formData.assigned_employee_id
+      assigned_employee_id: formData.assigned_employee_id,
+      location: formData.location || null
     };
 
     console.log("Customer JSON Payload:");
@@ -209,12 +256,38 @@ export default function AddCustomerPage() {
         if (!isEditMode && data.data) {
           setCreatedCustomer(data.data);
           setShowOtpModal(true);
+        } else if (isEditMode && data.data && formData.mobile !== originalMobile) {
+          try {
+            const customerId = data.data.id || data.data.customer_id || id;
+            await fetch(`/whatsapp/send-otp/${customerId}`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            showToast('Phone number changed. OTP sent via WhatsApp.');
+          } catch (e) {
+            console.error("Failed to send OTP", e);
+          }
+          setCreatedCustomer(data.data);
+          setShowOtpModal(true);
         } else {
           showToast(`Customer account '${formData.name}' ${isEditMode ? 'updated' : 'created'} successfully!`);
           navigate('/customers'); 
         }
       } else {
-        showToast(data.detail || data.message || `Failed to ${isEditMode ? 'update' : 'create'} customer`);
+        let errMsg = data.message || `Failed to ${isEditMode ? 'update' : 'create'} customer`;
+        if (data.detail) {
+          if (Array.isArray(data.detail)) {
+            errMsg = data.detail.map(err => `${err.loc?.join('.') || 'Field'}: ${err.msg}`).join(' | ');
+          } else if (typeof data.detail === 'string') {
+            errMsg = data.detail;
+          } else {
+            errMsg = JSON.stringify(data.detail);
+          }
+        }
+        showToast(errMsg);
       }
     } catch (err) {
       console.error("API error:", err);
@@ -346,12 +419,34 @@ export default function AddCustomerPage() {
           <div className="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <div className="p-1 bg-indigo-100 rounded-md"><MapPin className="w-4 h-4 text-indigo-600" /></div>
-              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">2. Address Details</h2>
+              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">2. Address & Location</h2>
             </div>
-            <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1 rounded-md border border-slate-200 shadow-sm w-fit">
-              <input type="checkbox" checked={formData.sameAsBilling} onChange={e => handleChange('sameAsBilling', e.target.checked)} className="w-3.5 h-3.5 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" />
-              <span className="text-[11px] font-bold text-slate-700">Shipping same as Billing</span>
-            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                        handleChange('location', { lat: pos.coords.latitude, lng: pos.coords.longitude });
+                        showToast('GPS Location captured successfully!', 'success');
+                      },
+                      (err) => showToast('Failed to get location. Please allow location access.', 'error')
+                    );
+                  } else {
+                    showToast('Geolocation is not supported by this browser.', 'error');
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-md border text-[10px] font-bold transition-all shadow-sm ${formData.location ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                {formData.location ? 'Location Captured ✓' : 'Capture GPS'}
+              </button>
+              <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1 rounded-md border border-slate-200 shadow-sm w-fit">
+                <input type="checkbox" checked={formData.sameAsBilling} onChange={e => handleChange('sameAsBilling', e.target.checked)} className="w-3.5 h-3.5 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" />
+                <span className="text-[11px] font-bold text-slate-700">Shipping same as Billing</span>
+              </label>
+            </div>
           </div>
           <div className="p-3 grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
             {/* Billing */}
@@ -401,6 +496,27 @@ export default function AddCustomerPage() {
                 </div>
               </div>
             )}
+          </div>
+          
+          <div className="px-3 pb-3">
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Pin Location on Map</h3>
+            <div className="h-[250px] rounded-lg overflow-hidden border border-slate-200 z-0 relative">
+              <MapContainer 
+                center={formData.location ? [formData.location.lat, formData.location.lng] : [20.5937, 78.9629]} 
+                zoom={formData.location ? 15 : 4} 
+                style={{ height: '100%', width: '100%', zIndex: 1 }}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                />
+                <LocationMarker 
+                  location={formData.location} 
+                  setLocation={(loc) => handleChange('location', loc)} 
+                />
+              </MapContainer>
+            </div>
+            <p className="text-[10px] text-slate-500 mt-1">Click anywhere on the map to pin the customer's exact location, or use the "Capture GPS" button above.</p>
           </div>
         </div>
 
@@ -496,9 +612,10 @@ export default function AddCustomerPage() {
       {/* OTP Verification Modal */}
       {showOtpModal && createdCustomer && (
         <OtpVerificationModal 
-          createdCustomer={createdCustomer}
+          customer={createdCustomer}
           showToast={showToast}
           onClose={() => navigate('/customers')}
+          onSuccess={() => navigate('/customers')}
         />
       )}
     </div >

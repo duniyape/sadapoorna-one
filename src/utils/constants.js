@@ -54,7 +54,7 @@ export const HR_FLEET_MODULES = [
   { id: 'staff', title: 'Staff Directory', icon: Users, color: 'bg-emerald-100 text-emerald-600 border-emerald-200', badge: null, desc: 'Directory of employees' },
   { id: 'leave-mgmt', title: 'Leave Management', icon: Calendar, color: 'bg-purple-100 text-purple-600 border-purple-200', badge: '3 New', desc: 'Approve leaves & holidays' },
   { id: 'attendance', title: 'Attendance Log', icon: CheckCircle2, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: null, desc: 'Daily punch & time logs' },
-  { id: 'fleet-mgmt', title: 'Fleet Management', icon: Truck, color: 'bg-amber-100 text-amber-600 border-amber-200', badge: null, desc: 'Vehicles, drivers & routes' },
+  { id: 'vehicles', title: 'Vehicles Directory', icon: Truck, color: 'bg-amber-100 text-amber-600 border-amber-200', badge: 'New', desc: 'Vehicles, drivers & routes', route: '/vehicles' },
   { id: 'fuel-log', title: 'Fuel Log', icon: Fuel, color: 'bg-pink-100 text-pink-600 border-pink-200', badge: null, desc: 'Track fuel fill-ups' },
   { id: 'expenses', title: 'Expenses Claims', icon: Receipt, color: 'bg-green-100 text-green-600 border-green-200', badge: null, desc: 'Record staff allowances' },
   { id: 'payroll', title: 'Payroll Slips', icon: DollarSign, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: null, desc: 'Salary disbursement & slips' },
@@ -73,6 +73,7 @@ export const MASTER_MODULES = [
   { id: 'product-attributes', title: 'Product Attributes', icon: Tags, badge: 'New', desc: 'Categories, Sub-Categories, and Brands', route: '/product-attributes' },
   { id: 'packing-types', title: 'Packing Types', icon: BoxSelect, color: 'bg-fuchsia-100 text-fuchsia-600 border-fuchsia-200', badge: 'New', desc: 'Manage packing types for products', route: '/packing-types' },
   { id: 'products', title: 'Products', icon: ShoppingCart, color: 'bg-sky-100 text-sky-600 border-sky-200', badge: 'New', desc: 'Create products & manage variants', route: '/products' },
+  { id: 'warehouses', title: 'Warehouses', icon: Building2, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: 'New', desc: 'Manage warehouses & storage', route: '/warehouses' },
 ];
 
 export const CATEGORIZED_SIDEBAR = [
@@ -102,7 +103,7 @@ export const CATEGORIZED_SIDEBAR = [
       { id: 'inventory-stock', label: 'Stock Inventory', icon: Package, route: '/inventory-stock' },
       { id: 'staff', label: 'Staff Directory', icon: Users, route: '/module/staff' },
       { id: 'leave-mgmt', label: 'Leave Requests', icon: Calendar, route: '/module/leave-mgmt' },
-      { id: 'fleet-mgmt', label: 'Fleet & Vehicles', icon: Truck, route: '/module/fleet-mgmt' },
+      { id: 'vehicles', label: 'Vehicles & Fleet', icon: Truck, badge: 'New', route: '/vehicles' },
       { id: 'reports', label: 'Financial Audit', icon: TrendingUp, route: '/module/reports' },
     ]
   },
@@ -119,6 +120,7 @@ export const CATEGORIZED_SIDEBAR = [
       { id: 'product-attributes', label: 'Product Attributes', icon: Tags, badge: 'New', route: '/product-attributes' },
       { id: 'packing-types', label: 'Packing Types', icon: BoxSelect, badge: 'New', route: '/packing-types' },
       { id: 'products', label: 'Products', icon: ShoppingCart, badge: 'New', route: '/products' },
+      { id: 'warehouses', label: 'Warehouses', icon: Building2, badge: 'New', route: '/warehouses' },
     ]
   }
 ];

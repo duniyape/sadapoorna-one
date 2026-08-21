@@ -1,37 +1,42 @@
 import React, { useState } from 'react';
 import { FileText } from 'lucide-react';
 
-export default function OtpVerificationModal({ createdCustomer, onClose, showToast }) {
+export default function OtpVerificationModal({ customer, onClose, onSuccess, showToast }) {
   const [otpInput, setOtpInput] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   const handleOtpSubmit = async () => {
     if (!otpInput) {
       showToast("Please enter an OTP");
       return;
     }
+    setIsSending(true);
     // Placeholder for actual OTP verification logic
     try {
-      const headers = { 
+      const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       };
-      const res = await fetch('/customer/verify-otp', {
+      const customerId = customer.id || customer.customer_id || customer._id;
+      const res = await fetch(`/whatsapp/verify-otp/${customerId}`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          customer_id: createdCustomer.id || createdCustomer._id,
           otp: otpInput
         })
       });
       if (res.ok) {
         showToast("OTP Verified successfully!");
+        if (onSuccess) onSuccess();
+        onClose();
       } else {
-        showToast("OTP submission attempted.");
+        showToast("Invalid OTP. Please try again.");
       }
     } catch (err) {
       console.error(err);
+      showToast("Error verifying OTP");
     } finally {
-      onClose();
+      setIsSending(false);
     }
   };
 
@@ -48,41 +53,42 @@ export default function OtpVerificationModal({ createdCustomer, onClose, showToa
           <h3 className="text-lg font-bold text-white">Verify Customer</h3>
           <p className="text-indigo-100 text-[11px] mt-1">Customer created successfully</p>
         </div>
-        
+
         <div className="p-5 space-y-4">
           <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Customer Mongo ID</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Customer ID</p>
             <p className="text-xs font-mono font-bold text-slate-800 break-all">
-              {createdCustomer.id || createdCustomer._id || 'N/A'}
+              {customer.id || customer.customer_id || customer._id || 'N/A'}
             </p>
           </div>
 
           <div>
             <label className={labelClass}>Enter OTP</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={otpInput}
               onChange={(e) => setOtpInput(e.target.value)}
-              placeholder="e.g. 123456" 
+              placeholder="e.g. 123456"
               className={inputClass}
               autoFocus
             />
           </div>
 
           <div className="flex items-center gap-2 pt-2">
-            <button 
+            <button
               type="button"
               onClick={onClose}
               className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors"
             >
               Skip
             </button>
-            <button 
+            <button
               type="button"
               onClick={handleOtpSubmit}
-              className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors"
+              disabled={isSending}
+              className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-bold rounded-lg shadow-sm transition-colors"
             >
-              Submit OTP
+              {isSending ? 'Verifying...' : 'Submit OTP'}
             </button>
           </div>
         </div>

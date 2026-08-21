@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, UserPlus, Phone, FileText, Edit2 } from 'lucide-react';
+import { ArrowLeft, UserPlus, Phone, FileText, Edit2, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Search, Filter } from 'lucide-react';
+import OtpVerificationModal from '../components/OtpVerificationModal';
 
 export default function CustomersDirectoryPage() {
   const navigate = useNavigate();
@@ -15,7 +16,29 @@ export default function CustomersDirectoryPage() {
   const [allEmployees, setAllEmployees] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [verifyingCustomer, setVerifyingCustomer] = useState(null);
   const limit = 5;
+
+  const handleSendOtpAndVerify = async (customer) => {
+    try {
+      showToast('Sending OTP to ' + customer.phone + '...');
+      const customerId = customer.id || customer.customer_id;
+      const res = await fetch(`/whatsapp/send-otp/${customerId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      setVerifyingCustomer(customer);
+      if (res.ok) {
+        showToast('OTP sent via WhatsApp');
+      }
+    } catch (err) {
+      console.error(err);
+      setVerifyingCustomer(customer);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -94,6 +117,7 @@ export default function CustomersDirectoryPage() {
               phone: c.mobile || 'N/A',
               email: c.email || 'N/A',
               status: c.status || 'active',
+              phone_verified: c.phone_verified || false,
               assigned_employee_id: c.assigned_employee_id || null
             })));
             if (json.pagination) {
@@ -273,8 +297,13 @@ export default function CustomersDirectoryPage() {
                   
                   {/* Name & Mobile Customer ID */}
                   <div className="flex-1 min-w-0 lg:w-48 lg:shrink-0 lg:flex-none">
-                    <div className="font-bold text-slate-900 truncate text-sm lg:text-xs" title={c.name}>
+                    <div className="font-bold text-slate-900 truncate text-sm lg:text-xs flex items-center gap-1.5" title={c.name}>
                       {c.name}
+                      {c.phone_verified ? (
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 inline-block" title="Phone Verified" />
+                      ) : (
+                        <ShieldAlert className="w-3.5 h-3.5 text-orange-400 inline-block" title="Phone Unverified" />
+                      )}
                     </div>
                     <div className="lg:hidden text-slate-500 font-medium truncate mt-0.5 text-[10px]">
                       ID: {c.customer_id}
@@ -320,7 +349,12 @@ export default function CustomersDirectoryPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="w-auto lg:w-28 shrink-0 flex items-center justify-end gap-1">
+                  <div className="w-auto lg:w-36 shrink-0 flex items-center justify-end gap-1">
+                    {!c.phone_verified && (
+                      <button onClick={() => handleSendOtpAndVerify(c)} className="p-1.5 rounded-md bg-orange-50 hover:bg-orange-100 text-orange-600 transition-colors" title="Verify Phone">
+                        <ShieldAlert className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
+                      </button>
+                    )}
                     {canPhone && (
                       <button onClick={() => showToast(`Dialed ${c.phone}`)} className="p-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors" title="Call Client">
                         <Phone className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
@@ -366,6 +400,18 @@ export default function CustomersDirectoryPage() {
             </div>
           )}
         </>
+      )}
+
+      {verifyingCustomer && (
+        <OtpVerificationModal 
+          customer={verifyingCustomer}
+          showToast={showToast}
+          onClose={() => setVerifyingCustomer(null)}
+          onSuccess={() => {
+            // Re-fetch or manually update state
+            setCustomers(prev => prev.map(c => c.id === verifyingCustomer.id ? { ...c, phone_verified: true } : c));
+          }}
+        />
       )}
     </div>
   );

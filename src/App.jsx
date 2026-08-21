@@ -22,6 +22,10 @@ import DataAccessPage from "./pages/DataAccessPage";
 import ProductUnitPage from "./pages/ProductUnitPage";
 import ProductAttributesPage from "./pages/ProductAttributesPage";
 import PackingTypePage from "./pages/PackingTypePage";
+import WarehousesDirectoryPage from "./pages/WarehousesDirectoryPage";
+import AddWarehousePage from "./pages/AddWarehousePage";
+import VehiclesDirectoryPage from "./pages/VehiclesDirectoryPage";
+import AddVehiclePage from "./pages/AddVehiclePage";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -45,6 +49,12 @@ const App = () => {
           <Route path="view-customer/:id" element={<CustomerProfilePage />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="customers" element={<CustomersDirectoryPage />} />
+          <Route path="warehouses" element={<WarehousesDirectoryPage />} />
+          <Route path="add-warehouse" element={<AddWarehousePage />} />
+          <Route path="edit-warehouse/:id" element={<AddWarehousePage />} />
+          <Route path="vehicles" element={<VehiclesDirectoryPage />} />
+          <Route path="add-vehicle" element={<AddVehiclePage />} />
+          <Route path="edit-vehicle/:id" element={<AddVehiclePage />} />
           <Route path="inventory-stock" element={<StockInventoryPage />} />
           <Route path="ai-suite" element={<AiSuitePage />} />
           <Route path="branch-profile" element={<BranchProfilePage />} />
