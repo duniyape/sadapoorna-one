@@ -74,6 +74,7 @@ export const MASTER_MODULES = [
   { id: 'packing-types', title: 'Packing Types', icon: BoxSelect, color: 'bg-fuchsia-100 text-fuchsia-600 border-fuchsia-200', badge: 'New', desc: 'Manage packing types for products', route: '/packing-types' },
   { id: 'products', title: 'Products', icon: ShoppingCart, color: 'bg-sky-100 text-sky-600 border-sky-200', badge: 'New', desc: 'Create products & manage variants', route: '/products' },
   { id: 'warehouses', title: 'Warehouses', icon: Building2, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: 'New', desc: 'Manage warehouses & storage', route: '/warehouses' },
+  { id: 'vendors', title: 'Vendors', icon: Handshake, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Manage vendors & suppliers', route: '/vendors' },
 ];
 
 export const CATEGORIZED_SIDEBAR = [
@@ -121,6 +122,7 @@ export const CATEGORIZED_SIDEBAR = [
       { id: 'packing-types', label: 'Packing Types', icon: BoxSelect, badge: 'New', route: '/packing-types' },
       { id: 'products', label: 'Products', icon: ShoppingCart, badge: 'New', route: '/products' },
       { id: 'warehouses', label: 'Warehouses', icon: Building2, badge: 'New', route: '/warehouses' },
+      { id: 'vendors', label: 'Vendors', icon: Handshake, badge: 'New', route: '/vendors' },
     ]
   }
 ];

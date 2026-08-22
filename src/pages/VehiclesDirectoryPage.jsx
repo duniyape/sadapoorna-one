@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Edit2, MapPin, Truck, CheckCircle2, AlertTriangle, XCircle, Search, Filter } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, MapPin, Truck, CheckCircle2, AlertTriangle, XCircle, Search, Filter, Eye, X, Calendar, ShieldCheck, FileText, Activity, Hash, Box, CreditCard } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 export default function VehiclesDirectoryPage() {
@@ -11,6 +11,7 @@ export default function VehiclesDirectoryPage() {
   const [selectedBranchFilter, setSelectedBranchFilter] = useState('all');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('all');
   const [branches, setBranches] = useState([]);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
 
   useEffect(() => {
     const fetchBranches = async () => {
@@ -262,7 +263,14 @@ export default function VehiclesDirectoryPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="w-auto lg:w-28 shrink-0 flex items-center justify-end gap-1">
+                  <div className="w-auto lg:w-32 shrink-0 flex items-center justify-end gap-1">
+                    <button 
+                      onClick={() => setSelectedVehicle(v)}
+                      className="p-1.5 rounded-md bg-sky-50 border border-sky-100 text-sky-600 hover:bg-sky-100 transition-colors"
+                      title="View Vehicle"
+                    >
+                      <Eye className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
+                    </button>
                     <button 
                       onClick={() => handleToggleStatus(v)}
                       className={`p-1.5 rounded-md border transition-colors ${getStatusColor(v.status)}`}
@@ -284,6 +292,156 @@ export default function VehiclesDirectoryPage() {
             ))}
           </div>
         </>
+      )}
+
+      {/* View Modal */}
+      {selectedVehicle && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
+          <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl ring-1 ring-white/10 relative">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100/50 bg-gradient-to-br from-slate-50 to-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-amber-500/10 blur-3xl pointer-events-none"></div>
+              
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 text-amber-600 flex items-center justify-center shadow-inner border border-amber-200/50">
+                  <Truck className="w-7 h-7" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+                    {selectedVehicle.vehicle_number}
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-widest uppercase shadow-sm border ${
+                      selectedVehicle.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : selectedVehicle.status === 'maintenance' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-slate-50 text-slate-700 border-slate-200'
+                    }`}>
+                      {selectedVehicle.status}
+                    </span>
+                  </h2>
+                  <p className="text-sm font-semibold text-slate-500 mt-1 tracking-tight">
+                    {selectedVehicle.make} {selectedVehicle.model} {selectedVehicle.variant ? `- ${selectedVehicle.variant}` : ''}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedVehicle(null)}
+                className="p-2.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-all hover:rotate-90 relative z-10 bg-white shadow-sm border border-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-slate-50/30">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                {/* General Info */}
+                <div className="bg-white rounded-[1.5rem] p-6 border border-slate-100/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="p-2 bg-blue-50/80 text-blue-600 rounded-xl border border-blue-100/50"><Hash className="w-4 h-4" /></div>
+                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">General Info</h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex flex-col group">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-blue-500 transition-colors">Vehicle Type</span>
+                      <span className="text-sm font-bold text-slate-700 capitalize mt-0.5">{selectedVehicle.vehicle_type || 'N/A'}</span>
+                    </div>
+                    <div className="w-full h-px bg-slate-50"></div>
+                    <div className="flex flex-col group">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-blue-500 transition-colors">Fuel Type</span>
+                      <span className="text-sm font-bold text-slate-700 capitalize mt-0.5">{selectedVehicle.fuel_type || 'N/A'}</span>
+                    </div>
+                    <div className="w-full h-px bg-slate-50"></div>
+                    <div className="flex flex-col group">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-blue-500 transition-colors">Color</span>
+                      <span className="text-sm font-bold text-slate-700 capitalize mt-0.5">{selectedVehicle.color || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ownership & Registration */}
+                <div className="bg-white rounded-[1.5rem] p-6 border border-slate-100/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="p-2 bg-indigo-50/80 text-indigo-600 rounded-xl border border-indigo-100/50"><CreditCard className="w-4 h-4" /></div>
+                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Registration</h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex flex-col group">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-indigo-500 transition-colors">Chassis No.</span>
+                      <span className="text-sm font-bold text-slate-700 font-mono mt-0.5">{selectedVehicle.chassis_number || 'N/A'}</span>
+                    </div>
+                    <div className="w-full h-px bg-slate-50"></div>
+                    <div className="flex flex-col group">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-indigo-500 transition-colors">Engine No.</span>
+                      <span className="text-sm font-bold text-slate-700 font-mono mt-0.5">{selectedVehicle.engine_number || 'N/A'}</span>
+                    </div>
+                    <div className="w-full h-px bg-slate-50"></div>
+                    <div className="flex flex-col group">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-indigo-500 transition-colors">Reg. Date</span>
+                      <span className="text-sm font-bold text-slate-700 mt-0.5">{selectedVehicle.registration_date || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Capacity & Branch */}
+                <div className="bg-white rounded-[1.5rem] p-6 border border-slate-100/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="p-2 bg-emerald-50/80 text-emerald-600 rounded-xl border border-emerald-100/50"><Box className="w-4 h-4" /></div>
+                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Capacity & Owner</h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex flex-col group">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-emerald-500 transition-colors">Ownership</span>
+                      <span className="text-sm font-bold text-slate-700 capitalize mt-0.5">{selectedVehicle.ownership_type} {selectedVehicle.ownership_type !== 'company' && selectedVehicle.owner_name ? `(${selectedVehicle.owner_name})` : ''}</span>
+                    </div>
+                    <div className="w-full h-px bg-slate-50"></div>
+                    <div className="flex flex-col group">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-emerald-500 transition-colors">Payload Capacity</span>
+                      <span className="text-sm font-bold text-slate-700 mt-0.5">{selectedVehicle.capacity ? `${selectedVehicle.capacity} ${selectedVehicle.capacity_unit}` : 'N/A'}</span>
+                    </div>
+                    <div className="w-full h-px bg-slate-50"></div>
+                    <div className="flex flex-col group">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-emerald-500 transition-colors">Branch</span>
+                      <span className="text-sm font-bold text-slate-700 mt-0.5">
+                        {branches.find(b => (b.id || b._id) === selectedVehicle.branch)?.name || selectedVehicle.branch || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Documents & Expiries (Spans full width) */}
+                <div className="md:col-span-2 lg:col-span-3 bg-white rounded-[1.5rem] p-6 border border-slate-100/80 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-rose-50/80 text-rose-600 rounded-xl border border-rose-100/50"><ShieldCheck className="w-4 h-4" /></div>
+                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Documents & Expiry</h3>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl border border-slate-100 flex flex-col items-start gap-1.5 hover:shadow-md hover:border-slate-200 transition-all group">
+                      <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5 group-hover:text-slate-800 transition-colors"><FileText className="w-3.5 h-3.5"/> RC / Reg.</div>
+                      <div className="text-sm font-bold text-slate-800 truncate w-full" title={selectedVehicle.rc_document || 'N/A'}>{selectedVehicle.rc_document || 'N/A'}</div>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl border border-slate-100 flex flex-col items-start gap-1.5 hover:shadow-md hover:border-slate-200 transition-all group">
+                      <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5 group-hover:text-slate-800 transition-colors"><ShieldCheck className="w-3.5 h-3.5"/> Insurance</div>
+                      <div className="text-sm font-bold text-slate-800 truncate w-full" title={selectedVehicle.insurance_document || 'N/A'}>{selectedVehicle.insurance_document || 'N/A'}</div>
+                      <div className="text-[10px] font-bold text-rose-500 mt-1 flex items-center gap-1.5 bg-rose-50 px-2 py-0.5 rounded-md"><Calendar className="w-3 h-3"/> Exp: {selectedVehicle.insurance_expiry || 'N/A'}</div>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl border border-slate-100 flex flex-col items-start gap-1.5 hover:shadow-md hover:border-slate-200 transition-all group">
+                      <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5 group-hover:text-slate-800 transition-colors"><Activity className="w-3.5 h-3.5"/> Pollution (PUC)</div>
+                      <div className="text-sm font-bold text-slate-800 truncate w-full" title={selectedVehicle.pollution_document || 'N/A'}>{selectedVehicle.pollution_document || 'N/A'}</div>
+                      <div className="text-[10px] font-bold text-rose-500 mt-1 flex items-center gap-1.5 bg-rose-50 px-2 py-0.5 rounded-md"><Calendar className="w-3 h-3"/> Exp: {selectedVehicle.pollution_expiry || 'N/A'}</div>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl border border-slate-100 flex flex-col items-start gap-1.5 hover:shadow-md hover:border-slate-200 transition-all group">
+                      <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5 group-hover:text-slate-800 transition-colors"><ShieldCheck className="w-3.5 h-3.5"/> Fitness / Permit</div>
+                      <div className="text-sm font-bold text-slate-800 truncate w-full" title={selectedVehicle.fitness_document || 'N/A'}>{selectedVehicle.fitness_document || 'N/A'}</div>
+                      <div className="text-[10px] font-bold text-rose-500 mt-1 flex flex-col gap-1 w-full">
+                        <span className="flex items-center gap-1.5 bg-rose-50 px-2 py-0.5 rounded-md"><Calendar className="w-3 h-3"/> Fit: {selectedVehicle.fitness_expiry || 'N/A'}</span>
+                        <span className="flex items-center gap-1.5 bg-rose-50 px-2 py-0.5 rounded-md"><Calendar className="w-3 h-3"/> Per: {selectedVehicle.permit_expiry || 'N/A'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

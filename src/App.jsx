@@ -26,6 +26,8 @@ import WarehousesDirectoryPage from "./pages/WarehousesDirectoryPage";
 import AddWarehousePage from "./pages/AddWarehousePage";
 import VehiclesDirectoryPage from "./pages/VehiclesDirectoryPage";
 import AddVehiclePage from "./pages/AddVehiclePage";
+import VendorsDirectoryPage from "./pages/VendorsDirectoryPage";
+import AddVendorPage from "./pages/AddVendorPage";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -55,6 +57,9 @@ const App = () => {
           <Route path="vehicles" element={<VehiclesDirectoryPage />} />
           <Route path="add-vehicle" element={<AddVehiclePage />} />
           <Route path="edit-vehicle/:id" element={<AddVehiclePage />} />
+          <Route path="vendors" element={<VendorsDirectoryPage />} />
+          <Route path="add-vendor" element={<AddVendorPage />} />
+          <Route path="edit-vendor/:id" element={<AddVendorPage />} />
           <Route path="inventory-stock" element={<StockInventoryPage />} />
           <Route path="ai-suite" element={<AiSuitePage />} />
           <Route path="branch-profile" element={<BranchProfilePage />} />
