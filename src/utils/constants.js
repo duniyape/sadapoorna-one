@@ -60,6 +60,7 @@ export const HR_FLEET_MODULES = [
   { id: 'payroll', title: 'Payroll Slips', icon: DollarSign, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: null, desc: 'Salary disbursement & slips' },
   { id: 'inventory-stock', title: 'Stock Inventory', icon: Package, color: 'bg-teal-100 text-teal-600 border-teal-200', badge: null, desc: 'Warehouse inventory count' },
   { id: 'reports', title: 'Financial Audit', icon: TrendingUp, color: 'bg-violet-100 text-violet-600 border-violet-200', badge: null, desc: 'P&L and ledger reports' },
+  { id: 'purchase-orders', title: 'Purchase Orders', icon: ShoppingCart, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Vendor orders & inventory intake', route: '/purchase-orders' },
 ];
 
 export const MASTER_MODULES = [
@@ -105,6 +106,7 @@ export const CATEGORIZED_SIDEBAR = [
       { id: 'staff', label: 'Staff Directory', icon: Users, route: '/module/staff' },
       { id: 'leave-mgmt', label: 'Leave Requests', icon: Calendar, route: '/module/leave-mgmt' },
       { id: 'vehicles', label: 'Vehicles & Fleet', icon: Truck, badge: 'New', route: '/vehicles' },
+      { id: 'purchase-orders', label: 'Purchase Orders', icon: ShoppingCart, badge: 'New', route: '/purchase-orders' },
       { id: 'reports', label: 'Financial Audit', icon: TrendingUp, route: '/module/reports' },
     ]
   },
