@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Plus, Search, Download, Eye } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Download, Eye, Check, X } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 export default function OrdersPage() {
@@ -7,12 +7,35 @@ export default function OrdersPage() {
   const navigate = useNavigate();
   const { showToast } = useOutletContext();
 
-  const orders = [
-    { id: 'ORD-9821', customer: 'Apex Wholesale Traders', date: 'Today, 10:30 AM', items: '50 Bags Sonamasuri Rice (26kg)', total: '₹72,500', status: 'Approved', paid: 'Paid' },
-    { id: 'ORD-9820', customer: 'Laxmi Supermarket', date: 'Today, 09:15 AM', items: '20 Quintals Basmati Special', total: '₹1,40,000', status: 'Pending Approval', paid: 'Credit' },
-    { id: 'ORD-9819', customer: 'Shree Balaji Kirana Store', date: 'Yesterday', items: '15 Bags Jeera Rice', total: '₹22,500', status: 'Dispatched', paid: 'Paid' },
+  const [ordersList, setOrdersList] = useState([
+    { id: 'ORD-9821', customer: 'Apex Wholesale Traders', date: 'Today, 10:30 AM', items: '50 Bags Sonamasuri Rice (26kg)', total: '₹72,500', status: 'Confirmed', paid: 'Paid' },
+    { id: 'ORD-9820', customer: 'Laxmi Supermarket', date: 'Today, 09:15 AM', items: '20 Quintals Basmati Special', total: '₹1,40,000', status: 'Pending', paid: 'Credit' },
+    { id: 'ORD-9819', customer: 'Shree Balaji Kirana Store', date: 'Yesterday', items: '15 Bags Jeera Rice', total: '₹22,500', status: 'Out for Delivery', paid: 'Paid' },
     { id: 'ORD-9818', customer: 'Karnataka Grain Hub', date: 'Yesterday', items: '100 Bags Wheat Grade A', total: '₹1,85,000', status: 'Delivered', paid: 'Partially Paid' },
-  ];
+  ]);
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    // Optimistically update the UI
+    setOrdersList(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    
+    try {
+      const response = await fetch(`http://192.168.29.8:8000/orders/status/v1/${orderId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('API returned an error');
+      }
+      showToast(`Order ${orderId} updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Status update failed:', error);
+      showToast(`Failed to update ${orderId}`);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -79,7 +102,7 @@ export default function OrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
-              {orders.map((ord) => (
+              {ordersList.map((ord) => (
                 <tr key={ord.id} className="hover:bg-slate-50/60 transition-colors">
                   <td className="p-4 font-bold text-slate-900">{ord.id}</td>
                   <td className="p-4 font-semibold text-slate-800">{ord.customer}</td>
@@ -91,15 +114,29 @@ export default function OrdersPage() {
                     </span>
                   </td>
                   <td className="p-4">
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border
+                        ${ord.status === 'Confirmed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
+                          ord.status === 'Cancelled' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                          ord.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                          'bg-slate-50 text-slate-700 border-slate-200'}`}>
                       {ord.status}
                     </span>
                   </td>
-                  <td className="p-4 text-right space-x-2">
-                    <button onClick={() => showToast(`Printed invoice ${ord.id}`)} className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600">
+                  <td className="p-4 text-right space-x-2 flex items-center justify-end">
+                    {ord.status === 'Pending' && (
+                      <>
+                        <button onClick={() => handleStatusChange(ord.id, 'Confirmed')} className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600" title="Confirm">
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleStatusChange(ord.id, 'Cancelled')} className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600" title="Cancel">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
+                    <button onClick={() => showToast(`Printed invoice ${ord.id}`)} className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600" title="Download Invoice">
                       <Download className="w-4 h-4" />
                     </button>
-                    <button onClick={() => showToast(`Opened ${ord.id}`)} className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600">
+                    <button onClick={() => showToast(`Opened ${ord.id}`)} className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600" title="View Details">
                       <Eye className="w-4 h-4" />
                     </button>
                   </td>

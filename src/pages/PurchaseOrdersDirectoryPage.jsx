@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Edit2, CheckCircle2, XCircle, Search, Filter, Eye, X, FileText, Building2, ShoppingCart, IndianRupee, Handshake, Users, Info, Calendar } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, CheckCircle2, XCircle, Search, Filter, Eye, X, FileText, Building2, ShoppingCart, IndianRupee, Handshake, Users, Info, Calendar, Check } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 export default function PurchaseOrdersDirectoryPage() {
@@ -107,7 +107,19 @@ export default function PurchaseOrdersDirectoryPage() {
         fetchOrders();
       } else {
         const errData = await res.json().catch(() => null);
-        showToast(errData?.detail || 'Failed to update status');
+        let errorMsg = 'Failed to update status';
+        if (errData?.detail) {
+          if (Array.isArray(errData.detail)) {
+            errorMsg = errData.detail.map(e => e.msg).join(', ');
+          } else if (typeof errData.detail === 'string') {
+            errorMsg = errData.detail;
+          } else {
+            errorMsg = JSON.stringify(errData.detail);
+          }
+        } else if (errData?.message) {
+          errorMsg = errData.message;
+        }
+        showToast(errorMsg);
       }
     } catch (error) {
       console.error("Status update error", error);
@@ -140,13 +152,13 @@ export default function PurchaseOrdersDirectoryPage() {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Pending': return 'bg-slate-100 text-slate-700 border-slate-200';
-      case 'Confirmed': return 'bg-sky-100 text-sky-700 border-sky-200';
-      case 'Ready to Pick Up': return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'Out for Delivery': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
-      case 'Delivered': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case 'Cancelled': return 'bg-rose-100 text-rose-700 border-rose-200';
+    switch (status?.toLowerCase()) {
+      case 'pending': return 'bg-slate-100 text-slate-700 border-slate-200';
+      case 'confirmed': return 'bg-sky-100 text-sky-700 border-sky-200';
+      case 'ready to pick up': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'out for delivery': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+      case 'delivered': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'cancelled': return 'bg-rose-100 text-rose-700 border-rose-200';
       default: return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
@@ -291,7 +303,25 @@ export default function PurchaseOrdersDirectoryPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="w-auto lg:w-32 shrink-0 flex items-center justify-end gap-1">
+                  <div className="w-auto lg:w-auto shrink-0 flex items-center justify-end gap-1">
+                    {order.status?.toLowerCase() === 'pending' && (
+                      <>
+                        <button 
+                          onClick={() => handleUpdateStatus(order.id, 'Confirmed')}
+                          className="p-1.5 rounded-md bg-emerald-50 border border-emerald-100 text-emerald-600 hover:bg-emerald-100 transition-colors"
+                          title="Confirm Order"
+                        >
+                          <Check className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleUpdateStatus(order.id, 'Cancelled')}
+                          className="p-1.5 rounded-md bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 transition-colors"
+                          title="Cancel Order"
+                        >
+                          <X className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
+                        </button>
+                      </>
+                    )}
                     <button 
                       onClick={() => setSelectedOrder(order)}
                       className="p-1.5 rounded-md bg-sky-50 border border-sky-100 text-sky-600 hover:bg-sky-100 transition-colors"
@@ -299,7 +329,7 @@ export default function PurchaseOrdersDirectoryPage() {
                     >
                       <Eye className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
                     </button>
-                    {order.status !== 'Delivered' && order.status !== 'Cancelled' && (
+                    {order.status?.toLowerCase() !== 'delivered' && order.status?.toLowerCase() !== 'cancelled' && (
                       <button 
                         onClick={() => navigate(`/edit-purchase-order/${order.id}`)}
                         className="p-1.5 rounded-md bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-colors"
@@ -483,10 +513,10 @@ export default function PurchaseOrdersDirectoryPage() {
                       {['Pending', 'Confirmed', 'Ready to Pick Up', 'Out for Delivery', 'Delivered', 'Cancelled'].map(status => (
                         <button
                           key={status}
-                          disabled={selectedOrder.status === status || selectedOrder.status === 'Delivered' || selectedOrder.status === 'Cancelled'}
+                          disabled={selectedOrder.status?.toLowerCase() === status.toLowerCase() || selectedOrder.status?.toLowerCase() === 'delivered' || selectedOrder.status?.toLowerCase() === 'cancelled'}
                           onClick={() => handleUpdateStatus(selectedOrder.id, status)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
-                            selectedOrder.status === status 
+                            selectedOrder.status?.toLowerCase() === status.toLowerCase() 
                               ? getStatusColor(status) 
                               : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed'
                           }`}
@@ -496,7 +526,7 @@ export default function PurchaseOrdersDirectoryPage() {
                       ))}
                     </div>
                   </div>
-                  {['Delivered', 'Cancelled'].includes(selectedOrder.status) && (
+                  {['delivered', 'cancelled'].includes(selectedOrder.status?.toLowerCase()) && (
                     <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-[10px] text-slate-500 font-medium">
                       This order is {selectedOrder.status}. The status cannot be changed further.
                     </div>
