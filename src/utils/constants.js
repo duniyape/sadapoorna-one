@@ -32,6 +32,8 @@ import {
   Tag,
   ShoppingCart,
   BoxSelect,
+  ArrowDownToLine,
+  Boxes,
 } from 'lucide-react';
 
 export const SALES_OPERATIONS = [
@@ -59,6 +61,9 @@ export const HR_FLEET_MODULES = [
   { id: 'expenses', title: 'Expenses Claims', icon: Receipt, color: 'bg-green-100 text-green-600 border-green-200', badge: null, desc: 'Record staff allowances' },
   { id: 'payroll', title: 'Payroll Slips', icon: DollarSign, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: null, desc: 'Salary disbursement & slips' },
   { id: 'inventory-stock', title: 'Stock Inventory', icon: Package, color: 'bg-teal-100 text-teal-600 border-teal-200', badge: null, desc: 'Warehouse inventory count' },
+  { id: 'warehouse-in', title: 'Warehouse In', icon: ArrowDownToLine, color: 'bg-emerald-100 text-emerald-600 border-emerald-200', badge: 'New', desc: 'Inward unallocated inventory', route: '/warehouse-in' },
+  { id: 'warehouse-inventory', title: 'Warehouse Inventory', icon: Boxes, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'View warehouse stock levels', route: '/warehouse-inventory' },
+  { id: 'vehicle-in', title: 'Vehicle In', icon: ArrowRightLeft, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: 'New', desc: 'Transfer warehouse stock to vehicle', route: '/vehicle-in' },
   { id: 'reports', title: 'Financial Audit', icon: TrendingUp, color: 'bg-violet-100 text-violet-600 border-violet-200', badge: null, desc: 'P&L and ledger reports' },
   { id: 'purchase-orders', title: 'Purchase Orders', icon: ShoppingCart, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Vendor orders & inventory intake', route: '/purchase-orders' },
 ];
@@ -103,6 +108,9 @@ export const CATEGORIZED_SIDEBAR = [
     category: 'Inventory & HR Fleet',
     items: [
       { id: 'inventory-stock', label: 'Stock Inventory', icon: Package, route: '/inventory-stock' },
+      { id: 'warehouse-in', label: 'Warehouse In', icon: ArrowDownToLine, badge: 'New', route: '/warehouse-in' },
+      { id: 'warehouse-inventory', label: 'Warehouse Inventory', icon: Boxes, badge: 'New', route: '/warehouse-inventory' },
+      { id: 'vehicle-in', label: 'Vehicle In', icon: ArrowRightLeft, badge: 'New', route: '/vehicle-in' },
       { id: 'staff', label: 'Staff Directory', icon: Users, route: '/module/staff' },
       { id: 'leave-mgmt', label: 'Leave Requests', icon: Calendar, route: '/module/leave-mgmt' },
       { id: 'vehicles', label: 'Vehicles & Fleet', icon: Truck, badge: 'New', route: '/vehicles' },

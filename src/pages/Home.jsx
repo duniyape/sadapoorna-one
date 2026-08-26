@@ -10,7 +10,7 @@ export default function Home() {
   const allowedIcons = user?.access?.frontend_icons || user?.designation?.frontend_icons || [];
   const isAllowed = (item) => {
     if (!user) return false; // Hide modules until user is loaded
-    if (['home', 'ai-suite', 'product-units', 'product-attributes', 'packing-types', 'products', 'warehouses', 'vehicles', 'vendors', 'purchase-orders'].includes(item.id)) return true;
+    if (['home', 'ai-suite', 'product-units', 'product-attributes', 'packing-types', 'products', 'warehouses', 'vehicles', 'vendors', 'purchase-orders', 'warehouse-in', 'warehouse-inventory', 'vehicle-in'].includes(item.id)) return true;
     return allowedIcons.some(iconData => {
       if (typeof iconData === 'string') return iconData === item.id;
       if (typeof iconData === 'object') return iconData.icon === item.id;
@@ -46,7 +46,7 @@ export default function Home() {
   }, [searchQuery, user]);
 
   const getRoute = (id) => {
-    const directRoutes = ['add-customer', 'orders', 'customers', 'inventory-stock', 'ai-suite', 'branch-profile', 'department', 'designation', 'users', 'accessibility', 'data-access', 'product-units', 'product-attributes', 'packing-types', 'products', 'warehouses', 'vehicles', 'vendors', 'purchase-orders'];
+    const directRoutes = ['add-customer', 'orders', 'add-order', 'customers', 'inventory-stock', 'ai-suite', 'branch-profile', 'department', 'designation', 'users', 'accessibility', 'data-access', 'product-units', 'product-attributes', 'packing-types', 'products', 'warehouses', 'vehicles', 'vendors', 'purchase-orders', 'warehouse-in', 'warehouse-inventory', 'vehicle-in'];
     if (directRoutes.includes(id)) {
       return `/${id}`;
     }

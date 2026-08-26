@@ -1,18 +1,43 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Plus, Search, Download, Eye, Check, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Plus, Search, Download, Eye, Check, X, Edit2 } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 export default function OrdersPage() {
   const [filter, setFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { showToast } = useOutletContext();
 
-  const [ordersList, setOrdersList] = useState([
-    { id: 'ORD-9821', customer: 'Apex Wholesale Traders', date: 'Today, 10:30 AM', items: '50 Bags Sonamasuri Rice (26kg)', total: '₹72,500', status: 'Confirmed', paid: 'Paid' },
-    { id: 'ORD-9820', customer: 'Laxmi Supermarket', date: 'Today, 09:15 AM', items: '20 Quintals Basmati Special', total: '₹1,40,000', status: 'Pending', paid: 'Credit' },
-    { id: 'ORD-9819', customer: 'Shree Balaji Kirana Store', date: 'Yesterday', items: '15 Bags Jeera Rice', total: '₹22,500', status: 'Out for Delivery', paid: 'Paid' },
-    { id: 'ORD-9818', customer: 'Karnataka Grain Hub', date: 'Yesterday', items: '100 Bags Wheat Grade A', total: '₹1,85,000', status: 'Delivered', paid: 'Partially Paid' },
-  ]);
+  const [ordersList, setOrdersList] = useState([]);
+
+  const fetchOrders = async () => {
+    setIsLoading(true);
+    try {
+      let url = '/orders/v1?type=sale&limit=100';
+      if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
+      if (filter !== 'all') url += `&status=${filter === 'pending' ? 'Pending' : filter}`;
+      
+      const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.ok) {
+        const json = await response.json();
+        if (json.success && json.data) {
+          setOrdersList(json.data);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to fetch orders');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, [filter, searchTerm]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     // Optimistically update the UI
@@ -50,7 +75,7 @@ export default function OrdersPage() {
           </div>
         </div>
         <button
-          onClick={() => showToast('New Order entry window triggered')}
+          onClick={() => navigate('/add-order')}
           className="px-5 py-2.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-2 shadow-md self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" /> Create New Order
@@ -84,7 +109,13 @@ export default function OrdersPage() {
           </div>
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-            <input type="text" placeholder="Search order ID or client..." className="pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none" />
+            <input 
+              type="text" 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Search invoice or notes..." 
+              className="pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none" 
+            />
           </div>
         </div>
 
@@ -102,46 +133,54 @@ export default function OrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
-              {ordersList.map((ord) => (
-                <tr key={ord.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="p-4 font-bold text-slate-900">{ord.id}</td>
-                  <td className="p-4 font-semibold text-slate-800">{ord.customer}</td>
-                  <td className="p-4 text-slate-600">{ord.items}</td>
-                  <td className="p-4 font-bold text-slate-900">{ord.total}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${ord.paid === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                      {ord.paid}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border
-                        ${ord.status === 'Confirmed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
-                          ord.status === 'Cancelled' ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                          ord.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                          'bg-slate-50 text-slate-700 border-slate-200'}`}>
-                      {ord.status}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right space-x-2 flex items-center justify-end">
-                    {ord.status === 'Pending' && (
-                      <>
-                        <button onClick={() => handleStatusChange(ord.id, 'Confirmed')} className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600" title="Confirm">
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleStatusChange(ord.id, 'Cancelled')} className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600" title="Cancel">
-                          <X className="w-4 h-4" />
-                        </button>
-                      </>
-                    )}
-                    <button onClick={() => showToast(`Printed invoice ${ord.id}`)} className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600" title="Download Invoice">
-                      <Download className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => showToast(`Opened ${ord.id}`)} className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600" title="View Details">
-                      <Eye className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {isLoading ? (
+                <tr><td colSpan="7" className="p-10 text-center text-slate-500 font-bold">Loading orders...</td></tr>
+              ) : ordersList.length === 0 ? (
+                <tr><td colSpan="7" className="p-10 text-center text-slate-500 font-bold">No orders found.</td></tr>
+              ) : ordersList.map((ord) => {
+                const orderId = ord.id || ord._id;
+                const custName = ord.customer?.company_name || ord.customer?.name || 'Unknown';
+                const itemsStr = `${ord.items?.length || 0} Items`;
+                const totalAmt = ord.total || ord.items?.reduce((acc, curr) => acc + (curr.quantity * curr.rate), 0) || 0;
+                
+                return (
+                  <tr key={orderId} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="p-4 font-bold text-slate-900">{ord.invoice_no || orderId.slice(-6)}</td>
+                    <td className="p-4 font-semibold text-slate-800">{custName}</td>
+                    <td className="p-4 text-slate-600">{itemsStr}</td>
+                    <td className="p-4 font-bold text-slate-900">₹{totalAmt.toLocaleString()}</td>
+                    <td className="p-4">
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${ord.payment_status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                        {ord.payment_status || 'Pending'}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border
+                          ${ord.status === 'Confirmed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
+                            ord.status === 'Cancelled' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                            ord.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                            'bg-slate-50 text-slate-700 border-slate-200'}`}>
+                        {ord.status || 'Pending'}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right space-x-2 flex items-center justify-end">
+                      {ord.status === 'Pending' && (
+                        <>
+                          <button onClick={() => handleStatusChange(orderId, 'Confirmed')} className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600" title="Confirm">
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleStatusChange(orderId, 'Cancelled')} className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600" title="Cancel">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                      <button onClick={() => navigate(`/edit-order/${orderId}`)} className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600" title="Edit Order">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
