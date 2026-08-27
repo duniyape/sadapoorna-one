@@ -132,13 +132,14 @@ export default function PurchaseOrdersDirectoryPage() {
     if (!isConfirmed) return;
 
     try {
+      const newStatus = activate ? 'active' : 'inactive';
       const res = await fetch(`/orders/record-status/v1/${order.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ record_status: activate ? 'active' : 'inactive' })
+        body: JSON.stringify({ record_status: newStatus })
       });
       if (res.ok) {
         showToast(`Order ${activate ? 'activated' : 'deactivated'}`);

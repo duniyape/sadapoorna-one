@@ -23,6 +23,8 @@ export default function AddOrderPage() {
         investors: []
       }
     ],
+    discount: 0,
+    other_charges: 0,
     notes: ''
   });
 
@@ -77,10 +79,31 @@ export default function AddOrderPage() {
                 invDate = d.toISOString().split('T')[0];
               }
             }
+            
+            // Fetch variants for all products in this order
+            if (ord.items && ord.items.length > 0) {
+              const variantPromises = ord.items.map(async (item) => {
+                if (!item.product_id) return;
+                try {
+                  const vRes = await fetch(`/products/products/${item.product_id}/variants`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                  });
+                  if (vRes.ok) {
+                    const vData = await vRes.json();
+                    if (vData.success && vData.data) {
+                      setVariants(prev => ({ ...prev, [item.product_id]: vData.data }));
+                    }
+                  }
+                } catch (e) {
+                  console.error(e);
+                }
+              });
+              await Promise.all(variantPromises);
+            }
 
             setFormData({
               type: ord.type || 'sale',
-              customer_id: ord.customer_id || '',
+              customer_id: ord.customer_id || ord.customer?._id || ord.customer?.id || '',
               invoice_date: invDate,
               gst_type: ord.gst_type || 'including',
               items: ord.items?.map(item => ({
@@ -91,6 +114,8 @@ export default function AddOrderPage() {
                 rate: item.rate || 0,
                 investors: []
               })) || [],
+              discount: ord.discount || 0,
+              other_charges: ord.other_charges || 0,
               notes: ord.notes || ''
             });
           }
@@ -197,8 +222,10 @@ export default function AddOrderPage() {
         delete payload.invoice_date;
       }
 
-      payload.vendor_id = ""; // Empty string for sales
-      payload.invoice_no = `SORD-${Date.now()}`;
+      delete payload.vendor_id;
+      
+      payload.discount = parseFloat(payload.discount) || 0;
+      payload.other_charges = parseFloat(payload.other_charges) || 0;
 
       payload.items = payload.items.map(item => {
         const { id, ...rest } = item;
