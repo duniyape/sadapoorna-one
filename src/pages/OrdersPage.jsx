@@ -15,6 +15,8 @@ import {
   ShoppingCart,
   IndianRupee,
   Info,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 
@@ -100,9 +102,15 @@ const SwipeButton = ({ text, onConfirm, colorClass = "bg-emerald-500" }) => {
 
 export default function OrdersPage() {
   const [filter, setFilter] = useState("all");
+  const [orderType, setOrderType] = useState("sale");
   const [searchTerm, setSearchTerm] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const limit = 20;
+  
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { showToast } = useOutletContext();
@@ -143,7 +151,8 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     setIsLoading(true);
     try {
-      let url = "/orders/v1?type=sale&limit=100";
+      let url = `/orders/v1?page=${page}&limit=${limit}`;
+      if (orderType !== "all") url += `&type=${orderType}`;
       if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
       if (filter !== "all") url += `&status=${encodeURIComponent(filter)}`;
       if (fromDate) url += `&from_date=${encodeURIComponent(fromDate)}`;
@@ -156,6 +165,8 @@ export default function OrdersPage() {
         const json = await response.json();
         if (json.success && json.data) {
           setOrdersList(json.data);
+          setTotalPages(json.pagination?.total_pages || 1);
+          setTotalRecords(json.pagination?.total || 0);
         }
       }
     } catch (err) {
@@ -168,7 +179,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-  }, [filter, searchTerm, fromDate, toDate]);
+  }, [filter, searchTerm, fromDate, toDate, page, orderType]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     // Optimistically update the UI
@@ -232,12 +243,20 @@ export default function OrdersPage() {
             </p>
           </div>
         </div>
-        <button
-          onClick={() => navigate("/add-order")}
-          className="px-5 py-2.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-2 shadow-md self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" /> Create New Order
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2 self-start sm:self-auto">
+          <button
+            onClick={() => navigate("/create-return-order")}
+            className="px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-2 shadow-md w-full sm:w-auto justify-center"
+          >
+            <Plus className="w-4 h-4" /> Create Return Order
+          </button>
+          <button
+            onClick={() => navigate("/add-order")}
+            className="px-5 py-2.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-2 shadow-md w-full sm:w-auto justify-center"
+          >
+            <Plus className="w-4 h-4" /> Create New Order
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -277,54 +296,63 @@ export default function OrdersPage() {
         <div className="p-4 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar xl:w-auto w-full">
             <button
-              onClick={() => setFilter("all")}
+              onClick={() => { setFilter("all"); setPage(1); }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
             >
               All Orders
             </button>
             <button
-              onClick={() => setFilter("Pending")}
+              onClick={() => { setFilter("Pending"); setPage(1); }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "Pending" ? "bg-amber-500 text-white shadow-md shadow-amber-500/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
             >
               Pending
             </button>
             <button
-              onClick={() => setFilter("Confirmed")}
+              onClick={() => { setFilter("Confirmed"); setPage(1); }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "Confirmed" ? "bg-sky-500 text-white shadow-md shadow-sky-500/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
             >
               Confirmed
             </button>
             <button
-              onClick={() => setFilter("Ready to Pick Up")}
+              onClick={() => { setFilter("Ready to Pick Up"); setPage(1); }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "Ready to Pick Up" ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
             >
               Ready to Pick Up
             </button>
             <button
-              onClick={() => setFilter("Out for Delivery")}
+              onClick={() => { setFilter("Out for Delivery"); setPage(1); }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "Out for Delivery" ? "bg-violet-500 text-white shadow-md shadow-violet-500/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
             >
               Out for Delivery
             </button>
             <button
-              onClick={() => setFilter("Delivered")}
+              onClick={() => { setFilter("Delivered"); setPage(1); }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "Delivered" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
             >
               Delivered
             </button>
             <button
-              onClick={() => setFilter("Cancelled")}
+              onClick={() => { setFilter("Cancelled"); setPage(1); }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "Cancelled" ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
             >
               Cancelled
             </button>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
+            <select
+              value={orderType}
+              onChange={(e) => { setOrderType(e.target.value); setPage(1); }}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 w-full sm:w-auto bg-slate-50 transition-all cursor-pointer"
+            >
+              <option value="sale">Sales</option>
+              <option value="sale_return">Returns</option>
+              <option value="all">All Types</option>
+            </select>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <input
                 type="date"
                 value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
+                onChange={(e) => { setFromDate(e.target.value); setPage(1); }}
                 className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 w-full sm:w-auto bg-slate-50 transition-all"
                 title="From Date"
               />
@@ -332,7 +360,7 @@ export default function OrdersPage() {
               <input
                 type="date"
                 value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
+                onChange={(e) => { setToDate(e.target.value); setPage(1); }}
                 className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 w-full sm:w-auto bg-slate-50 transition-all"
                 title="To Date"
               />
@@ -342,7 +370,7 @@ export default function OrdersPage() {
               <input
                 type="text"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                 placeholder="Search invoice or notes..."
                 className="pl-9 pr-3 py-1.5 w-full rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
               />
@@ -620,6 +648,34 @@ export default function OrdersPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {!isLoading && totalPages > 0 && (
+          <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="text-xs font-semibold text-slate-500">
+              Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalRecords)} of {totalRecords} entries
+            </div>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))} 
+                disabled={page <= 1}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <div className="text-xs font-bold text-slate-700 px-2">
+                Page {page} of {totalPages}
+              </div>
+              <button 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+                disabled={page >= totalPages}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* View Modal */}

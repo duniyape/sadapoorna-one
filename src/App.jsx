@@ -34,6 +34,8 @@ import WarehouseInPage from "./pages/WarehouseInPage";
 import WarehouseInventoryPage from "./pages/WarehouseInventoryPage";
 import VehicleInPage from "./pages/VehicleInPage";
 import AddOrderPage from "./pages/AddOrderPage";
+import CreateReturnOrderPage from "./pages/CreateReturnOrderPage";
+import MainInventoryPage from "./pages/MainInventoryPage";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -70,6 +72,7 @@ const App = () => {
           <Route path="add-purchase-order" element={<AddPurchaseOrderPage />} />
           <Route path="edit-purchase-order/:id" element={<AddPurchaseOrderPage />} />
           <Route path="inventory-stock" element={<StockInventoryPage />} />
+          <Route path="main-inventory" element={<MainInventoryPage />} />
           <Route path="warehouse-in" element={<WarehouseInPage />} />
           <Route path="warehouse-inventory" element={<WarehouseInventoryPage />} />
           <Route path="vehicle-in" element={<VehicleInPage />} />
@@ -85,6 +88,7 @@ const App = () => {
           <Route path="packing-types" element={<PackingTypePage />} />
           <Route path="add-order" element={<AddOrderPage />} />
           <Route path="edit-order/:id" element={<AddOrderPage />} />
+          <Route path="create-return-order" element={<CreateReturnOrderPage />} />
           <Route path="products" element={<AddProductPage />} />
           <Route path="add-product" element={<AddProductPage />} />
           <Route path="profile" element={<ProfilePage />} />

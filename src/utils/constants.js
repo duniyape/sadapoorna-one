@@ -61,6 +61,7 @@ export const HR_FLEET_MODULES = [
   { id: 'expenses', title: 'Expenses Claims', icon: Receipt, color: 'bg-green-100 text-green-600 border-green-200', badge: null, desc: 'Record staff allowances' },
   { id: 'payroll', title: 'Payroll Slips', icon: DollarSign, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: null, desc: 'Salary disbursement & slips' },
   { id: 'inventory-stock', title: 'Stock Inventory', icon: Package, color: 'bg-teal-100 text-teal-600 border-teal-200', badge: null, desc: 'Warehouse inventory count' },
+  { id: 'main-inventory', title: 'Main Inventory', icon: Boxes, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Consolidated inventory view', route: '/main-inventory' },
   { id: 'warehouse-in', title: 'Warehouse In', icon: ArrowDownToLine, color: 'bg-emerald-100 text-emerald-600 border-emerald-200', badge: 'New', desc: 'Inward unallocated inventory', route: '/warehouse-in' },
   { id: 'warehouse-inventory', title: 'Warehouse Inventory', icon: Boxes, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'View warehouse stock levels', route: '/warehouse-inventory' },
   { id: 'vehicle-in', title: 'Vehicle In', icon: ArrowRightLeft, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: 'New', desc: 'Transfer warehouse stock to vehicle', route: '/vehicle-in' },
@@ -108,6 +109,7 @@ export const CATEGORIZED_SIDEBAR = [
     category: 'Inventory & HR Fleet',
     items: [
       { id: 'inventory-stock', label: 'Stock Inventory', icon: Package, route: '/inventory-stock' },
+      { id: 'main-inventory', label: 'Main Inventory', icon: Boxes, badge: 'New', route: '/main-inventory' },
       { id: 'warehouse-in', label: 'Warehouse In', icon: ArrowDownToLine, badge: 'New', route: '/warehouse-in' },
       { id: 'warehouse-inventory', label: 'Warehouse Inventory', icon: Boxes, badge: 'New', route: '/warehouse-inventory' },
       { id: 'vehicle-in', label: 'Vehicle In', icon: ArrowRightLeft, badge: 'New', route: '/vehicle-in' },
