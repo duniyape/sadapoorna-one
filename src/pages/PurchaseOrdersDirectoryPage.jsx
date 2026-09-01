@@ -308,7 +308,7 @@ export default function PurchaseOrdersDirectoryPage() {
                     {order.status?.toLowerCase() === 'pending' && (
                       <>
                         <button 
-                          onClick={() => handleUpdateStatus(order.id, 'Confirmed')}
+                          onClick={() => handleUpdateStatus(order.id, 'Completed')}
                           className="p-1.5 rounded-md bg-emerald-50 border border-emerald-100 text-emerald-600 hover:bg-emerald-100 transition-colors"
                           title="Confirm Order"
                         >

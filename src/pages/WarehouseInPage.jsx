@@ -128,7 +128,7 @@ export default function WarehouseInPage() {
         })),
         discount: 0,
         other_charges: 0,
-        status: "Confirmed",
+        status: "Completed",
         record_status: "active",
         notes: "warehouse in"
       };

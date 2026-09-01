@@ -143,7 +143,7 @@ export default function VehicleInPage() {
       const invoiceDate = now.toISOString().split('T')[0];
       
       const payload = {
-        type: "Vehicle_IN",
+        type: "warehouse_to_vehicle",
         invoice_no: invoiceNo,
         invoice_date: invoiceDate,
         vendor_id: "",
@@ -160,7 +160,7 @@ export default function VehicleInPage() {
         })),
         discount: 0,
         other_charges: 0,
-        status: "Confirmed",
+        status: "Completed",
         record_status: "active",
         notes: "warehouse to vehicle transfer"
       };
