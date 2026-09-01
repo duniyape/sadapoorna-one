@@ -13,6 +13,9 @@ export default function AddOrderPage() {
     customer_id: '',
     invoice_date: new Date().toISOString().split('T')[0],
     gst_type: 'including',
+    payment_mode: 'Cash on Delivery',
+    branch_id: '',
+    assigned_employee_id: '',
     items: [
       {
         id: Date.now(),
@@ -34,6 +37,9 @@ export default function AddOrderPage() {
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [variants, setVariants] = useState({});
+  const [employees, setEmployees] = useState([]);
+  const [stockInventory, setStockInventory] = useState({});
+  const [branches, setBranches] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,12 +57,47 @@ export default function AddOrderPage() {
           const pData = await pRes.json();
           if (pData.data) setProducts(pData.data);
         }
+
+        const eRes = await fetch('/users/get', { headers });
+        if (eRes.ok) {
+          const eData = await eRes.json();
+          if (eData.data) setEmployees(eData.data);
+        }
+
+        const bRes = await fetch('/branches/v1', { headers });
+        if (bRes.ok) {
+          const bData = await bRes.json();
+          setBranches(Array.isArray(bData) ? bData : (bData.data || bData.branches || []));
+        }
       } catch (err) {
         console.error("Failed to fetch reference data", err);
       }
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    formData.items.forEach(async (item) => {
+      if (item.variant_id && stockInventory[item.variant_id] === undefined) {
+        setStockInventory(prev => ({ ...prev, [item.variant_id]: 'loading' }));
+        try {
+          const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+          const res = await fetch(`/inventory/inventory/unblocked?variant_id=${item.variant_id}&limit=100`, { headers });
+          if (res.ok) {
+            const json = await res.json();
+            const records = json.data || (Array.isArray(json) ? json : []);
+            const totalStock = records.reduce((sum, r) => sum + (parseFloat(r.unblocked_quantity) || parseFloat(r.available_quantity) || 0), 0);
+            setStockInventory(prev => ({ ...prev, [item.variant_id]: totalStock }));
+          } else {
+            setStockInventory(prev => ({ ...prev, [item.variant_id]: 0 }));
+          }
+        } catch (err) {
+          console.error("Failed to fetch stock", err);
+          setStockInventory(prev => ({ ...prev, [item.variant_id]: 0 }));
+        }
+      }
+    });
+  }, [formData.items, stockInventory]);
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -79,7 +120,7 @@ export default function AddOrderPage() {
                 invDate = d.toISOString().split('T')[0];
               }
             }
-            
+
             // Fetch variants for all products in this order
             if (ord.items && ord.items.length > 0) {
               const variantPromises = ord.items.map(async (item) => {
@@ -106,6 +147,9 @@ export default function AddOrderPage() {
               customer_id: ord.customer_id || ord.customer?._id || ord.customer?.id || '',
               invoice_date: invDate,
               gst_type: ord.gst_type || 'including',
+              payment_mode: ord.payment_mode || 'Cash on Delivery',
+              branch_id: ord.branch_id || ord.branch || '',
+              assigned_employee_id: ord.assigned_employee_id || ord.assigned_employee || '',
               items: ord.items?.map(item => ({
                 id: Math.random(),
                 product_id: item.product_id || '',
@@ -223,7 +267,7 @@ export default function AddOrderPage() {
       }
 
       delete payload.vendor_id;
-      
+
       payload.discount = parseFloat(payload.discount) || 0;
       payload.other_charges = parseFloat(payload.other_charges) || 0;
 
@@ -358,6 +402,31 @@ export default function AddOrderPage() {
                 <option value="excluding">Excluding GST (Rate doesn't include GST)</option>
               </select>
             </div>
+
+            <div className="lg:col-span-1">
+              <label className={labelClass}>Payment Mode *</label>
+              <select required value={formData.payment_mode} onChange={e => handleChange('payment_mode', e.target.value)} className={inputClass}>
+                <option value="Cash on Delivery">Cash on Delivery</option>
+                <option value="Credit">Credit</option>
+                <option value="Finance">Finance</option>
+              </select>
+            </div>
+
+            <div className="lg:col-span-1">
+              <label className={labelClass}>Branch / Hub *</label>
+              <select required value={formData.branch_id} onChange={e => handleChange('branch_id', e.target.value)} className={inputClass}>
+                <option value="">Select Branch...</option>
+                {branches.map(b => <option key={b.id || b._id} value={b.id || b._id}>{b.name || b.branch_name}</option>)}
+              </select>
+            </div>
+
+            <div className="lg:col-span-2">
+              <label className={labelClass}>Assigned Employee *</label>
+              <select required value={formData.assigned_employee_id} onChange={e => handleChange('assigned_employee_id', e.target.value)} className={inputClass}>
+                <option value="">Select Employee...</option>
+                {employees.map(e => <option key={e.id || e._id} value={e.id || e._id}>{e.name || e.first_name || 'Unnamed Employee'}</option>)}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -378,6 +447,7 @@ export default function AddOrderPage() {
                   <th className="p-3 w-1/3 min-w-[200px]">Variant *</th>
                   <th className="p-3 w-24">Qty *</th>
                   <th className="p-3 w-28">Rate (₹) *</th>
+                  <th className="p-3 w-32 text-right">Total (₹)</th>
                   <th className="p-3 w-10 text-center"></th>
                 </tr>
               </thead>
@@ -400,9 +470,17 @@ export default function AddOrderPage() {
                       </td>
                       <td className="p-3">
                         <input type="number" min="0.01" step="0.01" required value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className={`${inputClass} !py-2`} />
+                        {item.variant_id && stockInventory[item.variant_id] !== undefined && (
+                          <div className={`text-[10px] mt-1 font-semibold ${stockInventory[item.variant_id] > 0 || stockInventory[item.variant_id] === 'loading' ? 'text-emerald-600' : 'text-rose-500'}`}>
+                            {stockInventory[item.variant_id] === 'loading' ? 'Loading stock...' : `Stock: ${stockInventory[item.variant_id]}`}
+                          </div>
+                        )}
                       </td>
                       <td className="p-3">
                         <input type="number" min="0" step="0.01" required value={item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} className={`${inputClass} !py-2`} />
+                      </td>
+                      <td className="p-3 font-black text-slate-800 text-right">
+                        ₹{((parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="p-3 text-center">
                         {formData.items.length > 1 && (
@@ -424,8 +502,8 @@ export default function AddOrderPage() {
             <div className="p-1.5 bg-amber-100 rounded-lg"><FileText className="w-4 h-4 text-amber-600" /></div>
             <h2 className="text-xs font-black text-slate-800 uppercase tracking-wider">3. Totals & Notes</h2>
           </div>
-          <div className="p-5">
-            <div className="w-full">
+          <div className="p-5 flex flex-col lg:flex-row gap-5">
+            <div className="w-full lg:w-2/3">
               <label className={labelClass}>Order Notes</label>
               <textarea
                 rows={4}
@@ -434,6 +512,15 @@ export default function AddOrderPage() {
                 placeholder="Any special instructions..."
                 className={inputClass}
               />
+            </div>
+
+            <div className="w-full lg:w-1/3 bg-slate-50 rounded-xl p-4 border border-slate-200 flex flex-col justify-end">
+              <div className="flex justify-between items-center text-slate-900 border-t border-slate-200 pt-3">
+                <span className="font-bold text-sm uppercase tracking-wider">Grand Total</span>
+                <span className="font-black text-2xl text-emerald-600">
+                  ₹{formData.items.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
             </div>
           </div>
         </div>

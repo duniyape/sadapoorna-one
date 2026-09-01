@@ -106,8 +106,8 @@ export default function AddPurchaseOrderPage() {
             
             setFormData({
               type: po.type || 'purchase',
-              vendor_id: po.vendor_id || '',
-              warehouse_id: po.warehouse_id || '',
+              vendor_id: po.vendor_id || po.vendor?._id || po.vendor?.id || '',
+              warehouse_id: po.warehouse_id || po.warehouse?._id || po.warehouse?.id || '',
               invoice_no: po.invoice_no || '',
               invoice_date: invDate,
               gst_type: po.gst_type || 'excluding',
@@ -443,7 +443,7 @@ export default function AddPurchaseOrderPage() {
                   <th className="p-3 w-1/4 min-w-[180px]">Variant *</th>
                   <th className="p-3 w-24">Qty *</th>
                   <th className="p-3 w-28">Rate (₹) *</th>
-                  {/* <th className="p-3 min-w-[220px]">Investor Allocations</th> */}
+                  <th className="p-3 w-32 text-right">Total (₹)</th>
                   <th className="p-3 w-10 text-center"></th>
                 </tr>
               </thead>
@@ -470,25 +470,10 @@ export default function AddPurchaseOrderPage() {
                       <td className="p-3">
                         <input type="number" min="0" step="0.01" required value={item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} className={`${inputClass} !py-2`} />
                       </td>
-                      {/* <td className="p-3">
-                        <div className="space-y-2">
-                          {item.investors.map((inv, iIdx) => (
-                            <div key={inv.id} className="flex items-center gap-1.5">
-                              <select required value={inv.investor_id} onChange={e => handleInvestorChange(index, iIdx, 'investor_id', e.target.value)} className={`${inputClass} !py-1 !px-2 !text-[11px] flex-1`}>
-                                <option value="">Select Investor...</option>
-                                {users.map(u => <option key={u.id || u._id} value={u.id || u._id}>{u.first_name} {u.last_name}</option>)}
-                              </select>
-                              <input type="number" min="0.01" step="0.01" required placeholder="Qty" value={inv.quantity} onChange={e => handleInvestorChange(index, iIdx, 'quantity', e.target.value)} className={`${inputClass} !py-1 !px-2 !text-[11px] w-16`} />
-                              <button type="button" onClick={() => removeInvestor(index, iIdx)} className="p-1 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors" title="Remove Investor">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ))}
-                          <button type="button" onClick={() => addInvestor(index)} className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 w-full justify-center p-1.5 border border-dashed border-indigo-200 rounded-lg bg-indigo-50/50 hover:bg-indigo-50 transition-colors">
-                            <Plus className="w-3 h-3" /> Add Investor
-                          </button>
-                        </div>
-                      </td> */}
+                      <td className="p-3 font-black text-slate-800 text-right">
+                        ₹{((parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                      </td>
+
                       <td className="p-3 text-center">
                         {formData.items.length > 1 && (
                           <button type="button" onClick={() => removeItem(index)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors mt-1" title="Remove Item">
@@ -510,7 +495,7 @@ export default function AddPurchaseOrderPage() {
             <div className="p-1.5 bg-amber-100 rounded-lg"><FileText className="w-4 h-4 text-amber-600" /></div>
             <h2 className="text-xs font-black text-slate-800 uppercase tracking-wider">3. Totals & Notes</h2>
           </div>
-          <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             <div className="space-y-4">
               <div>
                 <label className={labelClass}>Total Discount (₹)</label>
@@ -530,6 +515,18 @@ export default function AddPurchaseOrderPage() {
                 placeholder="Any special instructions..." 
                 className={inputClass}
               />
+            </div>
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 flex flex-col justify-end">
+              <div className="flex justify-between items-center text-slate-600 mb-2">
+                <span className="font-semibold text-xs">Subtotal</span>
+                <span className="font-bold text-sm">₹{formData.items.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between items-center text-slate-900 border-t border-slate-200 pt-3 mt-1">
+                <span className="font-bold text-sm uppercase tracking-wider">Grand Total</span>
+                <span className="font-black text-2xl text-emerald-600">
+                  ₹{(formData.items.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0), 0) - (parseFloat(formData.discount) || 0) + (parseFloat(formData.other_charges) || 0)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                </span>
+              </div>
             </div>
           </div>
         </div>

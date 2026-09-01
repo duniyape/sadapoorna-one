@@ -28,7 +28,7 @@ export default function WarehouseInventoryPage() {
       
       const [wRes, pRes] = await Promise.all([
         fetch('/warehouses/get', { headers }).catch(() => null),
-        fetch('/products/get', { headers }).catch(() => null)
+        fetch('/products/products/v1?limit=100', { headers }).catch(() => null)
       ]);
 
       if (wRes && wRes.ok) {

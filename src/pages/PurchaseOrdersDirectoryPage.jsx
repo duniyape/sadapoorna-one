@@ -280,8 +280,17 @@ export default function PurchaseOrdersDirectoryPage() {
 
                 {/* Desktop Only Vendor & Warehouse */}
                 <div className="hidden lg:block w-48 shrink-0 text-slate-700 font-bold truncate">
-                  <div title="Vendor" className="truncate text-xs text-slate-800">{order.vendor_id ? (vendorsMap[order.vendor_id] || `V: ${order.vendor_id.substring(0,8)}...`) : 'No Vendor'}</div>
-                  <div className="text-[10px] text-slate-400 truncate mt-0.5 font-medium flex items-center gap-1"><Building2 className="w-3 h-3"/> {order.warehouse_id ? (warehousesMap[order.warehouse_id] || `W: ${order.warehouse_id.substring(0,8)}...`) : 'No Warehouse'}</div>
+                  <div title="Vendor" className="truncate text-xs text-slate-800">
+                    {order.vendor_id || order.vendor?._id || order.vendor?.id 
+                      ? (vendorsMap[order.vendor_id || order.vendor?._id || order.vendor?.id] || order.vendor?.business_name || order.vendor?.name || `V: ${(order.vendor_id || order.vendor?._id || order.vendor?.id).substring(0,8)}...`) 
+                      : 'No Vendor'}
+                  </div>
+                  <div className="text-[10px] text-slate-400 truncate mt-0.5 font-medium flex items-center gap-1">
+                    <Building2 className="w-3 h-3"/> 
+                    {order.warehouse_id || order.warehouse?._id || order.warehouse?.id 
+                      ? (warehousesMap[order.warehouse_id || order.warehouse?._id || order.warehouse?.id] || order.warehouse?.name || `W: ${(order.warehouse_id || order.warehouse?._id || order.warehouse?.id).substring(0,8)}...`) 
+                      : 'No Warehouse'}
+                  </div>
                 </div>
 
                 <div className="hidden lg:block w-32 shrink-0">
@@ -392,14 +401,22 @@ export default function PurchaseOrdersDirectoryPage() {
                   <Handshake className="w-8 h-8 text-indigo-400 shrink-0" />
                   <div className="min-w-0">
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Vendor / Supplier</div>
-                    <div className="text-xs font-bold text-slate-800 leading-tight mt-0.5 truncate">{selectedOrder.vendor_id ? (vendorsMap[selectedOrder.vendor_id] || selectedOrder.vendor_id) : 'N/A'}</div>
+                    <div className="text-xs font-bold text-slate-800 leading-tight mt-0.5 truncate">
+                      {selectedOrder.vendor_id || selectedOrder.vendor?._id || selectedOrder.vendor?.id 
+                        ? (vendorsMap[selectedOrder.vendor_id || selectedOrder.vendor?._id || selectedOrder.vendor?.id] || selectedOrder.vendor?.business_name || selectedOrder.vendor?.name || selectedOrder.vendor_id || selectedOrder.vendor?._id) 
+                        : 'N/A'}
+                    </div>
                   </div>
                 </div>
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-3">
                   <Building2 className="w-8 h-8 text-amber-400 shrink-0" />
                   <div className="min-w-0">
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Warehouse</div>
-                    <div className="text-xs font-bold text-slate-800 leading-tight mt-0.5 truncate">{selectedOrder.warehouse_id ? (warehousesMap[selectedOrder.warehouse_id] || selectedOrder.warehouse_id) : 'N/A'}</div>
+                    <div className="text-xs font-bold text-slate-800 leading-tight mt-0.5 truncate">
+                      {selectedOrder.warehouse_id || selectedOrder.warehouse?._id || selectedOrder.warehouse?.id 
+                        ? (warehousesMap[selectedOrder.warehouse_id || selectedOrder.warehouse?._id || selectedOrder.warehouse?.id] || selectedOrder.warehouse?.name || selectedOrder.warehouse_id || selectedOrder.warehouse?._id) 
+                        : 'N/A'}
+                    </div>
                   </div>
                 </div>
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-3">
