@@ -104,20 +104,21 @@ export default function OrdersPage() {
   const [filter, setFilter] = useState("all");
   const [orderType, setOrderType] = useState("sale");
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const limit = 20;
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { showToast, user } = useOutletContext();
 
   const allowedIcons = user?.access?.frontend_icons || user?.designation?.frontend_icons || [];
   const orderPermissions = allowedIcons.find(iconData => typeof iconData === 'object' && iconData.icon === 'orders')?.buttons || [];
-  
+
   const canConfirm = orderPermissions.includes('Confirm');
   const canPack = orderPermissions.includes('Pack');
   const canDispatch = orderPermissions.includes('Dispatch');
@@ -162,6 +163,14 @@ export default function OrdersPage() {
       day: "numeric",
     });
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(searchInput);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const fetchOrders = async () => {
     setIsLoading(true);
@@ -334,49 +343,20 @@ export default function OrdersPage() {
 
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar xl:w-auto w-full">
-            <button
-              onClick={() => { setFilter("all"); setPage(1); }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+          <div className="flex items-center gap-2 w-full xl:w-auto shrink-0">
+            <select
+              value={filter}
+              onChange={(e) => { setFilter(e.target.value); setPage(1); }}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 w-full sm:w-auto bg-slate-50 transition-all cursor-pointer"
             >
-              All Orders
-            </button>
-            <button
-              onClick={() => { setFilter("Pending"); setPage(1); }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "Pending" ? "bg-amber-500 text-white shadow-md shadow-amber-500/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-            >
-              Pending
-            </button>
-            <button
-              onClick={() => { setFilter("Confirmed"); setPage(1); }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "Confirmed" ? "bg-sky-500 text-white shadow-md shadow-sky-500/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-            >
-              Confirmed
-            </button>
-            <button
-              onClick={() => { setFilter("Ready to Pick Up"); setPage(1); }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "Ready to Pick Up" ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-            >
-              Ready to Pick Up
-            </button>
-            <button
-              onClick={() => { setFilter("Out for Delivery"); setPage(1); }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "Out for Delivery" ? "bg-violet-500 text-white shadow-md shadow-violet-500/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-            >
-              Out for Delivery
-            </button>
-            <button
-              onClick={() => { setFilter("Delivered"); setPage(1); }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "Delivered" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-            >
-              Delivered
-            </button>
-            <button
-              onClick={() => { setFilter("Cancelled"); setPage(1); }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${filter === "Cancelled" ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-            >
-              Cancelled
-            </button>
+              <option value="all">All Orders</option>
+              <option value="Pending">Pending</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="Ready to Pick Up">Ready to Pick Up</option>
+              <option value="Out for Delivery">Out for Delivery</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
             <select
@@ -405,14 +385,14 @@ export default function OrdersPage() {
                 title="To Date"
               />
             </div>
-            <div className="relative w-full sm:w-auto">
+            <div className="relative w-full sm:w-64 lg:w-80 shrink-0">
               <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
               <input
                 type="text"
-                value={searchTerm}
-                onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search invoice or notes..."
-                className="pl-9 pr-3 py-1.5 w-full rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+                className="pl-9 pr-3 py-1.5 w-full rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all bg-white shadow-sm"
               />
             </div>
           </div>
@@ -583,15 +563,14 @@ export default function OrdersPage() {
                       <td className="p-4">
                         <span
                           className={`px-2.5 py-1 rounded-full text-[10px] font-bold border
-                          ${
-                            ord.status === "Confirmed"
+                          ${ord.status === "Confirmed"
                               ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                               : ord.status === "Cancelled"
                                 ? "bg-rose-50 text-rose-700 border-rose-200"
                                 : ord.status === "Pending"
                                   ? "bg-amber-50 text-amber-700 border-amber-200"
                                   : "bg-slate-50 text-slate-700 border-slate-200"
-                          }`}
+                            }`}
                         >
                           {ord.status || "Pending"}
                         </span>
@@ -631,8 +610,8 @@ export default function OrdersPage() {
               Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalRecords)} of {totalRecords} entries
             </div>
             <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setPage(p => Math.max(1, p - 1))} 
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1}
                 className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
@@ -641,8 +620,8 @@ export default function OrdersPage() {
               <div className="text-xs font-bold text-slate-700 px-2">
                 Page {page} of {totalPages}
               </div>
-              <button 
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
                 className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
@@ -884,11 +863,11 @@ export default function OrdersPage() {
                             <input type="radio" name="deliveryType" value="warehouse" checked={deliveryType === "warehouse"} onChange={(e) => { setDeliveryType(e.target.value); setSelectedDeliveryId(""); }} className="accent-indigo-500" /> Warehouse
                           </label>
                         </div>
-                        
+
                         {(deliveryType === "vehicle" || deliveryType === "warehouse") && (
                           <div className="mt-3">
-                            <select 
-                              value={selectedDeliveryId} 
+                            <select
+                              value={selectedDeliveryId}
                               onChange={(e) => setSelectedDeliveryId(e.target.value)}
                               className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-indigo-500 bg-white"
                             >
@@ -947,14 +926,14 @@ export default function OrdersPage() {
                             onConfirm={() => {
                               handleStatusChange(selectedOrder.id || selectedOrder._id, "Delivered", {
                                 delivery_type: deliveryType,
-                                delivery_id: selectedDeliveryId
+                                vehicle_id: selectedDeliveryId
                               });
                               setSelectedOrder((prev) => ({ ...prev, status: "Delivered" }));
                             }}
                           />
                         </div>
                       )}
-                      
+
                       {(!selectedOrder.status || !["delivered", "cancelled"].includes(selectedOrder.status?.toLowerCase())) && (
                         <button
                           onClick={() => {
@@ -971,11 +950,11 @@ export default function OrdersPage() {
                   {["delivered", "cancelled"].includes(
                     selectedOrder.status?.toLowerCase(),
                   ) && (
-                    <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-[10px] text-slate-500 font-medium">
-                      This order is {selectedOrder.status}. The status cannot be
-                      changed further.
-                    </div>
-                  )}
+                      <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-[10px] text-slate-500 font-medium">
+                        This order is {selectedOrder.status}. The status cannot be
+                        changed further.
+                      </div>
+                    )}
                 </div>
 
                 {/* Notes & Terms */}
