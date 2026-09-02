@@ -15,6 +15,7 @@ export default function AddOrderPage() {
     gst_type: 'including',
     payment_mode: 'Cash on Delivery',
     branch_id: '',
+    warehouse_id: '',
     assigned_employee_id: '',
     items: [
       {
@@ -40,6 +41,7 @@ export default function AddOrderPage() {
   const [employees, setEmployees] = useState([]);
   const [stockInventory, setStockInventory] = useState({});
   const [branches, setBranches] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,6 +70,12 @@ export default function AddOrderPage() {
         if (bRes.ok) {
           const bData = await bRes.json();
           setBranches(Array.isArray(bData) ? bData : (bData.data || bData.branches || []));
+        }
+
+        const wRes = await fetch('/warehouses/get', { headers });
+        if (wRes.ok) {
+          const wData = await wRes.json();
+          if (wData.data) setWarehouses(wData.data);
         }
       } catch (err) {
         console.error("Failed to fetch reference data", err);
@@ -417,6 +425,14 @@ export default function AddOrderPage() {
               <select required value={formData.branch_id} onChange={e => handleChange('branch_id', e.target.value)} className={inputClass}>
                 <option value="">Select Branch...</option>
                 {branches.map(b => <option key={b.id || b._id} value={b.id || b._id}>{b.name || b.branch_name}</option>)}
+              </select>
+            </div>
+
+            <div className="lg:col-span-1">
+              <label className={labelClass}>Warehouse *</label>
+              <select required value={formData.warehouse_id} onChange={e => handleChange('warehouse_id', e.target.value)} className={inputClass}>
+                <option value="">Select Warehouse...</option>
+                {warehouses.map(w => <option key={w.id || w._id} value={w.id || w._id}>{w.name}</option>)}
               </select>
             </div>
 
