@@ -39,7 +39,7 @@ import {
 export const SALES_OPERATIONS = [
   { id: 'add-customer', title: 'Create Customer', icon: UserPlus, color: 'bg-pink-100 text-pink-600 border-pink-200', badge: 'Hot', desc: 'Register a new customer account', key: ['Assignment'] },
   { id: 'customers', title: 'Customers Directory', icon: Users, color: 'bg-orange-100 text-orange-600 border-orange-200', badge: null, desc: 'View complete client directory', key: ['Edit', 'View', 'Phone', 'Branch Filter', 'Employee Filter'] },
-  { id: 'orders', title: 'Orders & Invoices', icon: CheckSquare, color: 'bg-sky-100 text-sky-600 border-sky-200', badge: '12 New', desc: 'Process new orders & invoices' }
+  { id: 'orders', title: 'Orders & Invoices', icon: CheckSquare, color: 'bg-sky-100 text-sky-600 border-sky-200', badge: '12 New', desc: 'Process new orders & invoices', key: ['Edit', 'View', 'Confirm', 'Pack', 'Dispatch', 'Deliver'] }
 ];
 
 export const HR_FLEET_MODULES = [
