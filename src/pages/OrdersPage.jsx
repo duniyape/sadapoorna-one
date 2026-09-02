@@ -113,10 +113,25 @@ export default function OrdersPage() {
   
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { showToast } = useOutletContext();
+  const { showToast, user } = useOutletContext();
+
+  const allowedIcons = user?.access?.frontend_icons || user?.designation?.frontend_icons || [];
+  const orderPermissions = allowedIcons.find(iconData => typeof iconData === 'object' && iconData.icon === 'orders')?.buttons || [];
+  
+  const canConfirm = orderPermissions.includes('Confirm');
+  const canPack = orderPermissions.includes('Pack');
+  const canDispatch = orderPermissions.includes('Dispatch');
+  const canDeliver = orderPermissions.includes('Deliver');
+  const canView = orderPermissions.includes('View');
+  const canEdit = orderPermissions.includes('Edit');
 
   const [ordersList, setOrdersList] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const [deliveryType, setDeliveryType] = useState("");
+  const [deliveryOptions, setDeliveryOptions] = useState([]);
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState("");
+  const [isFetchingDeliveryOptions, setIsFetchingDeliveryOptions] = useState(false);
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -181,7 +196,32 @@ export default function OrdersPage() {
     fetchOrders();
   }, [filter, searchTerm, fromDate, toDate, page, orderType]);
 
-  const handleStatusChange = async (orderId, newStatus) => {
+  useEffect(() => {
+    const fetchOptions = async () => {
+      if (!deliveryType) {
+        setDeliveryOptions([]);
+        return;
+      }
+      setIsFetchingDeliveryOptions(true);
+      try {
+        const endpoint = deliveryType === "vehicle" ? "/vehicles/get" : "/warehouses/get";
+        const response = await fetch(endpoint, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        if (response.ok) {
+          const json = await response.json();
+          setDeliveryOptions(json.data || []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsFetchingDeliveryOptions(false);
+      }
+    };
+    fetchOptions();
+  }, [deliveryType]);
+
+  const handleStatusChange = async (orderId, newStatus, extraData = {}) => {
     // Optimistically update the UI
     setOrdersList((prev) =>
       prev.map((o) =>
@@ -196,7 +236,7 @@ export default function OrdersPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: newStatus, ...extraData }),
       });
 
       if (!response.ok) {
@@ -440,61 +480,28 @@ export default function OrdersPage() {
                         {ord.status || "Pending"}
                       </span>
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setSelectedOrder(ord)}
-                          className="p-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-600 shadow-sm"
-                          title="View Order"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => navigate(`/edit-order/${orderId}`)}
-                          className="p-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 shadow-sm"
-                          title="Edit Order"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
+                        {canView && (
+                          <button
+                            onClick={() => setSelectedOrder(ord)}
+                            className="p-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-600 shadow-sm"
+                            title="View Order"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        )}
+                        {canEdit && (
+                          <button
+                            onClick={() => navigate(`/edit-order/${orderId}`)}
+                            className="p-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 shadow-sm"
+                            title="Edit Order"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
 
-                    <div className="flex justify-center border-t border-slate-100 pt-3">
-                      {(!ord.status || ord.status === "Pending") && (
-                        <SwipeButton
-                          text="Confirm"
-                          colorClass="bg-emerald-500"
-                          onConfirm={() =>
-                            handleStatusChange(orderId, "Confirmed")
-                          }
-                        />
-                      )}
-                      {ord.status === "Confirmed" && (
-                        <SwipeButton
-                          text="Pack"
-                          colorClass="bg-sky-500"
-                          onConfirm={() =>
-                            handleStatusChange(orderId, "Ready to Pick Up")
-                          }
-                        />
-                      )}
-                      {ord.status === "Ready to Pick Up" && (
-                        <SwipeButton
-                          text="Dispatch"
-                          colorClass="bg-indigo-500"
-                          onConfirm={() =>
-                            handleStatusChange(orderId, "Out for Delivery")
-                          }
-                        />
-                      )}
-                      {ord.status === "Out for Delivery" && (
-                        <SwipeButton
-                          text="Deliver"
-                          colorClass="bg-emerald-600"
-                          onConfirm={() =>
-                            handleStatusChange(orderId, "Delivered")
-                          }
-                        />
-                      )}
-                    </div>
+
                   </div>
                 </div>
               );
@@ -590,56 +597,24 @@ export default function OrdersPage() {
                         </span>
                       </td>
                       <td className="p-4 text-right space-x-2 flex items-center justify-end">
-                        {(!ord.status || ord.status === "Pending") && (
-                          <SwipeButton
-                            text="Confirm"
-                            colorClass="bg-emerald-500"
-                            onConfirm={() =>
-                              handleStatusChange(orderId, "Confirmed")
-                            }
-                          />
+                        {canView && (
+                          <button
+                            onClick={() => setSelectedOrder(ord)}
+                            className="p-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-600"
+                            title="View Order"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
                         )}
-                        {ord.status === "Confirmed" && (
-                          <SwipeButton
-                            text="Pack"
-                            colorClass="bg-sky-500"
-                            onConfirm={() =>
-                              handleStatusChange(orderId, "Ready to Pick Up")
-                            }
-                          />
+                        {canEdit && (
+                          <button
+                            onClick={() => navigate(`/edit-order/${orderId}`)}
+                            className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600"
+                            title="Edit Order"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
                         )}
-                        {ord.status === "Ready to Pick Up" && (
-                          <SwipeButton
-                            text="Dispatch"
-                            colorClass="bg-indigo-500"
-                            onConfirm={() =>
-                              handleStatusChange(orderId, "Out for Delivery")
-                            }
-                          />
-                        )}
-                        {ord.status === "Out for Delivery" && (
-                          <SwipeButton
-                            text="Deliver"
-                            colorClass="bg-emerald-600"
-                            onConfirm={() =>
-                              handleStatusChange(orderId, "Delivered")
-                            }
-                          />
-                        )}
-                        <button
-                          onClick={() => setSelectedOrder(ord)}
-                          className="p-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-600"
-                          title="View Order"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => navigate(`/edit-order/${orderId}`)}
-                          className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600"
-                          title="Edit Order"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
                       </td>
                     </tr>
                   );
@@ -897,41 +872,100 @@ export default function OrdersPage() {
                       <Info className="w-4 h-4 text-indigo-500" /> Update Order
                       Status
                     </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        "Pending",
-                        "Confirmed",
-                        "Ready to Pick Up",
-                        "Out for Delivery",
-                        "Delivered",
-                        "Cancelled",
-                      ].map((status) => (
-                        <button
-                          key={status}
-                          disabled={
-                            selectedOrder.status?.toLowerCase() ===
-                              status.toLowerCase() ||
-                            selectedOrder.status?.toLowerCase() ===
-                              "delivered" ||
-                            selectedOrder.status?.toLowerCase() === "cancelled"
-                          }
-                          onClick={() => {
-                            handleStatusChange(
-                              selectedOrder.id || selectedOrder._id,
-                              status,
-                            );
-                            setSelectedOrder((prev) => ({ ...prev, status }));
+
+                    {selectedOrder.status === "Out for Delivery" && (
+                      <div className="mb-4 space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Delivery Medium</div>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                            <input type="radio" name="deliveryType" value="vehicle" checked={deliveryType === "vehicle"} onChange={(e) => { setDeliveryType(e.target.value); setSelectedDeliveryId(""); }} className="accent-indigo-500" /> Vehicle
+                          </label>
+                          <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                            <input type="radio" name="deliveryType" value="warehouse" checked={deliveryType === "warehouse"} onChange={(e) => { setDeliveryType(e.target.value); setSelectedDeliveryId(""); }} className="accent-indigo-500" /> Warehouse
+                          </label>
+                        </div>
+                        
+                        {(deliveryType === "vehicle" || deliveryType === "warehouse") && (
+                          <div className="mt-3">
+                            <select 
+                              value={selectedDeliveryId} 
+                              onChange={(e) => setSelectedDeliveryId(e.target.value)}
+                              className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-indigo-500 bg-white"
+                            >
+                              <option value="">Select {deliveryType === "vehicle" ? "a vehicle" : "a warehouse"}</option>
+                              {isFetchingDeliveryOptions ? (
+                                <option value="" disabled>Loading options...</option>
+                              ) : (
+                                deliveryOptions.map(opt => (
+                                  <option key={opt.id || opt._id} value={opt.id || opt._id}>
+                                    {deliveryType === "vehicle" ? `${opt.vehicle_number} - ${opt.vehicle_type}` : opt.name}
+                                  </option>
+                                ))
+                              )}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-4">
+                      {(!selectedOrder.status || selectedOrder.status === "Pending") && canConfirm && (
+                        <SwipeButton
+                          text="Confirm"
+                          colorClass="bg-emerald-500"
+                          onConfirm={() => {
+                            handleStatusChange(selectedOrder.id || selectedOrder._id, "Confirmed");
+                            setSelectedOrder((prev) => ({ ...prev, status: "Confirmed" }));
                           }}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
-                            selectedOrder.status?.toLowerCase() ===
-                            status.toLowerCase()
-                              ? getStatusColor(status)
-                              : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                          }`}
+                        />
+                      )}
+                      {selectedOrder.status === "Confirmed" && canPack && (
+                        <SwipeButton
+                          text="Pack"
+                          colorClass="bg-sky-500"
+                          onConfirm={() => {
+                            handleStatusChange(selectedOrder.id || selectedOrder._id, "Ready to Pick Up");
+                            setSelectedOrder((prev) => ({ ...prev, status: "Ready to Pick Up" }));
+                          }}
+                        />
+                      )}
+                      {selectedOrder.status === "Ready to Pick Up" && canDispatch && (
+                        <SwipeButton
+                          text="Dispatch"
+                          colorClass="bg-indigo-500"
+                          onConfirm={() => {
+                            handleStatusChange(selectedOrder.id || selectedOrder._id, "Out for Delivery");
+                            setSelectedOrder((prev) => ({ ...prev, status: "Out for Delivery" }));
+                          }}
+                        />
+                      )}
+                      {selectedOrder.status === "Out for Delivery" && canDeliver && (
+                        <div className={(!deliveryType || !selectedDeliveryId) ? "opacity-50 pointer-events-none" : ""}>
+                          <SwipeButton
+                            text="Deliver"
+                            colorClass="bg-emerald-600"
+                            onConfirm={() => {
+                              handleStatusChange(selectedOrder.id || selectedOrder._id, "Delivered", {
+                                delivery_type: deliveryType,
+                                delivery_id: selectedDeliveryId
+                              });
+                              setSelectedOrder((prev) => ({ ...prev, status: "Delivered" }));
+                            }}
+                          />
+                        </div>
+                      )}
+                      
+                      {(!selectedOrder.status || !["delivered", "cancelled"].includes(selectedOrder.status?.toLowerCase())) && (
+                        <button
+                          onClick={() => {
+                            handleStatusChange(selectedOrder.id || selectedOrder._id, "Cancelled");
+                            setSelectedOrder((prev) => ({ ...prev, status: "Cancelled" }));
+                          }}
+                          className="px-4 py-2 rounded-xl text-xs font-bold border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors"
                         >
-                          {status}
+                          Cancel Order
                         </button>
-                      ))}
+                      )}
                     </div>
                   </div>
                   {["delivered", "cancelled"].includes(
