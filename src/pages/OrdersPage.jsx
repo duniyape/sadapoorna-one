@@ -134,6 +134,11 @@ export default function OrdersPage() {
   const [selectedDeliveryId, setSelectedDeliveryId] = useState("");
   const [isFetchingDeliveryOptions, setIsFetchingDeliveryOptions] = useState(false);
 
+  const [showBillMode, setShowBillMode] = useState(false);
+  const [billDiscount, setBillDiscount] = useState("");
+  const [isGeneratingBill, setIsGeneratingBill] = useState(false);
+  const [isFetchingInvoice, setIsFetchingInvoice] = useState(false);
+
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case "pending":
@@ -162,6 +167,84 @@ export default function OrdersPage() {
       month: "short",
       day: "numeric",
     });
+  };
+
+  const handleGenerateBill = async () => {
+    setIsGeneratingBill(true);
+    try {
+      // Use mongo_id as requested by backend
+      const orderId = selectedOrder.mongo_id || selectedOrder._id || selectedOrder.id;
+      
+      const parsedDiscount = parseFloat(billDiscount) || 0;
+
+      const payload = {
+        discount_amount: parsedDiscount
+      };
+
+      console.log("Generating Bill - Payload sent to backend:", payload);
+
+      const res = await fetch(`/orders/billing/v1/${orderId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        showToast("Bill generated and discount applied successfully!");
+        setShowBillMode(false);
+        fetchOrders();
+        
+        // Calculate new grand total for optimistic UI update
+        const calcGrandTotal = (selectedOrder.subtotal || 0) + (selectedOrder.total_gst || 0) + (selectedOrder.other_charges || 0) - parsedDiscount;
+        
+        setSelectedOrder((prev) => ({
+          ...prev, 
+          discount: parsedDiscount,
+          grand_total: calcGrandTotal
+        }));
+      } else {
+        const err = await res.json().catch(()=>({}));
+        let errMsg = err.message || err.detail || "Failed to generate bill";
+        if (Array.isArray(err.detail)) {
+          errMsg = err.detail.map(e => `${e.loc?.join(".") || "Field"}: ${e.msg}`).join(" | ");
+        }
+        showToast(errMsg);
+      }
+    } catch(e) {
+      console.error(e);
+      showToast("Network error");
+    } finally {
+      setIsGeneratingBill(false);
+    }
+  };
+
+  const handleViewInvoice = async () => {
+    setIsFetchingInvoice(true);
+    try {
+      const orderId = selectedOrder.id || selectedOrder._id || selectedOrder.mongo_id;
+      const res = await fetch(`/orders/invoice/v1/${orderId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({}));
+        throw new Error(err.message || "Failed to fetch invoice");
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || "Error fetching invoice PDF");
+    } finally {
+      setIsFetchingInvoice(false);
+    }
   };
 
   useEffect(() => {
@@ -818,8 +901,21 @@ export default function OrdersPage() {
                     </div>
                     <div className="flex justify-between w-48 text-rose-600">
                       <span className="font-medium">Discount</span>
-                      <span className="font-bold">
-                        - ₹{selectedOrder.discount?.toLocaleString() || 0}
+                      <span className="font-bold flex items-center justify-end">
+                        {showBillMode ? (
+                          <div className="flex items-center gap-1">
+                            <span>- ₹</span>
+                            <input 
+                              type="number" 
+                              value={billDiscount}
+                              onChange={(e) => setBillDiscount(e.target.value)}
+                              className="w-16 px-1.5 py-0.5 border border-rose-200 bg-rose-50 rounded text-right font-bold text-rose-700 focus:outline-none focus:ring-1 focus:ring-rose-400"
+                              placeholder="0"
+                            />
+                          </div>
+                        ) : (
+                          `- ₹${selectedOrder.discount?.toLocaleString() || 0}`
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between w-48 text-emerald-700 pt-2 border-t border-slate-200">
@@ -827,15 +923,11 @@ export default function OrdersPage() {
                         Grand Total
                       </span>
                       <span className="font-black text-lg leading-none">
-                        ₹
-                        {selectedOrder.grand_total?.toLocaleString() ||
-                          selectedOrder.total?.toLocaleString() ||
-                          (
-                            selectedOrder.items?.reduce(
-                              (acc, curr) => acc + curr.quantity * curr.rate,
-                              0,
-                            ) || 0
-                          ).toLocaleString()}
+                        ₹{showBillMode 
+                          ? ((selectedOrder.subtotal || 0) + (selectedOrder.total_gst || 0) + (selectedOrder.other_charges || 0) - (parseFloat(billDiscount) || 0)).toLocaleString()
+                          : (selectedOrder.grand_total?.toLocaleString() ||
+                             selectedOrder.total?.toLocaleString() ||
+                             (selectedOrder.items?.reduce((acc, curr) => acc + curr.quantity * curr.rate, 0) || 0).toLocaleString())}
                       </span>
                     </div>
                   </div>
@@ -950,9 +1042,47 @@ export default function OrdersPage() {
                   {["delivered", "cancelled"].includes(
                     selectedOrder.status?.toLowerCase(),
                   ) && (
-                      <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-[10px] text-slate-500 font-medium">
-                        This order is {selectedOrder.status}. The status cannot be
-                        changed further.
+                      <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 flex flex-col gap-3">
+                        <div className="text-[10px] text-slate-500 font-medium">
+                          This order is {selectedOrder.status}. The status cannot be changed further.
+                        </div>
+                        {selectedOrder.status?.toLowerCase() === "delivered" && (
+                          <div className="flex gap-2 mt-1">
+                            {!showBillMode ? (
+                              <div className="flex gap-2 w-full">
+                                <button 
+                                  onClick={() => { setShowBillMode(true); setBillDiscount(selectedOrder.discount || ""); }} 
+                                  className="flex-1 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-600/20"
+                                >
+                                  Generate Bill
+                                </button>
+                                <button 
+                                  onClick={handleViewInvoice} 
+                                  disabled={isFetchingInvoice}
+                                  className="flex-1 px-4 py-2 rounded-xl text-xs font-bold bg-sky-600 text-white hover:bg-sky-700 transition-colors shadow-md shadow-sky-600/20 disabled:opacity-50"
+                                >
+                                  {isFetchingInvoice ? "Loading..." : "View Invoice"}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex gap-2 w-full">
+                                <button 
+                                  onClick={handleGenerateBill} 
+                                  disabled={isGeneratingBill}
+                                  className="flex-1 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-600/20 disabled:opacity-50"
+                                >
+                                  {isGeneratingBill ? "Saving..." : "Save & Generate"}
+                                </button>
+                                <button 
+                                  onClick={() => setShowBillMode(false)}
+                                  className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                 </div>
