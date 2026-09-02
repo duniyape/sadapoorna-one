@@ -18,6 +18,16 @@
   --mono: ui-monospace, Consolas, monospace;
 }
 
+/* Hide number input spin buttons globally */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+}
+
 /* Hide scrollbar for the custom-scrollbar class */
 .custom-scrollbar::-webkit-scrollbar {
   display: none;
