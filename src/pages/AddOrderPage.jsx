@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Building2, Calendar, FileText, ShoppingCart, CheckCircle2, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, FileText, ShoppingCart, CheckCircle2, Plus, Trash2, Search, X } from 'lucide-react';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 
 export default function AddOrderPage() {
@@ -35,7 +35,11 @@ export default function AddOrderPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [customers, setCustomers] = useState([]);
+  const [customerSearchTerm, setCustomerSearchTerm] = useState('');
+  const [customerSuggestions, setCustomerSuggestions] = useState([]);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [isSearchingCustomer, setIsSearchingCustomer] = useState(false);
+  const [selectedCustomerObj, setSelectedCustomerObj] = useState(null);
   const [products, setProducts] = useState([]);
   const [variants, setVariants] = useState({});
   const [employees, setEmployees] = useState([]);
@@ -48,11 +52,7 @@ export default function AddOrderPage() {
       try {
         const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
 
-        const cRes = await fetch('/customer/list?limit=20', { headers });
-        if (cRes.ok) {
-          const cData = await cRes.json();
-          if (cData.data) setCustomers(cData.data);
-        }
+
 
         const pRes = await fetch('/products/products/v1?limit=100', { headers });
         if (pRes.ok) {
@@ -83,6 +83,31 @@ export default function AddOrderPage() {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (customerSearchTerm.trim().length > 0 && !selectedCustomerObj) {
+        setIsSearchingCustomer(true);
+        try {
+          const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+          const cRes = await fetch(`/customer/list?search=${encodeURIComponent(customerSearchTerm)}&limit=10`, { headers });
+          if (cRes.ok) {
+            const cData = await cRes.json();
+            setCustomerSuggestions(cData.data || []);
+            setShowCustomerDropdown(true);
+          }
+        } catch(e) {
+          console.error(e);
+        } finally {
+          setIsSearchingCustomer(false);
+        }
+      } else {
+        setCustomerSuggestions([]);
+        setShowCustomerDropdown(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [customerSearchTerm, selectedCustomerObj]);
 
   useEffect(() => {
     formData.items.forEach(async (item) => {
@@ -148,6 +173,11 @@ export default function AddOrderPage() {
                 }
               });
               await Promise.all(variantPromises);
+            }
+
+            if (ord.customer) {
+              setSelectedCustomerObj(ord.customer);
+              setCustomerSearchTerm(ord.customer.company_name || ord.customer.name || '');
             }
 
             setFormData({
@@ -388,12 +418,67 @@ export default function AddOrderPage() {
             <h2 className="text-xs font-black text-slate-800 uppercase tracking-wider">1. Order Details</h2>
           </div>
           <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 relative">
               <label className={labelClass}>Customer *</label>
-              <select required value={formData.customer_id} onChange={e => handleChange('customer_id', e.target.value)} className={inputClass}>
-                <option value="">Select Customer...</option>
-                {customers.map(c => <option key={c.mongo_id || c._id || c.id} value={c.mongo_id || c._id || c.id}>{c.company_name || c.business_name || c.name || 'Unnamed Customer'}</option>)}
-              </select>
+              {!selectedCustomerObj ? (
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder="Search customer by name..."
+                    value={customerSearchTerm}
+                    onChange={(e) => {
+                      setCustomerSearchTerm(e.target.value);
+                      if (!e.target.value) setShowCustomerDropdown(false);
+                    }}
+                    onFocus={() => { if(customerSuggestions.length > 0) setShowCustomerDropdown(true); }}
+                    className={`${inputClass} pl-9`}
+                  />
+                  {isSearchingCustomer && (
+                    <div className="absolute right-3 top-2.5 w-4 h-4 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+                  )}
+                  {showCustomerDropdown && (
+                    <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto">
+                      {customerSuggestions.length > 0 ? (
+                        customerSuggestions.map(c => (
+                          <div
+                            key={c.mongo_id || c._id || c.id}
+                            className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
+                            onClick={() => {
+                              setSelectedCustomerObj(c);
+                              setCustomerSearchTerm(c.company_name || c.business_name || c.name || 'Unnamed Customer');
+                              handleChange('customer_id', c.mongo_id || c._id || c.id);
+                              setShowCustomerDropdown(false);
+                            }}
+                          >
+                            <div className="font-bold text-slate-800 text-sm">{c.company_name || c.business_name || c.name || 'Unnamed Customer'}</div>
+                            <div className="text-xs text-slate-500">{c.email || c.phone || 'No contact info'}</div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-3 text-sm text-slate-500 text-center">No customers found</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-2.5 border border-indigo-200 bg-indigo-50/50 rounded-xl">
+                  <div>
+                    <div className="font-bold text-indigo-900 text-sm">{selectedCustomerObj.company_name || selectedCustomerObj.business_name || selectedCustomerObj.name || 'Unnamed Customer'}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCustomerObj(null);
+                      setCustomerSearchTerm('');
+                      handleChange('customer_id', '');
+                    }}
+                    className="p-1 rounded-md text-indigo-400 hover:text-indigo-600 hover:bg-indigo-100 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="lg:col-span-2">
