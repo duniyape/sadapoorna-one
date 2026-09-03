@@ -82,7 +82,12 @@ export default function WhatsAppChatPage() {
       if (res.ok) {
         const json = await res.json();
         if (json.status) {
-          setMessages(json.data.reverse()); // Assume newest is first from API, we want oldest first for chat view
+          const sortedMsgs = [...json.data].sort((a, b) => {
+            const timeA = new Date(a.timestamp).getTime() || 0;
+            const timeB = new Date(b.timestamp).getTime() || 0;
+            return timeA - timeB;
+          });
+          setMessages(sortedMsgs);
         }
       }
     } catch (error) {
@@ -198,7 +203,18 @@ export default function WhatsAppChatPage() {
 
   const formatTime = (isoString) => {
     if (!isoString) return "";
-    const date = new Date(isoString);
+    let date;
+    if (!isNaN(isoString) && String(isoString).trim() !== "") {
+      date = new Date(Number(isoString));
+    } else {
+      let str = String(isoString);
+      if (!str.endsWith('Z') && !str.includes('+') && str.length > 10) {
+        if (str.includes(' ')) str = str.replace(' ', 'T');
+        str += 'Z';
+      }
+      date = new Date(str);
+    }
+    if (isNaN(date.getTime())) return "";
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
   

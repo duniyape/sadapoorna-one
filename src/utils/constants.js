@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 
 export const SALES_OPERATIONS = [
+  { id: 'whatsapp', title: 'WhatsApp', icon: MessageCircle, color: 'bg-green-100 text-green-600 border-green-200', badge: 'New', desc: 'WhatsApp chat integration', route: '/whatsapp' },
   { id: 'add-customer', title: 'Create Customer', icon: UserPlus, color: 'bg-pink-100 text-pink-600 border-pink-200', badge: 'Hot', desc: 'Register a new customer account', key: ['Assignment'] },
   { id: 'customers', title: 'Customers Directory', icon: Users, color: 'bg-orange-100 text-orange-600 border-orange-200', badge: null, desc: 'View complete client directory', key: ['Edit', 'View', 'Phone', 'Branch Filter', 'Employee Filter'] },
   { id: 'orders', title: 'Orders & Invoices', icon: CheckSquare, color: 'bg-sky-100 text-sky-600 border-sky-200', badge: '12 New', desc: 'Process new orders & invoices', key: ['Edit', 'View', 'Confirm', 'Pack', 'Dispatch', 'Deliver'] }
