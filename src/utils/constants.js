@@ -34,6 +34,7 @@ import {
   BoxSelect,
   ArrowDownToLine,
   Boxes,
+  MessageCircle,
 } from 'lucide-react';
 
 export const SALES_OPERATIONS = [
@@ -78,6 +79,7 @@ export const CATEGORIZED_SIDEBAR = [
   {
     category: 'Sales & Billing',
     items: [
+      { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, badge: 'New', route: '/whatsapp' },
       { id: 'add-customer', label: 'Create Customer', icon: UserPlus, badge: 'New', route: '/add-customer' },
       { id: 'orders', label: 'Orders & Bills', icon: ShoppingBag, badge: '12', route: '/orders' },
       { id: 'customers', label: 'Customer List', icon: Users, route: '/customers' },

@@ -36,6 +36,7 @@ import VehicleInPage from "./pages/VehicleInPage";
 import AddOrderPage from "./pages/AddOrderPage";
 import CreateReturnOrderPage from "./pages/CreateReturnOrderPage";
 import MainInventoryPage from "./pages/MainInventoryPage";
+import WhatsAppChatPage from "./pages/WhatsAppChatPage";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -93,6 +94,7 @@ const App = () => {
           <Route path="add-product" element={<AddProductPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="module/:id" element={<GenericModulePage />} />
+          <Route path="whatsapp" element={<WhatsAppChatPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
