@@ -123,9 +123,7 @@ export default function CreateReturnOrderPage() {
     try {
       const payload = {
         type: 'sale_return',
-        parent_order_id: formData.parent_order_id,
-        mongo_id: originalOrder._id || originalOrder.id,
-        // invoice_no: originalOrder.invoice_no || originalOrder.id || originalOrder._id,
+        ref_invoice_id: originalOrder._id || originalOrder.id,
         customer_id: formData.customer_id,
         invoice_date: new Date(formData.invoice_date).toISOString(),
         gst_type: formData.gst_type,
@@ -241,7 +239,7 @@ export default function CreateReturnOrderPage() {
             <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-4">
               <div>
                 <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Order Found</div>
-                <div className="font-bold text-slate-800 mt-1">Invoice: {originalOrder.invoice_no || originalOrder.id || originalOrder._id}</div>
+                <div className="font-bold text-slate-800 mt-1">Order No: {originalOrder.order_no || originalOrder.invoice_no || originalOrder.id || originalOrder._id}</div>
                 <div className="text-xs text-slate-600 mt-0.5">
                   Customer: {originalOrder.customer?.company_name || originalOrder.customer?.name || 'Unknown'} | Date: {new Date(originalOrder.invoice_date).toLocaleDateString()}
                 </div>

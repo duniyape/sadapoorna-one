@@ -547,7 +547,7 @@ export default function OrdersPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Order {ord.invoice_no || orderId.slice(-6)}
+                        Order {ord.order_no || ord.invoice_no || orderId.slice(-6)}
                       </div>
                       <div className="font-bold text-slate-900 text-sm mt-0.5">
                         {custName}
@@ -661,7 +661,7 @@ export default function OrdersPage() {
                       className="hover:bg-slate-50/60 transition-colors"
                     >
                       <td className="p-4 font-bold text-slate-900">
-                        {ord.invoice_no || orderId.slice(-6)}
+                        {ord.order_no || ord.invoice_no || orderId.slice(-6)}
                       </td>
                       <td className="p-4 font-semibold text-slate-800">
                         {custName}
