@@ -138,14 +138,8 @@ export default function VehicleInPage() {
     setSubmittingId('global');
     try {
       const token = localStorage.getItem('token');
-      const now = new Date();
-      const invoiceNo = `VINV-${now.getTime()}`;
-      const invoiceDate = now.toISOString().split('T')[0];
-      
       const payload = {
         type: "warehouse_to_vehicle",
-        invoice_no: invoiceNo,
-        invoice_date: invoiceDate,
         vendor_id: "",
         customer_id: "",
         warehouse_id: sourceWarehouseId,
