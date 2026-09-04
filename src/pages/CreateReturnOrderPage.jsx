@@ -124,6 +124,8 @@ export default function CreateReturnOrderPage() {
       const payload = {
         type: 'sale_return',
         parent_order_id: formData.parent_order_id,
+        mongo_id: originalOrder._id || originalOrder.id,
+        // invoice_no: originalOrder.invoice_no || originalOrder.id || originalOrder._id,
         customer_id: formData.customer_id,
         invoice_date: new Date(formData.invoice_date).toISOString(),
         gst_type: formData.gst_type,
