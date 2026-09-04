@@ -6,39 +6,77 @@ export default function WarehouseInPage() {
   const { showToast } = useOutletContext();
   const [items, setItems] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [submittingId, setSubmittingId] = useState(null);
 
   const [selections, setSelections] = useState({});
   const [selectedVariantIds, setSelectedVariantIds] = useState([]);
   const [globalWarehouseId, setGlobalWarehouseId] = useState('');
+  
+  const [sourceType, setSourceType] = useState('unallocated');
+  const [selectedVehicleId, setSelectedVehicleId] = useState('');
 
   useEffect(() => {
-    fetchData();
+    fetchMetadata();
   }, []);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    fetchInventory();
+  }, [sourceType, selectedVehicleId]);
+
+  const fetchMetadata = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      const [wRes, vRes] = await Promise.all([
+        fetch('/warehouses/get', { headers }).catch(() => null),
+        fetch('/vehicles/get', { headers }).catch(() => null)
+      ]);
+
+      if (wRes?.ok) {
+        const json = await wRes.json();
+        setWarehouses(json.data || []);
+      }
+      if (vRes?.ok) {
+        const json = await vRes.json();
+        setVehicles(json.data || []);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchInventory = async () => {
+    if (sourceType === 'vehicle' && !selectedVehicleId) {
+      setItems([]);
+      setSelections({});
+      setSelectedVariantIds([]);
+      return;
+    }
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      const invRes = await fetch('/inventory/get_unallocated_inventory?page=1&limit=20', { headers });
+      let url = '/inventory/get_unallocated_inventory?page=1&limit=100';
+      if (sourceType === 'vehicle') {
+        url = `/inventory/vehicle-inventory?page=1&limit=100&vehicle_id=${selectedVehicleId}`;
+      }
+
+      const invRes = await fetch(url, { headers });
       let invData = [];
       if (invRes.ok) {
         const json = await invRes.json();
         invData = json.data || [];
-      }
-
-      const wRes = await fetch('/warehouses/get', { headers });
-      let wData = [];
-      if (wRes.ok) {
-        const json = await wRes.json();
-        wData = json.data || [];
+        invData = invData.map(item => ({
+            ...item,
+            available_quantity: item.available_quantity ?? item.quantity ?? 0
+        }));
       }
 
       setItems(invData);
-      setWarehouses(wData);
       
       const initialSelections = {};
       invData.forEach(item => {
@@ -48,7 +86,6 @@ export default function WarehouseInPage() {
       });
       setSelections(initialSelections);
       setSelectedVariantIds([]);
-      setGlobalWarehouseId('');
 
     } catch (err) {
       console.error(err);
@@ -107,17 +144,12 @@ export default function WarehouseInPage() {
     setSubmittingId('global');
     try {
       const token = localStorage.getItem('token');
-      const now = new Date();
-      const invoiceNo = `WINV-${now.getTime()}`;
-      const invoiceDate = now.toISOString().split('T')[0];
-      
       const payload = {
         type: "Warehouse_IN",
-        invoice_no: invoiceNo,
-        invoice_date: invoiceDate,
         vendor_id: "",
         customer_id: "",
         warehouse_id: globalWarehouseId,
+        ...(sourceType === 'vehicle' ? { vehicle_id: selectedVehicleId } : {}),
         gst_type: "excluding",
         items: itemsToSubmit.map(item => ({
           product_id: item.product_id,
@@ -144,9 +176,14 @@ export default function WarehouseInPage() {
 
       if (res.ok) {
         showToast("Selected inventory added to warehouse successfully");
-        fetchData(); 
+        fetchInventory(); 
       } else {
-        showToast("Failed to inward selected items");
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Backend Error details:", errorData);
+        const errMsg = errorData.detail 
+          ? (Array.isArray(errorData.detail) ? errorData.detail.map(d => d.msg).join(", ") : errorData.detail)
+          : "Validation failed";
+        showToast("Failed: " + errMsg);
       }
     } catch (err) {
       console.error(err);
@@ -158,20 +195,49 @@ export default function WarehouseInPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Warehouse In</h1>
-          <p className="text-sm text-slate-500 mt-1">Allocate unallocated inventory to warehouses in bulk</p>
+          <p className="text-sm text-slate-500 mt-1">Inward inventory to warehouses</p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="relative w-full sm:w-64">
+          <div className="relative w-full sm:w-48">
+            <select
+              value={sourceType}
+              onChange={(e) => {
+                setSourceType(e.target.value);
+                if (e.target.value !== 'vehicle') setSelectedVehicleId('');
+              }}
+              className="w-full text-sm rounded-xl border border-slate-200 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm font-bold text-slate-700"
+            >
+              <option value="unallocated">Unallocated Stock</option>
+              <option value="vehicle">From Vehicle</option>
+            </select>
+          </div>
+
+          {sourceType === 'vehicle' && (
+            <div className="relative w-full sm:w-48">
+              <select
+                value={selectedVehicleId}
+                onChange={(e) => setSelectedVehicleId(e.target.value)}
+                className="w-full text-sm rounded-xl border border-slate-200 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm font-bold text-slate-700"
+              >
+                <option value="">Select Vehicle</option>
+                {vehicles.map(v => (
+                  <option key={v.id || v._id} value={v.id || v._id}>{v.vehicle_number} {v.vehicle_type ? `- ${v.vehicle_type}` : ''}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="relative w-full sm:w-56">
             <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <select
               value={globalWarehouseId}
               onChange={(e) => setGlobalWarehouseId(e.target.value)}
-              className="w-full text-sm rounded-xl border border-slate-200 pl-9 pr-8 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none shadow-sm"
+              className="w-full text-sm rounded-xl border border-slate-200 pl-9 pr-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm font-bold text-indigo-700 appearance-none"
             >
-              <option value="">Select Target Warehouse</option>
+              <option value="">Target Warehouse</option>
               {warehouses.map(w => (
                 <option key={w.id || w._id} value={w.id || w._id}>{w.name}</option>
               ))}
