@@ -138,6 +138,7 @@ export default function OrdersPage() {
   const [billDiscount, setBillDiscount] = useState("");
   const [isGeneratingBill, setIsGeneratingBill] = useState(false);
   const [isFetchingInvoice, setIsFetchingInvoice] = useState(false);
+  const [isResendingWhatsApp, setIsResendingWhatsApp] = useState(false);
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -193,6 +194,7 @@ export default function OrdersPage() {
       });
 
       if (res.ok) {
+        const json = await res.json().catch(()=>({}));
         showToast("Bill generated and discount applied successfully!");
         setShowBillMode(false);
         fetchOrders();
@@ -203,7 +205,8 @@ export default function OrdersPage() {
         setSelectedOrder((prev) => ({
           ...prev, 
           discount: parsedDiscount,
-          grand_total: calcGrandTotal
+          grand_total: calcGrandTotal,
+          invoice_no: json.invoice_no || json.data?.invoice_no || "Generated"
         }));
       } else {
         const err = await res.json().catch(()=>({}));
@@ -225,7 +228,7 @@ export default function OrdersPage() {
     setIsFetchingInvoice(true);
     try {
       const orderId = selectedOrder.id || selectedOrder._id || selectedOrder.mongo_id;
-      const res = await fetch(`/orders/invoice/v1/${orderId}`, {
+      const res = await fetch(`/orders/get-bill/v1/${orderId}/pdf`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -233,7 +236,7 @@ export default function OrdersPage() {
 
       if (!res.ok) {
         const err = await res.json().catch(()=>({}));
-        throw new Error(err.message || "Failed to fetch invoice");
+        throw new Error(err.message || err.detail || "Failed to fetch invoice");
       }
 
       const blob = await res.blob();
@@ -244,6 +247,37 @@ export default function OrdersPage() {
       showToast(error.message || "Error fetching invoice PDF");
     } finally {
       setIsFetchingInvoice(false);
+    }
+  };
+
+  const handleResendWhatsApp = async () => {
+    setIsResendingWhatsApp(true);
+    try {
+      const orderId = selectedOrder.id || selectedOrder._id || selectedOrder.mongo_id;
+      const res = await fetch(`/orders/resend-bill/v1/${orderId}/whatsapp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({}));
+        let errMsg = err.message || err.detail || "Failed to resend on WhatsApp";
+        if (Array.isArray(errMsg)) {
+            errMsg = errMsg[0]?.msg || "Failed to resend on WhatsApp";
+        }
+        throw new Error(errMsg);
+      }
+
+      showToast("Invoice sent successfully on WhatsApp");
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || "Error resending WhatsApp invoice");
+    } finally {
+      setIsResendingWhatsApp(false);
     }
   };
 
@@ -1049,20 +1083,32 @@ export default function OrdersPage() {
                         {selectedOrder.status?.toLowerCase() === "delivered" && (
                           <div className="flex gap-2 mt-1">
                             {!showBillMode ? (
-                              <div className="flex gap-2 w-full">
-                                <button 
-                                  onClick={() => { setShowBillMode(true); setBillDiscount(selectedOrder.discount || ""); }} 
-                                  className="flex-1 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-600/20"
-                                >
-                                  Generate Bill
-                                </button>
-                                <button 
-                                  onClick={handleViewInvoice} 
-                                  disabled={isFetchingInvoice}
-                                  className="flex-1 px-4 py-2 rounded-xl text-xs font-bold bg-sky-600 text-white hover:bg-sky-700 transition-colors shadow-md shadow-sky-600/20 disabled:opacity-50"
-                                >
-                                  {isFetchingInvoice ? "Loading..." : "View Invoice"}
-                                </button>
+                              <div className="flex flex-col gap-2 w-full">
+                                {!selectedOrder.invoice_no ? (
+                                  <button 
+                                    onClick={() => { setShowBillMode(true); setBillDiscount(selectedOrder.discount || ""); }} 
+                                    className="w-full px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-600/20"
+                                  >
+                                    Generate Bill
+                                  </button>
+                                ) : (
+                                  <>
+                                    <button 
+                                      onClick={handleViewInvoice} 
+                                      disabled={isFetchingInvoice}
+                                      className="w-full px-4 py-2 rounded-xl text-xs font-bold bg-sky-600 text-white hover:bg-sky-700 transition-colors shadow-md shadow-sky-600/20 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                    >
+                                      {isFetchingInvoice ? "Loading..." : <><Download className="w-3.5 h-3.5" /> PDF Bill</>}
+                                    </button>
+                                    <button
+                                      onClick={handleResendWhatsApp}
+                                      disabled={isResendingWhatsApp}
+                                      className="w-full px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors shadow-md shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                      {isResendingWhatsApp ? "Sending..." : "Resend Bill on WhatsApp"}
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             ) : (
                               <div className="flex gap-2 w-full">
