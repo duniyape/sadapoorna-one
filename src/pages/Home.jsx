@@ -10,7 +10,7 @@ export default function Home() {
   const allowedIcons = user?.access?.frontend_icons || user?.designation?.frontend_icons || [];
   const isAllowed = (item) => {
     if (!user) return false; // Hide modules until user is loaded
-    if (['home', 'ai-suite', 'whatsapp', 'product-units', 'product-attributes', 'packing-types', 'products', 'warehouses', 'vehicles', 'vendors', 'purchase-orders', 'warehouse-in', 'warehouse-inventory', 'vehicle-in', 'main-inventory'].includes(item.id)) return true;
+    if (['home', 'ai-suite', 'whatsapp', 'beat-mgmt', 'product-units', 'product-attributes', 'packing-types', 'products', 'warehouses', 'vehicles', 'vendors', 'purchase-orders', 'warehouse-in', 'warehouse-inventory', 'vehicle-in', 'main-inventory'].includes(item.id)) return true;
     return allowedIcons.some(iconData => {
       if (typeof iconData === 'string') return iconData === item.id;
       if (typeof iconData === 'object') return iconData.icon === item.id;
@@ -46,7 +46,7 @@ export default function Home() {
   }, [searchQuery, user]);
 
   const getRoute = (id) => {
-    const directRoutes = ['whatsapp', 'add-customer', 'orders', 'add-order', 'customers', 'inventory-stock', 'main-inventory', 'ai-suite', 'branch-profile', 'department', 'designation', 'users', 'accessibility', 'data-access', 'product-units', 'product-attributes', 'packing-types', 'products', 'warehouses', 'vehicles', 'vendors', 'purchase-orders', 'warehouse-in', 'warehouse-inventory', 'vehicle-in'];
+    const directRoutes = ['whatsapp', 'add-customer', 'orders', 'add-order', 'customers', 'inventory-stock', 'main-inventory', 'ai-suite', 'branch-profile', 'department', 'designation', 'users', 'accessibility', 'data-access', 'product-units', 'product-attributes', 'packing-types', 'products', 'warehouses', 'vehicles', 'vendors', 'purchase-orders', 'warehouse-in', 'warehouse-inventory', 'vehicle-in', 'beat-mgmt'];
     if (directRoutes.includes(id)) {
       return `/${id}`;
     }

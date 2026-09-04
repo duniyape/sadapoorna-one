@@ -37,6 +37,7 @@ import AddOrderPage from "./pages/AddOrderPage";
 import CreateReturnOrderPage from "./pages/CreateReturnOrderPage";
 import MainInventoryPage from "./pages/MainInventoryPage";
 import WhatsAppChatPage from "./pages/WhatsAppChatPage";
+import BeatManagementPage from "./pages/BeatManagementPage";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -95,6 +96,7 @@ const App = () => {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="module/:id" element={<GenericModulePage />} />
           <Route path="whatsapp" element={<WhatsAppChatPage />} />
+          <Route path="beat-mgmt" element={<BeatManagementPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
