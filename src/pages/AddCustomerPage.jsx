@@ -84,6 +84,7 @@ export default function AddCustomerPage() {
     price_category: '',
     branch_id: '',
     assigned_employee_id: '',
+    beat_id: '',
     documents: [],
     location: null
   });
@@ -92,6 +93,7 @@ export default function AddCustomerPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [branches, setBranches] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [beats, setBeats] = useState([]);
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [createdCustomer, setCreatedCustomer] = useState(null);
   const [originalMobile, setOriginalMobile] = useState('');
@@ -106,9 +108,10 @@ export default function AddCustomerPage() {
       try {
         const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
         
-        const [branchRes, userRes] = await Promise.all([
+        const [branchRes, userRes, beatRes] = await Promise.all([
           fetch('/branches/v1', { headers }).catch(() => null),
-          fetch('/users/get', { headers }).catch(() => null)
+          fetch('/users/get', { headers }).catch(() => null),
+          fetch('/beats/beats/', { headers }).catch(() => null)
         ]);
         if (branchRes && branchRes.ok) {
           const branchData = await branchRes.json();
@@ -117,6 +120,10 @@ export default function AddCustomerPage() {
         if (userRes && userRes.ok) {
           const userData = await userRes.json();
           setEmployees(userData.data || userData || []);
+        }
+        if (beatRes && beatRes.ok) {
+          const beatData = await beatRes.json();
+          setBeats(beatData.data || []);
         }
 
         if (isEditMode) {
@@ -141,6 +148,7 @@ export default function AddCustomerPage() {
                 gst_number: c.gst_number || '',
                 branch_id: c.branch_id || prev.branch_id,
                 assigned_employee_id: c.assigned_employee_id || prev.assigned_employee_id,
+                beat_id: c.beat_id || prev.beat_id,
                 created_at: c.created_at,
                 updated_at: c.updated_at,
                 status: c.status
@@ -232,6 +240,7 @@ export default function AddCustomerPage() {
       gst_number: formData.gst_number || null,
       branch_id: formData.branch_id,
       assigned_employee_id: formData.assigned_employee_id,
+      beat_id: formData.beat_id || null,
       location: formData.location || null
     };
 
@@ -528,7 +537,7 @@ export default function AddCustomerPage() {
               <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Assignment</h2>
             </div>
             <div className="p-3 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 content-start">
-              <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1 border-t border-slate-100 pt-3">
+              <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3 mt-1 border-t border-slate-100 pt-3">
                 <div>
                   <label className={labelClass}>Branch / Hub *</label>
                   <select required value={formData.branch_id} onChange={e => handleChange('branch_id', e.target.value)} className={inputClass}>
@@ -540,10 +549,19 @@ export default function AddCustomerPage() {
                 </div>
                 <div>
                   <label className={labelClass}>Assigned Employee *</label>
-                  <select required value={formData.assigned_employee_id} onChange={e => handleChange('assigned_employee_id', e.target.value)} className={inputClass}>
+                  <select required value={formData.assigned_employee_id} onChange={e => { handleChange('assigned_employee_id', e.target.value); handleChange('beat_id', ''); }} className={inputClass}>
                     <option value="">-- Select Employee --</option>
                     {employees.map(emp => (
                       <option key={emp.id || emp._id} value={emp.id || emp._id}>{emp.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Assigned Beat</label>
+                  <select value={formData.beat_id} onChange={e => handleChange('beat_id', e.target.value)} className={inputClass} disabled={!formData.assigned_employee_id}>
+                    <option value="">-- Select Beat --</option>
+                    {beats.filter(b => b.user_id === formData.assigned_employee_id).map(beat => (
+                      <option key={beat.id || beat._id} value={beat.id || beat._id}>{beat.beat_name}</option>
                     ))}
                   </select>
                 </div>
