@@ -978,7 +978,7 @@ export default function OrdersPage() {
                       Status
                     </h3>
 
-                    {selectedOrder.status === "Out for Delivery" && (
+                    {(selectedOrder.status === "Out for Delivery" || (selectedOrder.type === 'sale_return' && selectedOrder.status === "Confirmed")) && (
                       <div className="mb-4 space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Delivery Medium</div>
                         <div className="flex gap-4">
@@ -1014,66 +1014,119 @@ export default function OrdersPage() {
                     )}
 
                     <div className="flex items-center gap-4">
-                      {(!selectedOrder.status || selectedOrder.status === "Pending") && canConfirm && (
-                        <SwipeButton
-                          text="Confirm"
-                          colorClass="bg-emerald-500"
-                          onConfirm={() => {
-                            handleStatusChange(selectedOrder.id || selectedOrder._id, "Confirmed");
-                            setSelectedOrder((prev) => ({ ...prev, status: "Confirmed" }));
-                          }}
-                        />
-                      )}
-                      {selectedOrder.status === "Confirmed" && canPack && (
-                        <SwipeButton
-                          text="Pack"
-                          colorClass="bg-sky-500"
-                          onConfirm={() => {
-                            handleStatusChange(selectedOrder.id || selectedOrder._id, "Ready to Pick Up");
-                            setSelectedOrder((prev) => ({ ...prev, status: "Ready to Pick Up" }));
-                          }}
-                        />
-                      )}
-                      {selectedOrder.status === "Ready to Pick Up" && canDispatch && (
-                        <SwipeButton
-                          text="Dispatch"
-                          colorClass="bg-indigo-500"
-                          onConfirm={() => {
-                            handleStatusChange(selectedOrder.id || selectedOrder._id, "Out for Delivery");
-                            setSelectedOrder((prev) => ({ ...prev, status: "Out for Delivery" }));
-                          }}
-                        />
-                      )}
-                      {selectedOrder.status === "Out for Delivery" && canDeliver && (
-                        <div className={(!deliveryType || !selectedDeliveryId) ? "opacity-50 pointer-events-none" : ""}>
-                          <SwipeButton
-                            text="Deliver"
-                            colorClass="bg-emerald-600"
-                            onConfirm={() => {
-                              handleStatusChange(selectedOrder.id || selectedOrder._id, "Delivered", {
-                                delivery_type: deliveryType,
-                                vehicle_id: selectedDeliveryId
-                              });
-                              setSelectedOrder((prev) => ({ ...prev, status: "Delivered" }));
-                            }}
-                          />
-                        </div>
-                      )}
-
-                      {(!selectedOrder.status || !["delivered", "cancelled"].includes(selectedOrder.status?.toLowerCase())) && (
-                        <button
-                          onClick={() => {
-                            handleStatusChange(selectedOrder.id || selectedOrder._id, "Cancelled");
-                            setSelectedOrder((prev) => ({ ...prev, status: "Cancelled" }));
-                          }}
-                          className="px-4 py-2 rounded-xl text-xs font-bold border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors"
-                        >
-                          Cancel Order
-                        </button>
+                      {selectedOrder.type === 'sale_return' ? (
+                        <>
+                          {(!selectedOrder.status || selectedOrder.status === "Pending") && canConfirm && (
+                            <>
+                              <SwipeButton
+                                text="Confirm"
+                                colorClass="bg-emerald-500"
+                                onConfirm={() => {
+                                  handleStatusChange(selectedOrder.id || selectedOrder._id, "Confirmed");
+                                  setSelectedOrder((prev) => ({ ...prev, status: "Confirmed" }));
+                                }}
+                              />
+                              <button
+                                onClick={() => {
+                                  handleStatusChange(selectedOrder.id || selectedOrder._id, "Rejected");
+                                  setSelectedOrder((prev) => ({ ...prev, status: "Rejected" }));
+                                }}
+                                className="px-4 py-2 rounded-xl text-xs font-bold border border-orange-200 text-orange-600 bg-orange-50 hover:bg-orange-100 transition-colors h-11"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+                          {selectedOrder.status === "Confirmed" && canConfirm && (
+                            <div className={(!deliveryType || !selectedDeliveryId) ? "opacity-50 pointer-events-none" : ""}>
+                              <SwipeButton
+                                text="Complete"
+                                colorClass="bg-teal-500"
+                                onConfirm={() => {
+                                  handleStatusChange(selectedOrder.id || selectedOrder._id, "Completed", {
+                                    delivery_type: deliveryType,
+                                    vehicle_id: selectedDeliveryId
+                                  });
+                                  setSelectedOrder((prev) => ({ ...prev, status: "Completed" }));
+                                }}
+                              />
+                            </div>
+                          )}
+                          {(!selectedOrder.status || !["completed", "cancelled", "rejected"].includes(selectedOrder.status?.toLowerCase())) && (
+                            <button
+                              onClick={() => {
+                                handleStatusChange(selectedOrder.id || selectedOrder._id, "Cancelled");
+                                setSelectedOrder((prev) => ({ ...prev, status: "Cancelled" }));
+                              }}
+                              className="px-4 py-2 rounded-xl text-xs font-bold border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors h-11"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {(!selectedOrder.status || selectedOrder.status === "Pending") && canConfirm && (
+                            <SwipeButton
+                              text="Confirm"
+                              colorClass="bg-emerald-500"
+                              onConfirm={() => {
+                                handleStatusChange(selectedOrder.id || selectedOrder._id, "Confirmed");
+                                setSelectedOrder((prev) => ({ ...prev, status: "Confirmed" }));
+                              }}
+                            />
+                          )}
+                          {selectedOrder.status === "Confirmed" && canPack && (
+                            <SwipeButton
+                              text="Pack"
+                              colorClass="bg-sky-500"
+                              onConfirm={() => {
+                                handleStatusChange(selectedOrder.id || selectedOrder._id, "Ready to Pick Up");
+                                setSelectedOrder((prev) => ({ ...prev, status: "Ready to Pick Up" }));
+                              }}
+                            />
+                          )}
+                          {selectedOrder.status === "Ready to Pick Up" && canDispatch && (
+                            <SwipeButton
+                              text="Dispatch"
+                              colorClass="bg-indigo-500"
+                              onConfirm={() => {
+                                handleStatusChange(selectedOrder.id || selectedOrder._id, "Out for Delivery");
+                                setSelectedOrder((prev) => ({ ...prev, status: "Out for Delivery" }));
+                              }}
+                            />
+                          )}
+                          {selectedOrder.status === "Out for Delivery" && canDeliver && (
+                            <div className={(!deliveryType || !selectedDeliveryId) ? "opacity-50 pointer-events-none" : ""}>
+                              <SwipeButton
+                                text="Deliver"
+                                colorClass="bg-emerald-600"
+                                onConfirm={() => {
+                                  handleStatusChange(selectedOrder.id || selectedOrder._id, "Delivered", {
+                                    delivery_type: deliveryType,
+                                    vehicle_id: selectedDeliveryId
+                                  });
+                                  setSelectedOrder((prev) => ({ ...prev, status: "Delivered" }));
+                                }}
+                              />
+                            </div>
+                          )}
+                          {(!selectedOrder.status || !["delivered", "cancelled"].includes(selectedOrder.status?.toLowerCase())) && (
+                            <button
+                              onClick={() => {
+                                handleStatusChange(selectedOrder.id || selectedOrder._id, "Cancelled");
+                                setSelectedOrder((prev) => ({ ...prev, status: "Cancelled" }));
+                              }}
+                              className="px-4 py-2 rounded-xl text-xs font-bold border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors h-11"
+                            >
+                              Cancel Order
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
-                  {["delivered", "cancelled"].includes(
+                  {["delivered", "cancelled", "completed", "rejected"].includes(
                     selectedOrder.status?.toLowerCase(),
                   ) && (
                       <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 flex flex-col gap-3">
