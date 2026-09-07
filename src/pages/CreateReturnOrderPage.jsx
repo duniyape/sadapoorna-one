@@ -86,39 +86,8 @@ export default function CreateReturnOrderPage() {
   const { showToast, user } = useOutletContext();
 
   const allowedIcons = user?.access?.frontend_icons || user?.designation?.frontend_icons || [];
-  const orderPermissions = allowedIcons.find(iconData => typeof iconData === 'object' && iconData.icon === 'orders')?.buttons || [];
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
-  const canConfirm = isAdmin || orderPermissions.includes('Confirm');
 
-  const [warehouses, setWarehouses] = useState([]);
-  const [vehicles, setVehicles] = useState([]);
-  const [status, setStatus] = useState('Pending');
-  const [warehouseId, setWarehouseId] = useState('');
-  const [vehicleId, setVehicleId] = useState('');
-  const [deliveryType, setDeliveryType] = useState('vehicle');
 
-  useEffect(() => {
-    const fetchDropdowns = async () => {
-      try {
-        const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
-        const [whRes, vRes] = await Promise.all([
-          fetch('/warehouses/get', { headers }),
-          fetch('/vehicles/get', { headers })
-        ]);
-        if (whRes.ok) {
-          const whData = await whRes.json();
-          setWarehouses(whData.data || []);
-        }
-        if (vRes.ok) {
-          const vData = await vRes.json();
-          setVehicles(vData.data || []);
-        }
-      } catch (err) {
-        console.error("Error fetching dropdowns:", err);
-      }
-    };
-    fetchDropdowns();
-  }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -233,17 +202,6 @@ export default function CreateReturnOrderPage() {
       return;
     }
 
-    if (status === 'Completed') {
-      if (deliveryType === 'vehicle' && !vehicleId) {
-        showToast("Please select a Vehicle before confirming");
-        return;
-      }
-      if (deliveryType === 'warehouse' && !warehouseId) {
-        showToast("Please select a Warehouse before confirming");
-        return;
-      }
-    }
-
     setIsSaving(true);
     try {
       const payload = {
@@ -253,9 +211,7 @@ export default function CreateReturnOrderPage() {
         invoice_date: new Date(formData.invoice_date).toISOString(),
         gst_type: formData.gst_type,
         notes: formData.notes,
-        status: status,
-        warehouse_id: deliveryType === 'warehouse' ? (warehouseId || undefined) : undefined,
-        vehicle_id: deliveryType === 'vehicle' ? (vehicleId || undefined) : undefined,
+        status: 'Pending',
         discount: 0,
         other_charges: 0,
         items: itemsToReturn.map(item => ({
@@ -450,87 +406,7 @@ export default function CreateReturnOrderPage() {
                     <input type="date" value={formData.invoice_date} onChange={e => handleChange('invoice_date', e.target.value)} className={`${inputClass} pl-9`} />
                   </div>
                 </div>
-                <div className="col-span-1 md:col-span-2">
-                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">UPDATE RETURN STATUS</div>
-                  
-                  <div className="mb-4 inline-block px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase border bg-slate-50 border-slate-200 text-slate-600">
-                    Current Status: {status}
-                  </div>
-
-                  {status === 'Confirmed' && (
-                    <div className="mb-5 p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Select Delivery Medium</div>
-                      <div className="flex gap-4 mb-4">
-                        <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
-                          <input type="radio" name="deliveryType" value="vehicle" checked={deliveryType === "vehicle"} onChange={(e) => { setDeliveryType(e.target.value); setWarehouseId(''); }} className="accent-emerald-500" /> Vehicle
-                        </label>
-                        <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
-                          <input type="radio" name="deliveryType" value="warehouse" checked={deliveryType === "warehouse"} onChange={(e) => { setDeliveryType(e.target.value); setVehicleId(''); }} className="accent-emerald-500" /> Warehouse
-                        </label>
-                      </div>
-
-                      {deliveryType === 'warehouse' && (
-                        <div>
-                          <label className={labelClass}>Select Warehouse *</label>
-                          <div className="relative">
-                            <Building2 className="w-4 h-4 text-emerald-600 absolute left-3 top-2.5" />
-                            <select value={warehouseId} onChange={e => setWarehouseId(e.target.value)} className={`${inputClass} pl-9 border-emerald-200 focus:border-emerald-500`}>
-                              <option value="">-- Select Warehouse --</option>
-                              {warehouses.map(w => <option key={w.id || w._id} value={w.id || w._id}>{w.name}</option>)}
-                            </select>
-                          </div>
-                        </div>
-                      )}
-
-                      {deliveryType === 'vehicle' && (
-                        <div>
-                          <label className={labelClass}>Select Vehicle *</label>
-                          <div className="relative">
-                            <Truck className="w-4 h-4 text-emerald-600 absolute left-3 top-2.5" />
-                            <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} className={`${inputClass} pl-9 border-emerald-200 focus:border-emerald-500`}>
-                              <option value="">-- Select Vehicle --</option>
-                              {vehicles.map(v => <option key={v.id || v._id} value={v.id || v._id}>{v.vehicle_number || v.name}</option>)}
-                            </select>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-3">
-                    {status === 'Pending' && canConfirm && (
-                      <>
-                        <SwipeButton
-                          text="Confirm"
-                          colorClass="bg-emerald-500"
-                          onConfirm={() => setStatus('Confirmed')}
-                        />
-                        <button type="button" onClick={() => setStatus('Rejected')} className="px-4 py-1.5 rounded-full text-xs font-bold border border-orange-200 text-orange-600 bg-orange-50 hover:bg-orange-100 transition-colors">Reject</button>
-                        <button type="button" onClick={() => setStatus('Cancelled')} className="px-4 py-1.5 rounded-full text-xs font-bold border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors">Cancel</button>
-                      </>
-                    )}
-
-                    {status === 'Confirmed' && canConfirm && (
-                      <>
-                        <div className={((deliveryType === 'warehouse' && !warehouseId) || (deliveryType === 'vehicle' && !vehicleId)) ? "opacity-50 pointer-events-none" : ""}>
-                          <SwipeButton
-                            text="Complete"
-                            colorClass="bg-teal-500"
-                            onConfirm={() => setStatus('Completed')}
-                          />
-                        </div>
-                        <button type="button" onClick={() => setStatus('Cancelled')} className="px-4 py-1.5 rounded-full text-xs font-bold border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors">Cancel</button>
-                      </>
-                    )}
-
-                    {status === 'Pending' && !canConfirm && (
-                      <button type="button" onClick={() => setStatus('Cancelled')} className="px-4 py-1.5 rounded-full text-xs font-bold border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors">Cancel</button>
-                    )}
-                  </div>
-                </div>
               </div>
-
-
 
               <div>
                 <label className={labelClass}>Return Notes / Reason</label>

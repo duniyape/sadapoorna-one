@@ -46,7 +46,7 @@ export default function Home() {
   }, [searchQuery, user]);
 
   const getRoute = (id) => {
-    const directRoutes = ['whatsapp', 'add-customer', 'orders', 'add-order', 'customers', 'inventory-stock', 'main-inventory', 'ai-suite', 'branch-profile', 'department', 'designation', 'users', 'accessibility', 'data-access', 'product-units', 'product-attributes', 'packing-types', 'products', 'warehouses', 'vehicles', 'vendors', 'purchase-orders', 'warehouse-in', 'warehouse-inventory', 'vehicle-in', 'beat-mgmt'];
+    const directRoutes = ['whatsapp', 'add-customer', 'orders', 'add-order', 'customers', 'inventory-stock', 'main-inventory', 'ai-suite', 'branch-profile', 'department', 'designation', 'users', 'accessibility', 'data-access', 'product-units', 'product-attributes', 'packing-types', 'products', 'warehouses', 'vehicles', 'vendors', 'purchase-orders', 'warehouse-in', 'warehouse-inventory', 'vehicle-in', 'beat-mgmt', 'account-master'];
     if (directRoutes.includes(id)) {
       return `/${id}`;
     }
@@ -54,7 +54,7 @@ export default function Home() {
   };
 
   const handleCardClick = (item) => {
-    navigate(getRoute(item.id));
+    navigate(item.route || getRoute(item.id));
     showToast(`Navigated to ${item.title}`);
   };
 

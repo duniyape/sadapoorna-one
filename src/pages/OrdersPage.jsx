@@ -1133,7 +1133,7 @@ export default function OrdersPage() {
                         <div className="text-[10px] text-slate-500 font-medium">
                           This order is {selectedOrder.status}. The status cannot be changed further.
                         </div>
-                        {selectedOrder.status?.toLowerCase() === "delivered" && (
+                        {(selectedOrder.status?.toLowerCase() === "delivered" || (selectedOrder.type === 'sale_return' && selectedOrder.status?.toLowerCase() === "completed")) && (
                           <div className="flex gap-2 mt-1">
                             {!showBillMode ? (
                               <div className="flex flex-col gap-2 w-full">

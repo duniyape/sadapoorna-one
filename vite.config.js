@@ -11,7 +11,7 @@ export default defineConfig({
   server: {
     proxy: {
       // Single catch-all proxy — all API requests go to API_BASE_URL
-      '^/(branches|masters|users|auth|data-access-hierarchy|access|customer|product-units|attributes|products|variants|get|packing-types|whatsapp|whatsapp-webhook|warehouses|vehicles|vendors|orders|inventory|beats)/': {
+      '^/(branches|masters|users|auth|data-access-hierarchy|access|customer|product-units|attributes|products|variants|get|packing-types|whatsapp|whatsapp-webhook|warehouses|vehicles|vendors|orders|inventory|beats|accounting)/': {
         target: API_BASE_URL,
         changeOrigin: true,
       },
