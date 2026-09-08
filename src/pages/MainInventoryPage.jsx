@@ -59,8 +59,20 @@ export default function MainInventoryPage() {
   };
 
   useEffect(() => {
-    fetchInventory(page, searchTerm);
-  }, [page, searchTerm]);
+    if (activeTab === 'main') {
+      fetchInventory(page, searchTerm);
+    }
+  }, [page, searchTerm, activeTab]);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      if (activeTab === 'main') {
+        fetchInventory(page, searchTerm);
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [page, searchTerm, activeTab]);
 
   // Debounced search to avoid too many API calls while typing
   const debouncedSearch = useDebounce((value) => {
@@ -326,6 +338,14 @@ function UnblockedInventoryTab() {
     fetchInventory(page, searchTerm, warehouseId, productId);
   }, [page, searchTerm, warehouseId, productId]);
 
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchInventory(page, searchTerm, warehouseId, productId);
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [page, searchTerm, warehouseId, productId]);
+
   const debouncedSearch = useDebounce((value) => {
     setSearchTerm(value);
     setPage(1);
@@ -508,6 +528,14 @@ function VehicleInventoryTab() {
 
   useEffect(() => {
     fetchInventory(page, searchTerm, vehicleId, productId);
+  }, [page, searchTerm, vehicleId, productId]);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchInventory(page, searchTerm, vehicleId, productId);
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [page, searchTerm, vehicleId, productId]);
 
   const debouncedSearch = useDebounce((value) => {

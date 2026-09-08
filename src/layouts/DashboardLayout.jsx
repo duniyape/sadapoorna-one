@@ -43,7 +43,7 @@ export default function DashboardLayout() {
       
       {/* Toast Notification Banner */}
       {toastMessage && (
-        <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-between sm:justify-start gap-3 border border-slate-700 animate-in fade-in">
+        <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-6 z-[9999] bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-between sm:justify-start gap-3 border border-slate-700 animate-in fade-in">
           <div className="flex items-center gap-2.5">
             <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
             <span className="text-xs sm:text-sm font-medium">{toastMessage}</span>

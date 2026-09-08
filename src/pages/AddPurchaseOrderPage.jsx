@@ -281,8 +281,8 @@ export default function AddPurchaseOrderPage() {
       });
 
       // Simple validation
-      if (!payload.vendor_id || !payload.warehouse_id) {
-        showToast("Vendor and Warehouse are required");
+      if (!payload.vendor_id) {
+        showToast("Vendor is required");
         setIsSaving(false);
         return;
       }
@@ -393,6 +393,7 @@ export default function AddPurchaseOrderPage() {
                 {vendors.map(v => <option key={v.id || v._id} value={v.id || v._id}>{v.business_name || v.name || 'Unnamed Vendor'}</option>)}
               </select>
             </div>
+            {/* 
             <div className="lg:col-span-2">
               <label className={labelClass}>Destination Warehouse *</label>
               <select required value={formData.warehouse_id} onChange={e => handleChange('warehouse_id', e.target.value)} className={inputClass}>
@@ -400,6 +401,7 @@ export default function AddPurchaseOrderPage() {
                 {warehouses.map(w => <option key={w.id || w._id} value={w.id || w._id}>{w.name}</option>)}
               </select>
             </div>
+            */}
             
             <div>
               <label className={labelClass}>Invoice No. *</label>

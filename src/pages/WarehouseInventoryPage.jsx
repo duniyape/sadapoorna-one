@@ -49,6 +49,14 @@ export default function WarehouseInventoryPage() {
     fetchInventory();
   }, [page, limit, searchQuery, warehouseId, productId]);
 
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchInventory();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [page, limit, searchQuery, warehouseId, productId]);
+
   const fetchInventory = async () => {
     setLoading(true);
     try {

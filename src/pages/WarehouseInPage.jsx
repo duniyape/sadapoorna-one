@@ -210,7 +210,7 @@ export default function WarehouseInPage() {
               }}
               className="w-full text-sm rounded-xl border border-slate-200 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm font-bold text-slate-700"
             >
-              <option value="unallocated">Unallocated Stock</option>
+              <option value="unallocated">Purchase To Warehouse</option>
               <option value="vehicle">From Vehicle</option>
             </select>
           </div>
@@ -280,14 +280,14 @@ export default function WarehouseInPage() {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="p-8 text-center text-slate-500">Loading unallocated inventory...</td>
+                  <td colSpan="4" className="p-8 text-center text-slate-500">Loading purchased inventory...</td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan="4" className="p-8 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Package className="w-8 h-8 text-slate-300" />
-                      <span>No unallocated inventory found.</span>
+                      <span>No purchased inventory found.</span>
                     </div>
                   </td>
                 </tr>
