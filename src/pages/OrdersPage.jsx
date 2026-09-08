@@ -1045,7 +1045,7 @@ export default function OrdersPage() {
                                 onConfirm={() => {
                                   handleStatusChange(selectedOrder.id || selectedOrder._id, "Completed", {
                                     delivery_type: deliveryType,
-                                    vehicle_id: selectedDeliveryId
+                                    [deliveryType === "vehicle" ? "vehicle_id" : "warehouse_id"]: selectedDeliveryId
                                   });
                                   setSelectedOrder((prev) => ({ ...prev, status: "Completed" }));
                                 }}
@@ -1104,7 +1104,7 @@ export default function OrdersPage() {
                                 onConfirm={() => {
                                   handleStatusChange(selectedOrder.id || selectedOrder._id, "Delivered", {
                                     delivery_type: deliveryType,
-                                    vehicle_id: selectedDeliveryId
+                                    [deliveryType === "vehicle" ? "vehicle_id" : "warehouse_id"]: selectedDeliveryId
                                   });
                                   setSelectedOrder((prev) => ({ ...prev, status: "Delivered" }));
                                 }}
