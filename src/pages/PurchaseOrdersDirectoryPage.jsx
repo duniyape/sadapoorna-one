@@ -266,7 +266,7 @@ export default function PurchaseOrdersDirectoryPage() {
                       {order.invoice_no}
                     </div>
                     <div className="text-slate-500 font-medium truncate mt-0.5 text-[10px]">
-                      {formatDate(order.invoice_date)}
+                      {formatDate(order.invoice_date || order.created_at || order.createdAt || order.date)}
                     </div>
                   </div>
 
@@ -383,7 +383,7 @@ export default function PurchaseOrdersDirectoryPage() {
                     </span>
                   </h2>
                   <p className="text-xs font-semibold text-slate-500 mt-0.5 flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5" /> Date: {formatDate(selectedOrder.invoice_date)} 
+                    <Calendar className="w-3.5 h-3.5" /> Date: {formatDate(selectedOrder.invoice_date || selectedOrder.created_at || selectedOrder.createdAt || selectedOrder.date)} 
                   </p>
                 </div>
               </div>

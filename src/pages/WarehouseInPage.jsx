@@ -145,7 +145,7 @@ export default function WarehouseInPage() {
     try {
       const token = localStorage.getItem('token');
       const payload = {
-        type: "Warehouse_IN",
+        type: sourceType === 'vehicle' ? "vehicle_to_warehouse" : "purchase_to_warehouse",
         vendor_id: "",
         customer_id: "",
         warehouse_id: globalWarehouseId,

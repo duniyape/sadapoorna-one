@@ -109,13 +109,23 @@ export default function AddOrderPage() {
     return () => clearTimeout(timer);
   }, [customerSearchTerm, selectedCustomerObj]);
 
+  // Clear cached stock when warehouse changes so it fetches fresh data for the new warehouse
+  useEffect(() => {
+    setStockInventory({});
+  }, [formData.warehouse_id]);
+
   useEffect(() => {
     formData.items.forEach(async (item) => {
+      // Re-fetch if stock is undefined for this variant
       if (item.variant_id && stockInventory[item.variant_id] === undefined) {
         setStockInventory(prev => ({ ...prev, [item.variant_id]: 'loading' }));
         try {
           const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
-          const res = await fetch(`/inventory/inventory/unblocked?variant_id=${item.variant_id}&limit=100`, { headers });
+          let url = `/inventory/inventory/unblocked?variant_id=${item.variant_id}&limit=100`;
+          if (formData.warehouse_id) {
+            url += `&warehouse_id=${formData.warehouse_id}`;
+          }
+          const res = await fetch(url, { headers });
           if (res.ok) {
             const json = await res.json();
             const records = json.data || (Array.isArray(json) ? json : []);
@@ -130,7 +140,7 @@ export default function AddOrderPage() {
         }
       }
     });
-  }, [formData.items, stockInventory]);
+  }, [formData.items, stockInventory, formData.warehouse_id]);
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -446,12 +456,19 @@ export default function AddOrderPage() {
                             className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
                             onClick={() => {
                               setSelectedCustomerObj(c);
-                              setCustomerSearchTerm(c.company_name || c.business_name || c.name || 'Unnamed Customer');
+                              const dispName = (c.company_name || c.business_name) 
+                                ? (c.name && c.name !== (c.company_name || c.business_name) ? `${c.company_name || c.business_name} (${c.name})` : (c.company_name || c.business_name))
+                                : (c.name || 'Unnamed Customer');
+                              setCustomerSearchTerm(dispName);
                               handleChange('customer_id', c.mongo_id || c._id || c.id);
                               setShowCustomerDropdown(false);
                             }}
                           >
-                            <div className="font-bold text-slate-800 text-sm">{c.company_name || c.business_name || c.name || 'Unnamed Customer'}</div>
+                            <div className="font-bold text-slate-800 text-sm">
+                              {(c.company_name || c.business_name) 
+                                ? (c.name && c.name !== (c.company_name || c.business_name) ? `${c.company_name || c.business_name} (${c.name})` : (c.company_name || c.business_name))
+                                : (c.name || 'Unnamed Customer')}
+                            </div>
                             <div className="text-xs text-slate-500">{c.email || c.phone || 'No contact info'}</div>
                           </div>
                         ))
@@ -464,7 +481,11 @@ export default function AddOrderPage() {
               ) : (
                 <div className="flex items-center justify-between p-2.5 border border-indigo-200 bg-indigo-50/50 rounded-xl">
                   <div>
-                    <div className="font-bold text-indigo-900 text-sm">{selectedCustomerObj.company_name || selectedCustomerObj.business_name || selectedCustomerObj.name || 'Unnamed Customer'}</div>
+                    <div className="font-bold text-indigo-900 text-sm">
+                      {(selectedCustomerObj.company_name || selectedCustomerObj.business_name) 
+                        ? (selectedCustomerObj.name && selectedCustomerObj.name !== (selectedCustomerObj.company_name || selectedCustomerObj.business_name) ? `${selectedCustomerObj.company_name || selectedCustomerObj.business_name} (${selectedCustomerObj.name})` : (selectedCustomerObj.company_name || selectedCustomerObj.business_name))
+                        : (selectedCustomerObj.name || 'Unnamed Customer')}
+                    </div>
                   </div>
                   <button
                     type="button"

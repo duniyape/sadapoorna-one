@@ -295,7 +295,11 @@ export default function OrdersPage() {
       let url = `/orders/v1?page=${page}&limit=${limit}`;
       if (orderType !== "all") url += `&type=${orderType}`;
       if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
-      if (filter !== "all") url += `&status=${encodeURIComponent(filter)}`;
+      if (filter !== "all") {
+        if (filter === "billed") url += `&is_billed=true`;
+        else if (filter === "unbilled") url += `&is_billed=false`;
+        else url += `&status=${encodeURIComponent(filter)}`;
+      }
       if (fromDate) url += `&from_date=${encodeURIComponent(fromDate)}`;
       if (toDate) url += `&to_date=${encodeURIComponent(toDate)}`;
 
@@ -473,6 +477,8 @@ export default function OrdersPage() {
               <option value="Out for Delivery">Out for Delivery</option>
               <option value="Delivered">Delivered</option>
               <option value="Cancelled">Cancelled</option>
+              <option value="billed">Billed (Invoice Generated)</option>
+              <option value="unbilled">Unbilled (No Invoice)</option>
             </select>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
@@ -528,8 +534,7 @@ export default function OrdersPage() {
           ) : (
             ordersList.map((ord) => {
               const orderId = ord.id || ord._id;
-              const custName =
-                ord.customer?.company_name || ord.customer?.name || "Unknown";
+              const custName = ord.customer?.company_name || ord.customer?.business_name || ord.customer?.name || "Unknown";
               const itemsStr = `${ord.items?.length || 0} Items`;
               const totalAmt =
                 ord.total ||
@@ -546,17 +551,21 @@ export default function OrdersPage() {
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Order {ord.order_no || ord.invoice_no || orderId.slice(-6)}
+                      <div className="flex items-center gap-2">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          Order {ord.order_no || ord.invoice_no || orderId.slice(-6)}
+                        </div>
+                        <div className="text-[10px] text-slate-400">&bull;</div>
+                        <div className="text-[10px] font-semibold text-slate-500">
+                          {formatDate(ord.invoice_date || ord.created_at || ord.createdAt || ord.date)}
+                        </div>
                       </div>
                       <div className="font-bold text-slate-900 text-sm mt-0.5">
                         {custName}
                       </div>
                     </div>
-                    <span
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${ord.payment_status === "Paid" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}
-                    >
-                      {ord.payment_status || "Pending"}
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border h-fit ${ord.invoice_no ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                      {ord.invoice_no ? 'Billed' : 'Unbilled'}
                     </span>
                   </div>
 
@@ -615,7 +624,7 @@ export default function OrdersPage() {
                 <th className="p-4">Customer Name</th>
                 <th className="p-4">Order Summary</th>
                 <th className="p-4">Total Amount</th>
-                <th className="p-4">Payment</th>
+                <th className="p-4">Billing</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
@@ -642,10 +651,7 @@ export default function OrdersPage() {
               ) : (
                 ordersList.map((ord) => {
                   const orderId = ord.id || ord._id;
-                  const custName =
-                    ord.customer?.company_name ||
-                    ord.customer?.name ||
-                    "Unknown";
+                  const custName = ord.customer?.company_name || ord.customer?.business_name || ord.customer?.name || "Unknown";
                   const itemsStr = `${ord.items?.length || 0} Items`;
                   const totalAmt =
                     ord.total ||
@@ -660,8 +666,13 @@ export default function OrdersPage() {
                       key={orderId}
                       className="hover:bg-slate-50/60 transition-colors"
                     >
-                      <td className="p-4 font-bold text-slate-900">
-                        {ord.order_no || ord.invoice_no || orderId.slice(-6)}
+                      <td className="p-4">
+                        <div className="font-bold text-slate-900">
+                          {ord.order_no || ord.invoice_no || orderId.slice(-6)}
+                        </div>
+                        <div className="text-[10px] text-slate-500 mt-0.5 font-semibold">
+                          {formatDate(ord.invoice_date || ord.created_at || ord.createdAt || ord.date)}
+                        </div>
                       </td>
                       <td className="p-4 font-semibold text-slate-800">
                         {custName}
@@ -671,10 +682,8 @@ export default function OrdersPage() {
                         ₹{totalAmt.toLocaleString()}
                       </td>
                       <td className="p-4">
-                        <span
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${ord.payment_status === "Paid" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}
-                        >
-                          {ord.payment_status || "Pending"}
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${ord.invoice_no ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                          {ord.invoice_no ? 'Billed' : 'Unbilled'}
                         </span>
                       </td>
                       <td className="p-4">
@@ -760,10 +769,13 @@ export default function OrdersPage() {
                   <FileText className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 flex items-center gap-3">
-                    {selectedOrder.invoice_no ||
-                      selectedOrder.id?.slice(-6) ||
-                      selectedOrder._id?.slice(-6)}
+                  <h2 className="text-xl font-black text-slate-900 flex flex-wrap items-center gap-3">
+                    {selectedOrder.order_no ? `Order: ${selectedOrder.order_no}` : (selectedOrder.invoice_no ? `Invoice: ${selectedOrder.invoice_no}` : `ID: ${selectedOrder.id?.slice(-6) || selectedOrder._id?.slice(-6)}`)}
+                    {selectedOrder.order_no && selectedOrder.invoice_no && (
+                      <span className="text-sm font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded">
+                        Inv: {selectedOrder.invoice_no}
+                      </span>
+                    )}
                     <span
                       className={`px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-wider shadow-sm ${getStatusColor(selectedOrder.status)}`}
                     >
@@ -772,7 +784,7 @@ export default function OrdersPage() {
                   </h2>
                   <p className="text-xs font-semibold text-slate-500 mt-0.5 flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5" /> Date:{" "}
-                    {formatDate(selectedOrder.invoice_date)}
+                    {formatDate(selectedOrder.invoice_date || selectedOrder.created_at || selectedOrder.createdAt || selectedOrder.date)}
                   </p>
                 </div>
               </div>
@@ -805,10 +817,10 @@ export default function OrdersPage() {
                   <Building2 className="w-8 h-8 text-amber-400 shrink-0" />
                   <div className="min-w-0">
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Type
+                      Order Type
                     </div>
                     <div className="text-xs font-bold text-slate-800 leading-tight mt-0.5 truncate uppercase">
-                      {selectedOrder.type || "SALE"}
+                      {(selectedOrder.type || "SALE").replace(/_/g, ' ')}
                     </div>
                   </div>
                 </div>
@@ -990,24 +1002,29 @@ export default function OrdersPage() {
                           </label>
                         </div>
 
-                        {(deliveryType === "vehicle" || deliveryType === "warehouse") && (
+                        {deliveryType === "vehicle" && (
                           <div className="mt-3">
                             <select
                               value={selectedDeliveryId}
                               onChange={(e) => setSelectedDeliveryId(e.target.value)}
                               className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-indigo-500 bg-white"
                             >
-                              <option value="">Select {deliveryType === "vehicle" ? "a vehicle" : "a warehouse"}</option>
+                              <option value="">Select a vehicle</option>
                               {isFetchingDeliveryOptions ? (
                                 <option value="" disabled>Loading options...</option>
                               ) : (
                                 deliveryOptions.map(opt => (
                                   <option key={opt.id || opt._id} value={opt.id || opt._id}>
-                                    {deliveryType === "vehicle" ? `${opt.vehicle_number} - ${opt.vehicle_type}` : opt.name}
+                                    {opt.vehicle_number} - {opt.vehicle_type}
                                   </option>
                                 ))
                               )}
                             </select>
+                          </div>
+                        )}
+                        {deliveryType === "warehouse" && (
+                          <div className="mt-3 text-xs text-slate-500 font-medium px-1">
+                            Will be delivered directly to the assigned warehouse.
                           </div>
                         )}
                       </div>
@@ -1038,14 +1055,14 @@ export default function OrdersPage() {
                             </>
                           )}
                           {selectedOrder.status === "Confirmed" && canConfirm && (
-                            <div className={(!deliveryType || !selectedDeliveryId) ? "opacity-50 pointer-events-none" : ""}>
+                            <div className={(!deliveryType || (deliveryType === "vehicle" && !selectedDeliveryId)) ? "opacity-50 pointer-events-none" : ""}>
                               <SwipeButton
                                 text="Complete"
                                 colorClass="bg-teal-500"
                                 onConfirm={() => {
                                   handleStatusChange(selectedOrder.id || selectedOrder._id, "Completed", {
                                     delivery_type: deliveryType,
-                                    [deliveryType === "vehicle" ? "vehicle_id" : "warehouse_id"]: selectedDeliveryId
+                                    [deliveryType === "vehicle" ? "vehicle_id" : "warehouse_id"]: deliveryType === "vehicle" ? selectedDeliveryId : (selectedOrder.warehouse_id || selectedOrder.warehouse?._id)
                                   });
                                   setSelectedOrder((prev) => ({ ...prev, status: "Completed" }));
                                 }}
@@ -1097,14 +1114,14 @@ export default function OrdersPage() {
                             />
                           )}
                           {selectedOrder.status === "Out for Delivery" && canDeliver && (
-                            <div className={(!deliveryType || !selectedDeliveryId) ? "opacity-50 pointer-events-none" : ""}>
+                            <div className={(!deliveryType || (deliveryType === "vehicle" && !selectedDeliveryId)) ? "opacity-50 pointer-events-none" : ""}>
                               <SwipeButton
                                 text="Deliver"
                                 colorClass="bg-emerald-600"
                                 onConfirm={() => {
                                   handleStatusChange(selectedOrder.id || selectedOrder._id, "Delivered", {
                                     delivery_type: deliveryType,
-                                    [deliveryType === "vehicle" ? "vehicle_id" : "warehouse_id"]: selectedDeliveryId
+                                    [deliveryType === "vehicle" ? "vehicle_id" : "warehouse_id"]: deliveryType === "vehicle" ? selectedDeliveryId : (selectedOrder.warehouse_id || selectedOrder.warehouse?._id)
                                   });
                                   setSelectedOrder((prev) => ({ ...prev, status: "Delivered" }));
                                 }}
