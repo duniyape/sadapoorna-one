@@ -45,6 +45,11 @@ const AccountsMasterPage         = React.lazy(() => import("./pages/AccountsMast
 const AccountingVouchersPage     = React.lazy(() => import("./pages/AccountingVouchersPage"));
 const AddVoucherPage             = React.lazy(() => import("./pages/AddVoucherPage"));
 const EmployeeCashBalancesPage   = React.lazy(() => import("./pages/EmployeeCashBalancesPage"));
+const ChequeManagementPage       = React.lazy(() => import("./pages/ChequeManagementPage"));
+const FinanceCollectionsPage     = React.lazy(() => import("./pages/FinanceCollectionsPage"));
+const FinanceClearancesPage      = React.lazy(() => import("./pages/FinanceClearancesPage"));
+const BankVerificationPage       = React.lazy(() => import("./pages/BankVerificationPage"));
+const CustomerKhataPage          = React.lazy(() => import("./pages/CustomerKhataPage"));
 
 // ── Customer 360° — layout + 5 separate tab pages ────────────────────────────
 const CustomerProfileLayout = React.lazy(() => import("./pages/CustomerProfileLayout"));
@@ -148,6 +153,11 @@ const App = () => (
                 <Route path="accounting-vouchers" element={<AccountingVouchersPage />} />
                 <Route path="add-voucher"         element={<AddVoucherPage />} />
                 <Route path="employee-cash"       element={<EmployeeCashBalancesPage />} />
+                <Route path="cheque-management"   element={<ChequeManagementPage />} />
+                <Route path="finance-collections" element={<FinanceCollectionsPage />} />
+                <Route path="finance-clearances"  element={<FinanceClearancesPage />} />
+                <Route path="bank-verification"   element={<BankVerificationPage />} />
+                <Route path="customer-khata"      element={<CustomerKhataPage />} />
                 <Route path="module/:id"          element={<GenericModulePage />} />
 
                 {/* ── Other ─────────────────────────────────────── */}

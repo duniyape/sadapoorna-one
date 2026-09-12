@@ -27,6 +27,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import FinanceReceiptModal from "../components/FinanceReceiptModal";
 
 const SwipeButton = ({ text, onConfirm, colorClass = "bg-emerald-500" }) => {
   const [sliderValue, setSliderValue] = useState(0);
@@ -176,6 +177,8 @@ export default function OrdersPage() {
   const [isGeneratingBill, setIsGeneratingBill] = useState(false);
   const [isFetchingInvoice, setIsFetchingInvoice] = useState(false);
   const [isResendingWhatsApp, setIsResendingWhatsApp] = useState(false);
+  
+  const [showFinanceModal, setShowFinanceModal] = useState(false);
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -1186,14 +1189,30 @@ export default function OrdersPage() {
                           {!showBillMode ? (
                             <div className="flex flex-col gap-2 w-full">
                               {!selectedOrder.invoice_no ? (
-                                <button
-                                  onClick={() => { setShowBillMode(true); setBillDiscount(selectedOrder.discount || ""); }}
-                                  className="w-full px-4 py-2.5 rounded-xl text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2"
-                                >
-                                  <FileText className="w-3.5 h-3.5" /> Generate Bill
-                                </button>
+                                <div className="flex gap-2 w-full">
+                                  <button
+                                    onClick={() => { setShowBillMode(true); setBillDiscount(selectedOrder.discount || ""); }}
+                                    className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
+                                  >
+                                    <FileText className="w-4 h-4" />
+                                    Generate Bill
+                                  </button>
+                                  <button
+                                    onClick={() => setShowFinanceModal(true)}
+                                    className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
+                                  >
+                                    <IndianRupee className="w-4 h-4" />
+                                    Collect Payment
+                                  </button>
+                                </div>
                               ) : (
                                 <>
+                                  <button
+                                    onClick={() => setShowFinanceModal(true)}
+                                    className="w-full px-4 py-3 rounded-xl text-xs font-black bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all border border-indigo-200 flex items-center justify-center gap-2"
+                                  >
+                                    <IndianRupee className="w-4 h-4" /> Collect Payment
+                                  </button>
                                   <button
                                     onClick={handleViewInvoice}
                                     disabled={isFetchingInvoice}
@@ -1251,6 +1270,19 @@ export default function OrdersPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {showFinanceModal && selectedOrder && (
+        <FinanceReceiptModal 
+          order={selectedOrder} 
+          onClose={() => setShowFinanceModal(false)}
+          onSuccess={(msg) => {
+            showToast(msg);
+            setShowFinanceModal(false);
+            fetchOrders(); // Refresh table
+            setSelectedOrder(null); // Close modal
+          }}
+        />
       )}
     </div>
   );

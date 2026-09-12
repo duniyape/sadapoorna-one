@@ -42,7 +42,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, mobileM
         {(() => {
           const allowedIcons = user?.access?.frontend_icons || user?.designation?.frontend_icons || [];
           const isAllowed = (item) => {
-            if (['home', 'ai-suite', 'whatsapp', 'product-units', 'product-attributes', 'packing-types', 'products', 'warehouses', 'vehicles', 'vendors', 'purchase-orders', 'main-inventory', 'account-master', 'accounting-vouchers', 'employee-cash'].includes(item.id)) return true; 
+            if (['home', 'ai-suite', 'whatsapp', 'beat-mgmt', 'product-units', 'product-attributes', 'packing-types', 'products', 'warehouses', 'vehicles', 'vendors', 'purchase-orders', 'warehouse-in', 'warehouse-inventory', 'vehicle-in', 'main-inventory', 'account-master', 'accounting-vouchers', 'employee-cash', 'cheque-management'].includes(item.id)) return true; 
             return allowedIcons.some(iconData => {
               if (typeof iconData === 'string') return iconData === item.id;
               if (typeof iconData === 'object') return iconData.icon === item.id;

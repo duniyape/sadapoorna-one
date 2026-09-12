@@ -37,6 +37,7 @@ import {
   MessageCircle,
   Layers,
   BookOpen,
+  Landmark,
 } from 'lucide-react';
 
 export const SALES_OPERATIONS = [
@@ -57,22 +58,33 @@ export const HR_FLEET_MODULES = [
   { id: 'purchase-orders', title: 'Purchase Orders', icon: ShoppingCart, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Vendor orders & inventory intake', route: '/purchase-orders' },
 ];
 
-export const MASTER_MODULES = [
+export const SYSTEM_HR_MODULES = [
   { id: 'branch-profile', title: 'Branch Profile', icon: Building2, color: 'bg-amber-100 text-amber-600 border-amber-200', badge: null, desc: 'Manage company branches' },
   { id: 'department', title: 'Department', icon: Briefcase, color: 'bg-orange-100 text-orange-600 border-orange-200', badge: null, desc: 'Organizational departments' },
   { id: 'designation', title: 'Designation', icon: BadgeCheck, color: 'bg-rose-100 text-rose-600 border-rose-200', badge: null, desc: 'Employee roles & designations' },
   { id: 'users', title: 'Users', icon: UserCog, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Create & manage staff users', key: ['Create', 'Edit', 'View'] },
   { id: 'accessibility', title: 'Accessibility', icon: ShieldCheck, color: 'bg-teal-100 text-teal-600 border-teal-200', badge: 'Admin', desc: 'Manage access controls' },
   { id: 'data-access', title: 'Data Access', icon: FolderLock, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: 'New', desc: 'Manage reporting hierarchy', route: '/data-access' },
+];
+
+export const INVENTORY_MASTER_MODULES = [
   { id: 'product-units', title: 'Product Units', icon: Package, color: 'bg-emerald-100 text-emerald-600 border-emerald-200', desc: 'Manage product measurement units', route: '/product-units' },
   { id: 'product-attributes', title: 'Product Attributes', icon: Tags, badge: 'New', desc: 'Categories, Sub-Categories, and Brands', route: '/product-attributes' },
   { id: 'packing-types', title: 'Packing Types', icon: BoxSelect, color: 'bg-fuchsia-100 text-fuchsia-600 border-fuchsia-200', badge: 'New', desc: 'Manage packing types for products', route: '/packing-types' },
   { id: 'products', title: 'Products', icon: ShoppingCart, color: 'bg-sky-100 text-sky-600 border-sky-200', badge: 'New', desc: 'Create products & manage variants', route: '/products' },
   { id: 'warehouses', title: 'Warehouses', icon: Building2, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: 'New', desc: 'Manage warehouses & storage', route: '/warehouses' },
   { id: 'vendors', title: 'Vendors', icon: Handshake, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Manage vendors & suppliers', route: '/vendors' },
+];
+
+export const ACCOUNTING_FINANCE_MODULES = [
   { id: 'account-master', title: 'Accounts Master', icon: Layers, color: 'bg-fuchsia-100 text-fuchsia-600 border-fuchsia-200', badge: 'New', desc: 'Manage accounting groups & ledgers', route: '/account-master' },
   { id: 'accounting-vouchers', title: 'Accounting Vouchers', icon: Receipt, color: 'bg-emerald-100 text-emerald-600 border-emerald-200', badge: 'New', desc: 'Manage accounting entries', route: '/accounting-vouchers' },
   { id: 'employee-cash', title: 'Employee Cash', icon: Wallet, color: 'bg-amber-100 text-amber-600 border-amber-200', badge: 'Live', desc: 'Live cash-in-hand custody', route: '/employee-cash' },
+  { id: 'cheque-management', title: 'Cheque Management', icon: Landmark, color: 'bg-teal-100 text-teal-600 border-teal-200', badge: 'New', desc: 'Manage cheque lifecycle', route: '/cheque-management' },
+  { id: 'finance-collections', title: 'Finance Collections', icon: Landmark, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'Hot', desc: 'Collect payments via Order ID', route: '/finance-collections' },
+  { id: 'finance-clearances', title: 'Finance Clearances', icon: Landmark, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Disburse NBFC Loans', route: '/finance-clearances' },
+  { id: 'bank-verification', title: 'Bank Verification', icon: Landmark, color: 'bg-cyan-100 text-cyan-600 border-cyan-200', badge: 'New', desc: 'Verify online bank transfers', route: '/bank-verification' },
+  { id: 'customer-khata', title: 'Customer Khata', icon: Wallet, color: 'bg-emerald-100 text-emerald-600 border-emerald-200', badge: 'New', desc: 'Ledger & Collect Payments', route: '/customer-khata' },
 ];
 
 export const CATEGORIZED_SIDEBAR = [
@@ -113,7 +125,7 @@ export const CATEGORIZED_SIDEBAR = [
     ]
   },
   {
-    category: 'Master Configuration',
+    category: 'System & HR',
     items: [
       { id: 'branch-profile', label: 'Branch Profile', icon: Building2, route: '/branch-profile' },
       { id: 'department', label: 'Department', icon: Briefcase, route: '/department' },
@@ -121,6 +133,11 @@ export const CATEGORIZED_SIDEBAR = [
       { id: 'users', label: 'Users', icon: UserCog, badge: 'New', route: '/users' },
       { id: 'accessibility', label: 'Accessibility', icon: ShieldCheck, route: '/accessibility' },
       { id: 'data-access', label: 'Data Access', icon: FolderLock, badge: 'New', route: '/data-access' },
+    ]
+  },
+  {
+    category: 'Inventory Master',
+    items: [
       { id: 'product-units', label: 'Product Units', icon: Package, route: '/product-units' },
       { id: 'product-attributes', label: 'Product Attributes', icon: Tags, badge: 'New', route: '/product-attributes' },
       { id: 'packing-types', label: 'Packing Types', icon: BoxSelect, badge: 'New', route: '/packing-types' },
@@ -135,6 +152,11 @@ export const CATEGORIZED_SIDEBAR = [
       { id: 'account-master', label: 'Accounts Master', icon: Layers, badge: 'New', route: '/account-master' },
       { id: 'accounting-vouchers', label: 'Accounting Vouchers', icon: Receipt, badge: 'New', route: '/accounting-vouchers' },
       { id: 'employee-cash', label: 'Employee Cash', icon: Wallet, badge: 'Live', route: '/employee-cash' },
+      { id: 'cheque-management', label: 'Cheque Management', icon: Landmark, badge: 'New', route: '/cheque-management' },
+      { id: 'finance-collections', label: 'Finance Collections', icon: Landmark, badge: 'Hot', route: '/finance-collections' },
+      { id: 'finance-clearances', label: 'Finance Clearances', icon: Landmark, badge: 'New', route: '/finance-clearances' },
+      { id: 'bank-verification', label: 'Bank Verification', icon: Landmark, badge: 'New', route: '/bank-verification' },
+      { id: 'customer-khata', label: 'Customer Khata', icon: Wallet, badge: 'New', route: '/customer-khata' },
     ]
   }
 ];

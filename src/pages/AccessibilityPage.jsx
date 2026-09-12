@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Lock, Save, ShieldCheck, CheckSquare, Search } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { SALES_OPERATIONS, HR_FLEET_MODULES, MASTER_MODULES } from '../utils/constants';
+import { SALES_OPERATIONS, HR_FLEET_MODULES, SYSTEM_HR_MODULES, INVENTORY_MASTER_MODULES, ACCOUNTING_FINANCE_MODULES } from '../utils/constants';
 
 const ALL_MODULES_CATEGORIZED = [
-  { category: 'Customer & Sales Operations', items: SALES_OPERATIONS },
-  { category: 'HR, Staff & Fleet Management', items: HR_FLEET_MODULES },
-  { category: 'Master Configurations', items: MASTER_MODULES }
+  { category: 'Customer & Sales', items: SALES_OPERATIONS },
+  { category: 'HR, Staff & Fleet', items: HR_FLEET_MODULES },
+  { category: 'Accounting & Finance', items: ACCOUNTING_FINANCE_MODULES },
+  { category: 'Inventory Master', items: INVENTORY_MASTER_MODULES },
+  { category: 'System & HR', items: SYSTEM_HR_MODULES }
 ];
 
 export default function AccessibilityPage() {
