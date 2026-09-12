@@ -71,6 +71,7 @@ export const MASTER_MODULES = [
   { id: 'warehouses', title: 'Warehouses', icon: Building2, color: 'bg-blue-100 text-blue-600 border-blue-200', badge: 'New', desc: 'Manage warehouses & storage', route: '/warehouses' },
   { id: 'vendors', title: 'Vendors', icon: Handshake, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Manage vendors & suppliers', route: '/vendors' },
   { id: 'account-master', title: 'Accounts Master', icon: Layers, color: 'bg-fuchsia-100 text-fuchsia-600 border-fuchsia-200', badge: 'New', desc: 'Manage accounting groups & ledgers', route: '/account-master' },
+  { id: 'accounting-vouchers', title: 'Accounting Vouchers', icon: Receipt, color: 'bg-emerald-100 text-emerald-600 border-emerald-200', badge: 'New', desc: 'Manage accounting entries', route: '/accounting-vouchers' },
 ];
 
 export const CATEGORIZED_SIDEBAR = [
@@ -125,7 +126,13 @@ export const CATEGORIZED_SIDEBAR = [
       { id: 'products', label: 'Products', icon: ShoppingCart, badge: 'New', route: '/products' },
       { id: 'warehouses', label: 'Warehouses', icon: Building2, badge: 'New', route: '/warehouses' },
       { id: 'vendors', label: 'Vendors', icon: Handshake, badge: 'New', route: '/vendors' },
+    ]
+  },
+  {
+    category: 'Accounting & Finance',
+    items: [
       { id: 'account-master', label: 'Accounts Master', icon: Layers, badge: 'New', route: '/account-master' },
+      { id: 'accounting-vouchers', label: 'Accounting Vouchers', icon: Receipt, badge: 'New', route: '/accounting-vouchers' },
     ]
   }
 ];

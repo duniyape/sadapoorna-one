@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Building2, Calendar, FileText, ShoppingCart, CheckCircle2, Plus, Trash2, Search, X } from 'lucide-react';
-import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import { useNavigate, useOutletContext, useParams, useLocation } from 'react-router-dom';
 
 export default function AddOrderPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
   const { showToast } = useOutletContext();
   const isEditMode = !!id;
 
+  // Customer pre-selected when arriving from CustomerProfilePage
+  const preselectedCustomer = location.state?.preselectedCustomer || null;
+
   const [formData, setFormData] = useState({
     type: 'sale',
-    customer_id: '',
+    customer_id: preselectedCustomer ? (preselectedCustomer.mongo_id || preselectedCustomer._id || preselectedCustomer.id || '') : '',
     invoice_date: new Date().toISOString().split('T')[0],
     gst_type: 'including',
     payment_mode: 'Cash on Delivery',
@@ -35,11 +39,16 @@ export default function AddOrderPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [customerSearchTerm, setCustomerSearchTerm] = useState('');
+  const [customerSearchTerm, setCustomerSearchTerm] = useState(() => {
+    if (preselectedCustomer) {
+      return preselectedCustomer.company_name || preselectedCustomer.business_name || preselectedCustomer.name || '';
+    }
+    return '';
+  });
   const [customerSuggestions, setCustomerSuggestions] = useState([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [isSearchingCustomer, setIsSearchingCustomer] = useState(false);
-  const [selectedCustomerObj, setSelectedCustomerObj] = useState(null);
+  const [selectedCustomerObj, setSelectedCustomerObj] = useState(preselectedCustomer || null);
   const [products, setProducts] = useState([]);
   const [variants, setVariants] = useState({});
   const [employees, setEmployees] = useState([]);

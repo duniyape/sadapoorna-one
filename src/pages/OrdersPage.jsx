@@ -17,6 +17,14 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
+  TrendingUp,
+  Package,
+  Truck,
+  CheckCircle2,
+  Clock,
+  Zap,
+  BarChart3,
+  RefreshCw,
 } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 
@@ -35,7 +43,6 @@ const SwipeButton = ({ text, onConfirm, colorClass = "bg-emerald-500" }) => {
   const handlePointerMove = (e) => {
     if (!isDragging || isSuccess || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
-    // 28 is the width of the thumb plus padding
     const maxX = rect.width - 28;
     const x = Math.max(0, Math.min(e.clientX - rect.left - 14, maxX));
     const percentage = (x / maxX) * 100;
@@ -100,6 +107,36 @@ const SwipeButton = ({ text, onConfirm, colorClass = "bg-emerald-500" }) => {
   );
 };
 
+// ─── Animated Stat Card ───────────────────────────────────────────────────────
+const StatCard = ({ icon: Icon, label, value, color, bg, border, sub }) => (
+  <div
+    className={`relative p-5 rounded-2xl border ${border} ${bg} overflow-hidden group transition-all duration-300 hover:scale-[1.02] hover:shadow-lg`}
+  >
+    {/* Glow blob */}
+    <div
+      className={`absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-20 blur-2xl ${color.replace("text-", "bg-")}`}
+    />
+    <div className="flex items-start justify-between relative z-10">
+      <div>
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+          {label}
+        </p>
+        <p className={`text-2xl font-black ${color} leading-none`}>{value}</p>
+        {sub && (
+          <p className="text-[10px] text-slate-400 font-medium mt-1">{sub}</p>
+        )}
+      </div>
+      <div
+        className={`w-10 h-10 rounded-xl flex items-center justify-center ${color.replace("text-", "bg-").replace(/(\d+)/, (m) => String(parseInt(m) - 500 + 100))} bg-opacity-20 border ${border}`}
+      >
+        <Icon className={`w-5 h-5 ${color}`} />
+      </div>
+    </div>
+  </div>
+);
+
+import OrderPipeline from "../components/OrderPipeline";
+
 export default function OrdersPage() {
   const [filter, setFilter] = useState("all");
   const [orderType, setOrderType] = useState("sale");
@@ -143,19 +180,31 @@ export default function OrdersPage() {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case "pending":
-        return "bg-slate-100 text-slate-700 border-slate-200";
+        return "bg-amber-50 text-amber-700 border-amber-200";
       case "confirmed":
-        return "bg-sky-100 text-sky-700 border-sky-200";
+        return "bg-sky-50 text-sky-700 border-sky-200";
       case "ready to pick up":
-        return "bg-amber-100 text-amber-700 border-amber-200";
+        return "bg-violet-50 text-violet-700 border-violet-200";
       case "out for delivery":
-        return "bg-indigo-100 text-indigo-700 border-indigo-200";
+        return "bg-indigo-50 text-indigo-700 border-indigo-200";
       case "delivered":
-        return "bg-emerald-100 text-emerald-700 border-emerald-200";
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
       case "cancelled":
-        return "bg-rose-100 text-rose-700 border-rose-200";
+        return "bg-rose-50 text-rose-700 border-rose-200";
       default:
         return "bg-slate-100 text-slate-700 border-slate-200";
+    }
+  };
+
+  const getStatusDot = (status) => {
+    switch (status?.toLowerCase()) {
+      case "pending": return "bg-amber-400";
+      case "confirmed": return "bg-sky-400";
+      case "ready to pick up": return "bg-violet-400";
+      case "out for delivery": return "bg-indigo-400";
+      case "delivered": return "bg-emerald-400";
+      case "cancelled": return "bg-rose-400";
+      default: return "bg-slate-400";
     }
   };
 
@@ -173,14 +222,9 @@ export default function OrdersPage() {
   const handleGenerateBill = async () => {
     setIsGeneratingBill(true);
     try {
-      // Use mongo_id as requested by backend
       const orderId = selectedOrder.mongo_id || selectedOrder._id || selectedOrder.id;
-      
       const parsedDiscount = parseFloat(billDiscount) || 0;
-
-      const payload = {
-        discount_amount: parsedDiscount
-      };
+      const payload = { discount_amount: parsedDiscount };
 
       console.log("Generating Bill - Payload sent to backend:", payload);
 
@@ -194,29 +238,26 @@ export default function OrdersPage() {
       });
 
       if (res.ok) {
-        const json = await res.json().catch(()=>({}));
+        const json = await res.json().catch(() => ({}));
         showToast("Bill generated and discount applied successfully!");
         setShowBillMode(false);
         fetchOrders();
-        
-        // Calculate new grand total for optimistic UI update
         const calcGrandTotal = (selectedOrder.subtotal || 0) + (selectedOrder.total_gst || 0) + (selectedOrder.other_charges || 0) - parsedDiscount;
-        
         setSelectedOrder((prev) => ({
-          ...prev, 
+          ...prev,
           discount: parsedDiscount,
           grand_total: calcGrandTotal,
           invoice_no: json.invoice_no || json.data?.invoice_no || "Generated"
         }));
       } else {
-        const err = await res.json().catch(()=>({}));
+        const err = await res.json().catch(() => ({}));
         let errMsg = err.message || err.detail || "Failed to generate bill";
         if (Array.isArray(err.detail)) {
           errMsg = err.detail.map(e => `${e.loc?.join(".") || "Field"}: ${e.msg}`).join(" | ");
         }
         showToast(errMsg);
       }
-    } catch(e) {
+    } catch (e) {
       console.error(e);
       showToast("Network error");
     } finally {
@@ -229,16 +270,12 @@ export default function OrdersPage() {
     try {
       const orderId = selectedOrder.id || selectedOrder._id || selectedOrder.mongo_id;
       const res = await fetch(`/orders/get-bill/v1/${orderId}/pdf`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-
       if (!res.ok) {
-        const err = await res.json().catch(()=>({}));
+        const err = await res.json().catch(() => ({}));
         throw new Error(err.message || err.detail || "Failed to fetch invoice");
       }
-
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       window.open(url, "_blank");
@@ -262,16 +299,12 @@ export default function OrdersPage() {
         },
         body: JSON.stringify({}),
       });
-
       if (!res.ok) {
-        const err = await res.json().catch(()=>({}));
+        const err = await res.json().catch(() => ({}));
         let errMsg = err.message || err.detail || "Failed to resend on WhatsApp";
-        if (Array.isArray(errMsg)) {
-            errMsg = errMsg[0]?.msg || "Failed to resend on WhatsApp";
-        }
+        if (Array.isArray(errMsg)) errMsg = errMsg[0]?.msg || "Failed to resend on WhatsApp";
         throw new Error(errMsg);
       }
-
       showToast("Invoice sent successfully on WhatsApp");
     } catch (error) {
       console.error(error);
@@ -328,10 +361,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     const fetchOptions = async () => {
-      if (!deliveryType) {
-        setDeliveryOptions([]);
-        return;
-      }
+      if (!deliveryType) { setDeliveryOptions([]); return; }
       setIsFetchingDeliveryOptions(true);
       try {
         const endpoint = deliveryType === "vehicle" ? "/vehicles/get" : "/warehouses/get";
@@ -352,7 +382,6 @@ export default function OrdersPage() {
   }, [deliveryType]);
 
   const handleStatusChange = async (orderId, newStatus, extraData = {}) => {
-    // Optimistically update the UI
     setOrdersList((prev) =>
       prev.map((o) =>
         o.id === orderId || o._id === orderId ? { ...o, status: newStatus } : o,
@@ -374,9 +403,7 @@ export default function OrdersPage() {
         let errorMsg = "API returned an error";
         if (errData?.detail) {
           if (Array.isArray(errData.detail)) {
-            errorMsg = errData.detail
-              .map((e) => `${e.loc?.join(".")}: ${e.msg}`)
-              .join(" | ");
+            errorMsg = errData.detail.map((e) => `${e.loc?.join(".")}: ${e.msg}`).join(" | ");
           } else if (typeof errData.detail === "string") {
             errorMsg = errData.detail;
           } else {
@@ -389,86 +416,117 @@ export default function OrdersPage() {
     } catch (error) {
       console.error("Status update failed:", error);
       showToast(error.message || `Failed to update ${orderId.slice(-6)}`);
-      // Revert optimistic update
       fetchOrders();
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/")}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              Orders & Invoices
-            </h1>
-            <p className="text-xs text-slate-500">
-              Live order processing and delivery status
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 self-start sm:self-auto">
-          <button
-            onClick={() => navigate("/create-return-order")}
-            className="px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-2 shadow-md w-full sm:w-auto justify-center"
-          >
-            <Plus className="w-4 h-4" /> Create Return Order
-          </button>
-          <button
-            onClick={() => navigate("/add-order")}
-            className="px-5 py-2.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-2 shadow-md w-full sm:w-auto justify-center"
-          >
-            <Plus className="w-4 h-4" /> Create New Order
-          </button>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
-          <div className="text-xs text-slate-500 font-semibold">
-            Total Orders Today
+      {/* ── Hero Header ─────────────────────────────────────────────────────── */}
+      <div
+        className="relative rounded-3xl overflow-hidden p-6"
+        style={{
+          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+        }}
+      >
+        {/* Decorative glow blobs */}
+        <div className="absolute -top-10 -left-10 w-48 h-48 bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 right-16 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-6 right-32 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate("/")}
+              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <Zap className="w-4 h-4 text-amber-400" />
+                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-[0.2em]">
+                  Live Order Processing
+                </span>
+              </div>
+              <h1 className="text-2xl font-black text-white tracking-tight">
+                Orders &amp; Invoices
+              </h1>
+              <p className="text-xs text-slate-400 mt-0.5">
+                End-to-end delivery lifecycle management
+              </p>
+            </div>
           </div>
-          <div className="text-2xl font-extrabold text-slate-900 mt-1">
-            28 Invoices
-          </div>
-        </div>
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
-          <div className="text-xs text-slate-500 font-semibold">
-            Today's Order Value
-          </div>
-          <div className="text-2xl font-extrabold text-emerald-600 mt-1">
-            ₹4,20,000
-          </div>
-        </div>
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
-          <div className="text-xs text-slate-500 font-semibold">
-            Pending Approval
-          </div>
-          <div className="text-2xl font-extrabold text-amber-600 mt-1">
-            3 Orders
-          </div>
-        </div>
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
-          <div className="text-xs text-slate-500 font-semibold">Dispatched</div>
-          <div className="text-2xl font-extrabold text-sky-600 mt-1">
-            14 Vehicles
+
+          <div className="flex flex-col sm:flex-row gap-2 self-start sm:self-auto">
+            <button
+              onClick={() => navigate("/create-return-order")}
+              className="px-5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-2 border border-white/15 transition-all w-full sm:w-auto justify-center"
+            >
+              <RefreshCw className="w-4 h-4" /> Create Return Order
+            </button>
+            <button
+              onClick={() => navigate("/add-order")}
+              className="px-5 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 shadow-lg w-full sm:w-auto justify-center transition-all hover:scale-105"
+              style={{ background: "linear-gradient(135deg, #dc2626, #9f1239)", color: "#fff" }}
+            >
+              <Plus className="w-4 h-4" /> Create New Order
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      {/* ── Stat Cards ──────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatCard
+          icon={BarChart3}
+          label="Total Orders Today"
+          value="28"
+          color="text-indigo-600"
+          bg="bg-white"
+          border="border-indigo-100"
+          sub="↑ 12% vs yesterday"
+        />
+        <StatCard
+          icon={IndianRupee}
+          label="Today's Order Value"
+          value="₹4.2L"
+          color="text-emerald-600"
+          bg="bg-white"
+          border="border-emerald-100"
+          sub="₹4,20,000 total"
+        />
+        <StatCard
+          icon={Clock}
+          label="Pending Approval"
+          value="3"
+          color="text-amber-600"
+          bg="bg-white"
+          border="border-amber-100"
+          sub="Needs action"
+        />
+        <StatCard
+          icon={Truck}
+          label="Dispatched"
+          value="14"
+          color="text-sky-600"
+          bg="bg-white"
+          border="border-sky-100"
+          sub="Vehicles on route"
+        />
+      </div>
+
+      {/* ── Orders Table Card ────────────────────────────────────────────────── */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+
+        {/* Toolbar */}
+        <div className="p-4 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-slate-50/60">
           <div className="flex items-center gap-2 w-full xl:w-auto shrink-0">
             <select
               value={filter}
               onChange={(e) => { setFilter(e.target.value); setPage(1); }}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 w-full sm:w-auto bg-slate-50 transition-all cursor-pointer"
+              className="px-3 py-2 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 w-full sm:w-auto bg-white transition-all cursor-pointer shadow-sm"
             >
               <option value="all">All Orders</option>
               <option value="Pending">Pending</option>
@@ -485,7 +543,7 @@ export default function OrdersPage() {
             <select
               value={orderType}
               onChange={(e) => { setOrderType(e.target.value); setPage(1); }}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 w-full sm:w-auto bg-slate-50 transition-all cursor-pointer"
+              className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 w-full sm:w-auto bg-white transition-all cursor-pointer shadow-sm"
             >
               <option value="sale">Sales</option>
               <option value="sale_return">Returns</option>
@@ -496,15 +554,15 @@ export default function OrdersPage() {
                 type="date"
                 value={fromDate}
                 onChange={(e) => { setFromDate(e.target.value); setPage(1); }}
-                className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 w-full sm:w-auto bg-slate-50 transition-all"
+                className="px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 w-full sm:w-auto bg-white transition-all shadow-sm"
                 title="From Date"
               />
-              <span className="text-slate-300 font-bold text-xs">-</span>
+              <span className="text-slate-300 font-bold text-xs">–</span>
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => { setToDate(e.target.value); setPage(1); }}
-                className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 w-full sm:w-auto bg-slate-50 transition-all"
+                className="px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 w-full sm:w-auto bg-white transition-all shadow-sm"
                 title="To Date"
               />
             </div>
@@ -515,14 +573,14 @@ export default function OrdersPage() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search invoice or notes..."
-                className="pl-9 pr-3 py-1.5 w-full rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all bg-white shadow-sm"
+                className="pl-9 pr-3 py-2 w-full rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all bg-white shadow-sm"
               />
             </div>
           </div>
         </div>
 
         {/* Mobile View */}
-        <div className="md:hidden flex flex-col gap-4 p-4 bg-slate-50/50">
+        <div className="md:hidden flex flex-col gap-3 p-4 bg-slate-50/50">
           {isLoading ? (
             <div className="p-10 text-center text-slate-500 font-bold bg-white rounded-2xl border border-slate-100">
               Loading orders...
@@ -538,16 +596,13 @@ export default function OrdersPage() {
               const itemsStr = `${ord.items?.length || 0} Items`;
               const totalAmt =
                 ord.total ||
-                ord.items?.reduce(
-                  (acc, curr) => acc + curr.quantity * curr.rate,
-                  0,
-                ) ||
+                ord.items?.reduce((acc, curr) => acc + curr.quantity * curr.rate, 0) ||
                 0;
 
               return (
                 <div
                   key={orderId}
-                  className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3 relative"
+                  className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3 relative hover:shadow-md transition-shadow"
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -580,16 +635,15 @@ export default function OrdersPage() {
 
                   <div className="flex flex-col gap-3 mt-1">
                     <div className="flex justify-between items-center">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(ord.status)}`}
-                      >
+                      <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(ord.status)}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${getStatusDot(ord.status)}`} />
                         {ord.status || "Pending"}
                       </span>
                       <div className="flex items-center gap-2">
                         {canView && (
                           <button
                             onClick={() => setSelectedOrder(ord)}
-                            className="p-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-600 shadow-sm"
+                            className="p-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-600 shadow-sm transition-colors"
                             title="View Order"
                           >
                             <Eye className="w-4 h-4" />
@@ -598,7 +652,7 @@ export default function OrdersPage() {
                         {canEdit && (
                           <button
                             onClick={() => navigate(`/edit-order/${orderId}`)}
-                            className="p-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 shadow-sm"
+                            className="p-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 shadow-sm transition-colors"
                             title="Edit Order"
                           >
                             <Edit2 className="w-4 h-4" />
@@ -606,8 +660,6 @@ export default function OrdersPage() {
                         )}
                       </div>
                     </div>
-
-
                   </div>
                 </div>
               );
@@ -618,33 +670,30 @@ export default function OrdersPage() {
         {/* Desktop View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
+            <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100 text-[10px]">
               <tr>
-                <th className="p-4">Order ID</th>
+                <th className="p-4 pl-5">Order ID</th>
                 <th className="p-4">Customer Name</th>
                 <th className="p-4">Order Summary</th>
                 <th className="p-4">Total Amount</th>
                 <th className="p-4">Billing</th>
                 <th className="p-4">Status</th>
-                <th className="p-4 text-right">Actions</th>
+                <th className="p-4 text-right pr-5">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {isLoading ? (
                 <tr>
-                  <td
-                    colSpan="7"
-                    className="p-10 text-center text-slate-500 font-bold"
-                  >
-                    Loading orders...
+                  <td colSpan="7" className="p-10 text-center">
+                    <div className="flex flex-col items-center gap-2 text-slate-400">
+                      <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm font-bold">Loading orders...</span>
+                    </div>
                   </td>
                 </tr>
               ) : ordersList.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan="7"
-                    className="p-10 text-center text-slate-500 font-bold"
-                  >
+                  <td colSpan="7" className="p-10 text-center text-slate-500 font-bold">
                     No orders found.
                   </td>
                 </tr>
@@ -655,71 +704,70 @@ export default function OrdersPage() {
                   const itemsStr = `${ord.items?.length || 0} Items`;
                   const totalAmt =
                     ord.total ||
-                    ord.items?.reduce(
-                      (acc, curr) => acc + curr.quantity * curr.rate,
-                      0,
-                    ) ||
+                    ord.items?.reduce((acc, curr) => acc + curr.quantity * curr.rate, 0) ||
                     0;
 
                   return (
                     <tr
                       key={orderId}
-                      className="hover:bg-slate-50/60 transition-colors"
+                      className="hover:bg-indigo-50/30 transition-colors group"
                     >
-                      <td className="p-4">
-                        <div className="font-bold text-slate-900">
-                          {ord.order_no || ord.invoice_no || orderId.slice(-6)}
+                      <td className="p-4 pl-5">
+                        <div className="font-black text-slate-900 text-xs">
+                          #{ord.order_no || ord.invoice_no || orderId.slice(-6)}
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5 font-semibold">
+                        <div className="text-[10px] text-slate-400 mt-0.5 font-semibold flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
                           {formatDate(ord.invoice_date || ord.created_at || ord.createdAt || ord.date)}
                         </div>
                       </td>
-                      <td className="p-4 font-semibold text-slate-800">
-                        {custName}
-                      </td>
-                      <td className="p-4 text-slate-600">{itemsStr}</td>
-                      <td className="p-4 font-bold text-slate-900">
-                        ₹{totalAmt.toLocaleString()}
+                      <td className="p-4">
+                        <div className="font-bold text-slate-800">{custName}</div>
                       </td>
                       <td className="p-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${ord.invoice_no ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                        <div className="flex items-center gap-1.5 text-slate-500 font-semibold">
+                          <ShoppingCart className="w-3 h-3" />
+                          {itemsStr}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="font-black text-slate-900">
+                          ₹{totalAmt.toLocaleString()}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${ord.invoice_no ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${ord.invoice_no ? 'bg-emerald-500' : 'bg-slate-400'}`} />
                           {ord.invoice_no ? 'Billed' : 'Unbilled'}
                         </span>
                       </td>
                       <td className="p-4">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold border
-                          ${ord.status === "Confirmed"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                              : ord.status === "Cancelled"
-                                ? "bg-rose-50 text-rose-700 border-rose-200"
-                                : ord.status === "Pending"
-                                  ? "bg-amber-50 text-amber-700 border-amber-200"
-                                  : "bg-slate-50 text-slate-700 border-slate-200"
-                            }`}
-                        >
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(ord.status)}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${getStatusDot(ord.status)}`} />
                           {ord.status || "Pending"}
                         </span>
                       </td>
-                      <td className="p-4 text-right space-x-2 flex items-center justify-end">
-                        {canView && (
-                          <button
-                            onClick={() => setSelectedOrder(ord)}
-                            className="p-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-600"
-                            title="View Order"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        )}
-                        {canEdit && (
-                          <button
-                            onClick={() => navigate(`/edit-order/${orderId}`)}
-                            className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600"
-                            title="Edit Order"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                        )}
+                      <td className="p-4 pr-5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {canView && (
+                            <button
+                              onClick={() => setSelectedOrder(ord)}
+                              className="p-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-600 opacity-70 group-hover:opacity-100 transition-all"
+                              title="View Order"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {canEdit && (
+                            <button
+                              onClick={() => navigate(`/edit-order/${orderId}`)}
+                              className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 opacity-70 group-hover:opacity-100 transition-all"
+                              title="Edit Order"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -733,23 +781,24 @@ export default function OrdersPage() {
         {!isLoading && totalPages > 0 && (
           <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div className="text-xs font-semibold text-slate-500">
-              Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalRecords)} of {totalRecords} entries
+              Showing <span className="text-slate-800 font-bold">{((page - 1) * limit) + 1}</span>–<span className="text-slate-800 font-bold">{Math.min(page * limit, totalRecords)}</span> of <span className="text-slate-800 font-bold">{totalRecords}</span> entries
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <div className="text-xs font-bold text-slate-700 px-2">
-                Page {page} of {totalPages}
+              <div className="flex items-center gap-1">
+                <span className="px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-black">{page}</span>
+                <span className="text-xs text-slate-400 font-bold">of {totalPages}</span>
               </div>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -758,99 +807,110 @@ export default function OrdersPage() {
         )}
       </div>
 
-      {/* View Modal */}
+      {/* ── View Modal ───────────────────────────────────────────────────────── */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
-          <div className="bg-white rounded-[2rem] w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl ring-1 ring-white/10 overflow-hidden relative">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50 relative shrink-0">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-inner border border-indigo-200/50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/70 backdrop-blur-sm transition-all duration-300">
+          <div className="bg-white rounded-[2rem] w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl ring-1 ring-slate-200 overflow-hidden relative">
+
+            {/* Modal Header */}
+            <div
+              className="flex items-center justify-between px-6 py-5 border-b border-slate-100 relative shrink-0"
+              style={{ background: "linear-gradient(135deg, #0f172a, #1e293b)" }}
+            >
+              {/* Glow */}
+              <div className="absolute -top-6 left-8 w-32 h-32 bg-indigo-600/20 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-white/10 text-indigo-300 flex items-center justify-center border border-white/15">
                   <FileText className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 flex flex-wrap items-center gap-3">
-                    {selectedOrder.order_no ? `Order: ${selectedOrder.order_no}` : (selectedOrder.invoice_no ? `Invoice: ${selectedOrder.invoice_no}` : `ID: ${selectedOrder.id?.slice(-6) || selectedOrder._id?.slice(-6)}`)}
+                  <h2 className="text-lg font-black text-white flex flex-wrap items-center gap-2">
+                    {selectedOrder.order_no
+                      ? `Order: ${selectedOrder.order_no}`
+                      : selectedOrder.invoice_no
+                        ? `Invoice: ${selectedOrder.invoice_no}`
+                        : `ID: ${selectedOrder.id?.slice(-6) || selectedOrder._id?.slice(-6)}`}
                     {selectedOrder.order_no && selectedOrder.invoice_no && (
-                      <span className="text-sm font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded">
+                      <span className="text-xs font-bold text-slate-300 bg-white/10 px-2 py-0.5 rounded-lg border border-white/10">
                         Inv: {selectedOrder.invoice_no}
                       </span>
                     )}
-                    <span
-                      className={`px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-wider shadow-sm ${getStatusColor(selectedOrder.status)}`}
-                    >
+                    <span className={`px-2 py-0.5 rounded-lg border text-[10px] font-black uppercase tracking-wider ${getStatusColor(selectedOrder.status)}`}>
                       {selectedOrder.status || "Pending"}
                     </span>
                   </h2>
-                  <p className="text-xs font-semibold text-slate-500 mt-0.5 flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5" /> Date:{" "}
+                  <p className="text-xs font-semibold text-slate-400 mt-0.5 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" />
                     {formatDate(selectedOrder.invoice_date || selectedOrder.created_at || selectedOrder.createdAt || selectedOrder.date)}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="p-2 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors bg-white shadow-sm border border-slate-200"
+                className="relative z-10 p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors border border-white/10"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Body */}
+            {/* Order Pipeline */}
+            {selectedOrder.type !== 'sale_return' && (
+              <div className="px-6 pt-4 pb-2 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+                  Order Progress
+                </p>
+                <OrderPipeline currentStatus={selectedOrder.status} />
+              </div>
+            )}
+
+            {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 custom-scrollbar space-y-6">
+
               {/* Quick Info Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-3">
-                  <Handshake className="w-8 h-8 text-indigo-400 shrink-0" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-3 hover:border-indigo-200 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+                    <Handshake className="w-4 h-4 text-indigo-500" />
+                  </div>
                   <div className="min-w-0">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Customer
-                    </div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Customer</div>
                     <div className="text-xs font-bold text-slate-800 leading-tight mt-0.5 truncate">
-                      {selectedOrder.customer?.company_name ||
-                        selectedOrder.customer?.name ||
-                        "Unknown"}
+                      {selectedOrder.customer?.company_name || selectedOrder.customer?.name || "Unknown"}
                     </div>
                   </div>
                 </div>
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-3">
-                  <Building2 className="w-8 h-8 text-amber-400 shrink-0" />
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-3 hover:border-amber-200 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                    <Building2 className="w-4 h-4 text-amber-500" />
+                  </div>
                   <div className="min-w-0">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Order Type
-                    </div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Order Type</div>
                     <div className="text-xs font-bold text-slate-800 leading-tight mt-0.5 truncate uppercase">
                       {(selectedOrder.type || "SALE").replace(/_/g, ' ')}
                     </div>
                   </div>
                 </div>
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-3">
-                  <ShoppingCart className="w-8 h-8 text-sky-400 shrink-0" />
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-3 hover:border-sky-200 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center shrink-0">
+                    <ShoppingCart className="w-4 h-4 text-sky-500" />
+                  </div>
                   <div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Total Items
-                    </div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Items</div>
                     <div className="text-sm font-black text-slate-800 leading-tight mt-0.5">
                       {selectedOrder.items?.length || 0}
                     </div>
                   </div>
                 </div>
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-3">
-                  <IndianRupee className="w-8 h-8 text-emerald-400 shrink-0" />
+                <div className="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm flex items-start gap-3 hover:border-emerald-200 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                    <IndianRupee className="w-4 h-4 text-emerald-500" />
+                  </div>
                   <div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Grand Total
-                    </div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Grand Total</div>
                     <div className="text-sm font-black text-emerald-600 leading-tight mt-0.5">
-                      ₹
-                      {selectedOrder.grand_total?.toLocaleString() ||
+                      ₹{selectedOrder.grand_total?.toLocaleString() ||
                         selectedOrder.total?.toLocaleString() ||
-                        (
-                          selectedOrder.items?.reduce(
-                            (acc, curr) => acc + curr.quantity * curr.rate,
-                            0,
-                          ) || 0
-                        ).toLocaleString()}
+                        (selectedOrder.items?.reduce((acc, curr) => acc + curr.quantity * curr.rate, 0) || 0).toLocaleString()}
                     </div>
                   </div>
                 </div>
@@ -865,7 +925,7 @@ export default function OrdersPage() {
                       Order Items
                     </h3>
                   </div>
-                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider border border-slate-200 px-2 py-0.5 rounded bg-white">
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider border border-slate-200 px-2.5 py-1 rounded-lg bg-white shadow-sm">
                     GST: {selectedOrder.gst_type || "including"}
                   </div>
                 </div>
@@ -883,30 +943,20 @@ export default function OrdersPage() {
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
                       {selectedOrder.items?.map((item, idx) => (
-                        <tr
-                          key={idx}
-                          className="hover:bg-slate-50 transition-colors"
-                        >
+                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
                           <td className="px-5 py-4">
-                            <div className="font-bold text-slate-800">
-                              {item.product_name || "Product"}
-                            </div>
+                            <div className="font-bold text-slate-800">{item.product_name || "Product"}</div>
                             <div className="text-[10px] text-slate-500 mt-0.5">
-                              {item.variant_name || "Variant"}{" "}
-                              {item.sku ? `(${item.sku})` : ""}
+                              {item.variant_name || "Variant"} {item.sku ? `(${item.sku})` : ""}
                             </div>
                           </td>
-                          <td className="px-5 py-4 text-right font-bold">
-                            {item.quantity}
-                          </td>
+                          <td className="px-5 py-4 text-right font-black text-slate-900">{item.quantity}</td>
                           <td className="px-5 py-4 text-right">₹{item.rate}</td>
                           <td className="px-5 py-4 text-right font-semibold text-slate-700">
                             ₹{item.taxable_amount || item.quantity * item.rate}
                           </td>
                           <td className="px-5 py-4 text-right text-slate-500">
-                            {item.gst_percent
-                              ? `${item.gst_percent}% (₹${item.gst_amount})`
-                              : "N/A"}
+                            {item.gst_percent ? `${item.gst_percent}% (₹${item.gst_amount})` : "N/A"}
                           </td>
                           <td className="px-5 py-4 text-right font-black text-slate-800">
                             ₹{item.total_amount || item.quantity * item.rate}
@@ -918,41 +968,26 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Financial Totals */}
-                <div className="bg-slate-50 p-5 border-t border-slate-200">
+                <div className="bg-gradient-to-r from-slate-50 to-slate-100/50 p-5 border-t border-slate-200">
                   <div className="flex flex-col items-end gap-2 text-xs">
-                    <div className="flex justify-between w-48 text-slate-600">
-                      <span className="font-medium">Subtotal</span>
-                      <span className="font-bold">
-                        ₹
-                        {selectedOrder.subtotal?.toLocaleString() ||
-                          (
-                            selectedOrder.items?.reduce(
-                              (acc, curr) => acc + curr.quantity * curr.rate,
-                              0,
-                            ) || 0
-                          ).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between w-48 text-slate-600">
-                      <span className="font-medium">Total GST</span>
-                      <span className="font-bold">
-                        ₹{selectedOrder.total_gst?.toLocaleString() || 0}
-                      </span>
-                    </div>
-                    <div className="flex justify-between w-48 text-slate-600">
-                      <span className="font-medium">Other Charges</span>
-                      <span className="font-bold">
-                        ₹{selectedOrder.other_charges?.toLocaleString() || 0}
-                      </span>
-                    </div>
-                    <div className="flex justify-between w-48 text-rose-600">
+                    {[
+                      { label: "Subtotal", val: `₹${selectedOrder.subtotal?.toLocaleString() || (selectedOrder.items?.reduce((a, c) => a + c.quantity * c.rate, 0) || 0).toLocaleString()}`, color: "text-slate-600" },
+                      { label: "Total GST", val: `₹${selectedOrder.total_gst?.toLocaleString() || 0}`, color: "text-slate-600" },
+                      { label: "Other Charges", val: `₹${selectedOrder.other_charges?.toLocaleString() || 0}`, color: "text-slate-600" },
+                    ].map(({ label, val, color }) => (
+                      <div key={label} className={`flex justify-between w-52 ${color}`}>
+                        <span className="font-medium">{label}</span>
+                        <span className="font-bold">{val}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between w-52 text-rose-600">
                       <span className="font-medium">Discount</span>
                       <span className="font-bold flex items-center justify-end">
                         {showBillMode ? (
                           <div className="flex items-center gap-1">
                             <span>- ₹</span>
-                            <input 
-                              type="number" 
+                            <input
+                              type="number"
                               value={billDiscount}
                               onChange={(e) => setBillDiscount(e.target.value)}
                               className="w-16 px-1.5 py-0.5 border border-rose-200 bg-rose-50 rounded text-right font-bold text-rose-700 focus:outline-none focus:ring-1 focus:ring-rose-400"
@@ -964,16 +999,14 @@ export default function OrdersPage() {
                         )}
                       </span>
                     </div>
-                    <div className="flex justify-between w-48 text-emerald-700 pt-2 border-t border-slate-200">
-                      <span className="font-black uppercase tracking-wider text-[10px] mt-0.5">
-                        Grand Total
-                      </span>
-                      <span className="font-black text-lg leading-none">
-                        ₹{showBillMode 
+                    <div className="flex justify-between w-52 text-emerald-700 pt-3 border-t-2 border-emerald-200 mt-1">
+                      <span className="font-black uppercase tracking-wider text-[10px] mt-1">Grand Total</span>
+                      <span className="font-black text-xl leading-none">
+                        ₹{showBillMode
                           ? ((selectedOrder.subtotal || 0) + (selectedOrder.total_gst || 0) + (selectedOrder.other_charges || 0) - (parseFloat(billDiscount) || 0)).toLocaleString()
                           : (selectedOrder.grand_total?.toLocaleString() ||
-                             selectedOrder.total?.toLocaleString() ||
-                             (selectedOrder.items?.reduce((acc, curr) => acc + curr.quantity * curr.rate, 0) || 0).toLocaleString())}
+                              selectedOrder.total?.toLocaleString() ||
+                              (selectedOrder.items?.reduce((acc, curr) => acc + curr.quantity * curr.rate, 0) || 0).toLocaleString())}
                       </span>
                     </div>
                   </div>
@@ -986,8 +1019,7 @@ export default function OrdersPage() {
                 <div className="bg-white p-5 rounded-[1.5rem] border border-slate-200 shadow-sm flex flex-col justify-between">
                   <div>
                     <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-                      <Info className="w-4 h-4 text-indigo-500" /> Update Order
-                      Status
+                      <Zap className="w-4 h-4 text-indigo-500" /> Update Order Status
                     </h3>
 
                     {(selectedOrder.status === "Out for Delivery" || (selectedOrder.type === 'sale_return' && selectedOrder.status === "Confirmed")) && (
@@ -1030,7 +1062,7 @@ export default function OrdersPage() {
                       </div>
                     )}
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 flex-wrap">
                       {selectedOrder.type === 'sale_return' ? (
                         <>
                           {(!selectedOrder.status || selectedOrder.status === "Pending") && canConfirm && (
@@ -1143,75 +1175,74 @@ export default function OrdersPage() {
                       )}
                     </div>
                   </div>
-                  {["delivered", "cancelled", "completed", "rejected"].includes(
-                    selectedOrder.status?.toLowerCase(),
-                  ) && (
-                      <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 flex flex-col gap-3">
-                        <div className="text-[10px] text-slate-500 font-medium">
-                          This order is {selectedOrder.status}. The status cannot be changed further.
-                        </div>
-                        {(selectedOrder.status?.toLowerCase() === "delivered" || (selectedOrder.type === 'sale_return' && selectedOrder.status?.toLowerCase() === "completed")) && (
-                          <div className="flex gap-2 mt-1">
-                            {!showBillMode ? (
-                              <div className="flex flex-col gap-2 w-full">
-                                {!selectedOrder.invoice_no ? (
-                                  <button 
-                                    onClick={() => { setShowBillMode(true); setBillDiscount(selectedOrder.discount || ""); }} 
-                                    className="w-full px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-600/20"
-                                  >
-                                    Generate Bill
-                                  </button>
-                                ) : (
-                                  <>
-                                    <button 
-                                      onClick={handleViewInvoice} 
-                                      disabled={isFetchingInvoice}
-                                      className="w-full px-4 py-2 rounded-xl text-xs font-bold bg-sky-600 text-white hover:bg-sky-700 transition-colors shadow-md shadow-sky-600/20 disabled:opacity-50 flex items-center justify-center gap-1.5"
-                                    >
-                                      {isFetchingInvoice ? "Loading..." : <><Download className="w-3.5 h-3.5" /> PDF Bill</>}
-                                    </button>
-                                    <button
-                                      onClick={handleResendWhatsApp}
-                                      disabled={isResendingWhatsApp}
-                                      className="w-full px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors shadow-md shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                      {isResendingWhatsApp ? "Sending..." : "Resend Bill on WhatsApp"}
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="flex gap-2 w-full">
-                                <button 
-                                  onClick={handleGenerateBill} 
-                                  disabled={isGeneratingBill}
-                                  className="flex-1 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-600/20 disabled:opacity-50"
-                                >
-                                  {isGeneratingBill ? "Saving..." : "Save & Generate"}
-                                </button>
-                                <button 
-                                  onClick={() => setShowBillMode(false)}
-                                  className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        )}
+
+                  {["delivered", "cancelled", "completed", "rejected"].includes(selectedOrder.status?.toLowerCase()) && (
+                    <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-3">
+                      <div className="text-[10px] text-slate-500 font-medium">
+                        This order is <span className="font-black text-slate-700">{selectedOrder.status}</span>. Status cannot be changed further.
                       </div>
-                    )}
+                      {(selectedOrder.status?.toLowerCase() === "delivered" || (selectedOrder.type === 'sale_return' && selectedOrder.status?.toLowerCase() === "completed")) && (
+                        <div className="flex gap-2 mt-1">
+                          {!showBillMode ? (
+                            <div className="flex flex-col gap-2 w-full">
+                              {!selectedOrder.invoice_no ? (
+                                <button
+                                  onClick={() => { setShowBillMode(true); setBillDiscount(selectedOrder.discount || ""); }}
+                                  className="w-full px-4 py-2.5 rounded-xl text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2"
+                                >
+                                  <FileText className="w-3.5 h-3.5" /> Generate Bill
+                                </button>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={handleViewInvoice}
+                                    disabled={isFetchingInvoice}
+                                    className="w-full px-4 py-2.5 rounded-xl text-xs font-black bg-sky-600 text-white hover:bg-sky-700 transition-all shadow-lg shadow-sky-600/20 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                  >
+                                    {isFetchingInvoice ? "Loading..." : <><Download className="w-3.5 h-3.5" /> PDF Bill</>}
+                                  </button>
+                                  <button
+                                    onClick={handleResendWhatsApp}
+                                    disabled={isResendingWhatsApp}
+                                    className="w-full px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                                  >
+                                    {isResendingWhatsApp ? "Sending..." : "Resend Bill on WhatsApp"}
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex gap-2 w-full">
+                              <button
+                                onClick={handleGenerateBill}
+                                disabled={isGeneratingBill}
+                                className="flex-1 px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-600 text-white hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50"
+                              >
+                                {isGeneratingBill ? "Saving..." : "Save & Generate"}
+                              </button>
+                              <button
+                                onClick={() => setShowBillMode(false)}
+                                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Notes & Terms */}
                 <div className="bg-white p-5 rounded-[1.5rem] border border-slate-200 shadow-sm">
                   <div className="space-y-4">
                     <div>
-                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                        Order Notes
+                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <Info className="w-3.5 h-3.5" /> Order Notes
                       </h4>
-                      <p className="text-xs text-slate-700 font-medium bg-slate-50 p-2.5 rounded-xl border border-slate-100 min-h-[60px]">
-                        {selectedOrder.notes || "No additional notes."}
+                      <p className="text-xs text-slate-700 font-medium bg-slate-50 p-3 rounded-xl border border-slate-100 min-h-[64px] leading-relaxed">
+                        {selectedOrder.notes || "No additional notes for this order."}
                       </p>
                     </div>
                   </div>
