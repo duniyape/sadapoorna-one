@@ -175,10 +175,16 @@ export default function AccountingVouchersPage() {
                     </td>
                     <td className="p-4 pr-6 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => setSelectedVoucherId(v._id || v.id)} className="p-1.5 rounded-lg bg-sky-50 text-sky-600 hover:bg-sky-100">
+                        <button onClick={() => {
+                          const realId = v._id || (v.id?.length === 24 ? v.id : v.voucher_id);
+                          setSelectedVoucherId(realId);
+                        }} className="p-1.5 rounded-lg bg-sky-50 text-sky-600 hover:bg-sky-100">
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleDelete(v._id || v.id)} className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100">
+                        <button onClick={() => {
+                          const realId = v._id || (v.id?.length === 24 ? v.id : v.voucher_id);
+                          handleDelete(realId);
+                        }} className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>

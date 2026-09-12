@@ -44,6 +44,7 @@ const BeatManagementPage         = React.lazy(() => import("./pages/BeatManageme
 const AccountsMasterPage         = React.lazy(() => import("./pages/AccountsMasterPage"));
 const AccountingVouchersPage     = React.lazy(() => import("./pages/AccountingVouchersPage"));
 const AddVoucherPage             = React.lazy(() => import("./pages/AddVoucherPage"));
+const EmployeeCashBalancesPage   = React.lazy(() => import("./pages/EmployeeCashBalancesPage"));
 
 // ── Customer 360° — layout + 5 separate tab pages ────────────────────────────
 const CustomerProfileLayout = React.lazy(() => import("./pages/CustomerProfileLayout"));
@@ -146,6 +147,7 @@ const App = () => (
                 <Route path="account-master"      element={<AccountsMasterPage />} />
                 <Route path="accounting-vouchers" element={<AccountingVouchersPage />} />
                 <Route path="add-voucher"         element={<AddVoucherPage />} />
+                <Route path="employee-cash"       element={<EmployeeCashBalancesPage />} />
                 <Route path="module/:id"          element={<GenericModulePage />} />
 
                 {/* ── Other ─────────────────────────────────────── */}

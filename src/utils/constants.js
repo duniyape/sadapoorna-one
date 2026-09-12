@@ -72,6 +72,7 @@ export const MASTER_MODULES = [
   { id: 'vendors', title: 'Vendors', icon: Handshake, color: 'bg-indigo-100 text-indigo-600 border-indigo-200', badge: 'New', desc: 'Manage vendors & suppliers', route: '/vendors' },
   { id: 'account-master', title: 'Accounts Master', icon: Layers, color: 'bg-fuchsia-100 text-fuchsia-600 border-fuchsia-200', badge: 'New', desc: 'Manage accounting groups & ledgers', route: '/account-master' },
   { id: 'accounting-vouchers', title: 'Accounting Vouchers', icon: Receipt, color: 'bg-emerald-100 text-emerald-600 border-emerald-200', badge: 'New', desc: 'Manage accounting entries', route: '/accounting-vouchers' },
+  { id: 'employee-cash', title: 'Employee Cash', icon: Wallet, color: 'bg-amber-100 text-amber-600 border-amber-200', badge: 'Live', desc: 'Live cash-in-hand custody', route: '/employee-cash' },
 ];
 
 export const CATEGORIZED_SIDEBAR = [
@@ -133,6 +134,7 @@ export const CATEGORIZED_SIDEBAR = [
     items: [
       { id: 'account-master', label: 'Accounts Master', icon: Layers, badge: 'New', route: '/account-master' },
       { id: 'accounting-vouchers', label: 'Accounting Vouchers', icon: Receipt, badge: 'New', route: '/accounting-vouchers' },
+      { id: 'employee-cash', label: 'Employee Cash', icon: Wallet, badge: 'Live', route: '/employee-cash' },
     ]
   }
 ];
