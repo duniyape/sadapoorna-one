@@ -126,7 +126,7 @@ export default function BranchProfilePage() {
   return (
     <div className="max-w-7xl mx-auto mt-2">
       <div className="flex items-center gap-2.5 mb-4">
-        <button onClick={() => navigate('/')} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm transition-all">
+        <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm transition-all">
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div>

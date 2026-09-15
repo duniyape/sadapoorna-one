@@ -39,7 +39,7 @@ export default function FinanceCollectionsPage() {
       const isMongoId = /^[0-9a-fA-F]{24}$/.test(query);
       const url = isMongoId ? `/orders/v1/${query}` : `/orders/v1?search=${encodeURIComponent(query)}`;
       
-      const res = await fetch(url, { headers: authHdr() });
+      const res = await fetch(url, { headers: { ...authHdr(), 'Content-Type': 'application/json' } });
       if (res.ok) {
         const json = await res.json();
         let data = null;
@@ -95,7 +95,7 @@ export default function FinanceCollectionsPage() {
 
       const res = await fetch(`/accounting/orders/${orderId}/receipt`, {
         method: 'POST',
-        headers: authHdr(),
+        headers: { ...authHdr(), 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       
@@ -120,7 +120,7 @@ export default function FinanceCollectionsPage() {
   return (
     <div className="max-w-4xl mx-auto mt-2 pb-12">
       <div className="flex items-center gap-2.5 mb-6">
-        <button onClick={() => navigate('/')} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm transition-all">
+        <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm transition-all">
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div>
@@ -337,3 +337,4 @@ export default function FinanceCollectionsPage() {
     </div>
   );
 }
+

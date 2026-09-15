@@ -62,7 +62,7 @@ export default function CustomerKhataPage() {
     setIsFetching(true);
     setKhata(null);
     try {
-      const res = await fetch(`/accounting/customers/${customerId.trim()}/aging`, { headers: authHdr() });
+      const res = await fetch(`/accounting/customers/${customerId.trim()}/aging`, { headers: { ...authHdr(), 'Content-Type': 'application/json' } });
       if (res.ok) {
         const json = await res.json();
         let data = json.data || json;
@@ -70,7 +70,7 @@ export default function CustomerKhataPage() {
         // If backend aging returns null name (e.g. no invoices), check if customer actually exists
         if (!data.customer_name) {
           try {
-            const custRes = await fetch(`/customer/${customerId.trim()}`, { headers: authHdr() });
+            const custRes = await fetch(`/customer/${customerId.trim()}`, { headers: { ...authHdr(), 'Content-Type': 'application/json' } });
             if (custRes.ok) {
               const custJson = await custRes.json();
               const custData = custJson.data || custJson;
@@ -164,7 +164,7 @@ export default function CustomerKhataPage() {
 
       const res = await fetch(`/accounting/customers/${khata.customer_id || customerId.trim()}/receipt`, {
         method: 'POST',
-        headers: authHdr(),
+        headers: { ...authHdr(), 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
@@ -176,7 +176,11 @@ export default function CustomerKhataPage() {
         fetchKhata(); // Refresh background data
       } else {
         const err = await res.json().catch(() => ({}));
-        showToast(err.detail || err.message || "Payment receipt submission failed");
+        let errMsg = "Payment receipt submission failed";
+        if (typeof err.detail === 'string') errMsg = err.detail;
+        else if (typeof err.message === 'string') errMsg = err.message;
+        else if (Array.isArray(err.detail) && err.detail.length > 0 && err.detail[0].msg) errMsg = err.detail[0].msg;
+        showToast(errMsg);
       }
     } catch (err) {
       showToast("Network error during submission");
@@ -191,12 +195,12 @@ export default function CustomerKhataPage() {
     <div className="max-w-6xl mx-auto mt-2 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-2.5">
-          <button onClick={() => navigate('/')} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm transition-all">
+          <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm transition-all">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h1 className="text-lg font-extrabold text-slate-900 leading-tight">Customer Khata</h1>
-            <p className="text-[9px] text-teal-600 font-bold uppercase tracking-widest">Ledger & Payment Collection</p>
+            <h1 className="text-lg font-extrabold text-slate-900 leading-tight">Customer Payment</h1>
+            <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest">Accounting & Finance</p>
           </div>
         </div>
       </div>
@@ -585,3 +589,4 @@ export default function CustomerKhataPage() {
     </div>
   );
 }
+

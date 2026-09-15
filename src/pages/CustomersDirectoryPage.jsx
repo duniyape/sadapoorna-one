@@ -192,7 +192,7 @@ export default function CustomersDirectoryPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/')} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
+          <button onClick={() => navigate(-1)} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
@@ -286,7 +286,11 @@ export default function CustomersDirectoryPage() {
             </div>
             
             {filteredCustomers.map((c, i) => (
-              <div key={c.id || i} className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-3 px-4 py-3 lg:py-2.5 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all text-xs">
+              <div 
+                key={c.id || i} 
+                onClick={() => navigate(`/view-customer/${c.id || c.customer_id}`)}
+                className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-3 px-4 py-3 lg:py-2.5 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all text-xs cursor-pointer"
+              >
                 
                 {/* Mobile Top Row / Desktop Left side */}
                 <div className="flex items-center gap-3 w-full lg:w-auto">
@@ -351,22 +355,22 @@ export default function CustomersDirectoryPage() {
                   {/* Actions */}
                   <div className="w-auto lg:w-36 shrink-0 flex items-center justify-end gap-1">
                     {!c.phone_verified && (
-                      <button onClick={() => handleSendOtpAndVerify(c)} className="p-1.5 rounded-md bg-orange-50 hover:bg-orange-100 text-orange-600 transition-colors" title="Verify Phone">
+                      <button onClick={(e) => { e.stopPropagation(); handleSendOtpAndVerify(c); }} className="p-1.5 rounded-md bg-orange-50 hover:bg-orange-100 text-orange-600 transition-colors" title="Verify Phone">
                         <ShieldAlert className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
                       </button>
                     )}
                     {canPhone && (
-                      <button onClick={() => showToast(`Dialed ${c.phone}`)} className="p-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors" title="Call Client">
+                      <button onClick={(e) => { e.stopPropagation(); showToast(`Dialed ${c.phone}`); }} className="p-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors" title="Call Client">
                         <Phone className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
                       </button>
                     )}
                     {canEdit && (
-                      <button onClick={() => navigate(`/edit-customer/${c.id}`)} className="p-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors" title="Edit Customer">
+                      <button onClick={(e) => { e.stopPropagation(); navigate(`/edit-customer/${c.id || c.customer_id}`); }} className="p-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors" title="Edit Customer">
                         <Edit2 className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
                       </button>
                     )}
                     {canView && (
-                      <button onClick={() => navigate(`/view-customer/${c.id}`)} className="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600" title="View Details">
+                      <button onClick={(e) => { e.stopPropagation(); navigate(`/view-customer/${c.id || c.customer_id}`); }} className="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600" title="View Details">
                         <FileText className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
                       </button>
                     )}

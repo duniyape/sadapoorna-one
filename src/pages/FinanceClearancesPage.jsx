@@ -23,6 +23,7 @@ export default function FinanceClearancesPage() {
 
   // Disburse Form State
   const [bankAccountName, setBankAccountName] = useState('');
+  const [bankLedgers, setBankLedgers] = useState([]);
   const [clearanceDate, setClearanceDate] = useState('');
   const [utr, setUtr] = useState('');
   const [notes, setNotes] = useState('');
@@ -43,7 +44,7 @@ export default function FinanceClearancesPage() {
         url += `&verification_status=${activeTab === 'DISBURSED' ? 'VERIFIED' : activeTab}`;
       }
       
-      const res = await fetch(url, { headers: authHdr() });
+      const res = await fetch(url, { headers: { ...authHdr(), 'Content-Type': 'application/json' } });
       if (res.ok) {
         const json = await res.json();
         const dataList = json.data?.data || json.data || [];
@@ -54,10 +55,10 @@ export default function FinanceClearancesPage() {
         // Also if tab is ALL, we just use verification_status to show in UI
         setVouchers(financeVouchers);
       } else {
-        showToast("Failed to fetch finance vouchers");
+        showToast("Failed to fetch finance vouchers", "error");
       }
     } catch (err) {
-      showToast("Network error fetching finance vouchers");
+      showToast("Network error", "error");
     } finally {
       setIsLoading(false);
     }
@@ -66,6 +67,21 @@ export default function FinanceClearancesPage() {
   useEffect(() => {
     fetchVouchers();
     setSelectedIds([]); // Clear selection on tab change
+
+    // Fetch Bank Ledgers for dropdown
+    const fetchBanks = async () => {
+      try {
+        const res = await fetch('/accounting/ledgers/bank-accounts', { headers: { ...authHdr(), 'Content-Type': 'application/json' } });
+        const json = await res.json();
+        if (res.ok) {
+          const arr = Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
+          setBankLedgers(arr);
+        }
+      } catch (err) {
+        console.error("Failed to fetch bank ledgers", err);
+      }
+    };
+    fetchBanks();
   }, [activeTab]);
 
   const handleActionClick = (vouchersArr, type) => {
@@ -124,19 +140,20 @@ export default function FinanceClearancesPage() {
         };
       } else {
         const voucherId = selectedVouchers[0]._id || selectedVouchers[0].id;
-        url = `/accounting/vouchers/${voucherId}`;
         
         if (actionType === 'DISBURSE') {
-          url += `/disburse-finance`;
+          // Fix 404: Use the batch endpoint even for single disbursements to be safe
+          url = `/accounting/vouchers/batch-disburse-finance`;
           payload = {
+            voucher_ids: [voucherId],
             disbursement_bank_name: bankAccountName,
             bank_clearance_date: clearanceDate,
-            subvention_charges: parseFloat(subventionFee.toFixed(2)),
+            total_subvention_charges: parseFloat(subventionFee.toFixed(2)),
             disbursement_utr: utr,
             notes: notes
           };
         } else if (actionType === 'BOUNCE') {
-          url += `/bounce`;
+          url = `/accounting/vouchers/${voucherId}/bounce`;
           payload = {
             bounce_reason: bounceReason,
             penalty_amount: parseFloat(penaltyAmount || 0)
@@ -146,7 +163,7 @@ export default function FinanceClearancesPage() {
 
       const res = await fetch(url, {
         method: 'POST',
-        headers: authHdr(),
+        headers: { ...authHdr(), 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
@@ -157,10 +174,14 @@ export default function FinanceClearancesPage() {
         fetchVouchers();
       } else {
         const err = await res.json().catch(() => ({}));
-        showToast(err.detail || err.message || `Failed to process finance transaction`);
+        let errMsg = "Failed to process finance transaction";
+        if (typeof err.detail === 'string') errMsg = err.detail;
+        else if (typeof err.message === 'string') errMsg = err.message;
+        else if (Array.isArray(err.detail) && err.detail.length > 0 && err.detail[0].msg) errMsg = err.detail[0].msg;
+        showToast(errMsg);
       }
     } catch (err) {
-      showToast("Network error");
+      showToast("Network error", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -208,7 +229,7 @@ export default function FinanceClearancesPage() {
     <div className="max-w-6xl mx-auto mt-2 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-2.5">
-          <button onClick={() => navigate('/')} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm transition-all">
+          <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm transition-all">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
@@ -450,14 +471,18 @@ export default function FinanceClearancesPage() {
                   <div className="grid grid-cols-2 gap-3 mt-2">
                     <div className="space-y-1.5">
                       <label className="text-xs font-black uppercase text-slate-500 tracking-wider">Disbursement Bank *</label>
-                      <input 
-                        type="text" 
+                      <select 
                         required
-                        placeholder="e.g. HDFC Current A/c"
                         value={bankAccountName}
                         onChange={(e) => setBankAccountName(e.target.value)}
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm font-bold text-slate-800 bg-slate-50"
-                      />
+                      >
+                        <option value="">-- Select Bank --</option>
+                        {bankLedgers.map(l => (
+                          <option key={l._id} value={l.ledger_name || l.name}>{l.ledger_name || l.name}</option>
+                        ))}
+                        <option value="Bank Account (Main)">Bank Account (Main)</option>
+                      </select>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-black uppercase text-slate-500 tracking-wider">Clearance Date *</label>
@@ -552,3 +577,4 @@ export default function FinanceClearancesPage() {
     </div>
   );
 }
+

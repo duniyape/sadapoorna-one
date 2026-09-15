@@ -25,12 +25,17 @@ export default function EmployeeCashBalancesPage() {
       if (res.ok) {
         const json = await res.json();
         setBalances(Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []));
-      } else {
-        showToast("Failed to load cash balances");
-      }
+        } else {
+          let errMsg = "Failed to load cash balances";
+          const err = await res.json().catch(() => ({}));
+          if (typeof err.detail === 'string') errMsg = err.detail;
+          else if (typeof err.message === 'string') errMsg = err.message;
+          else if (Array.isArray(err.detail) && err.detail.length > 0 && err.detail[0].msg) errMsg = err.detail[0].msg;
+          showToast(errMsg);
+        }
     } catch (err) {
       console.error("Failed to fetch cash balances", err);
-      showToast("Network error");
+      showToast("Network error", "error");
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +62,7 @@ export default function EmployeeCashBalancesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/')} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
@@ -144,8 +149,8 @@ export default function EmployeeCashBalancesPage() {
                   </td>
                 </tr>
               ) : (
-                filteredBalances.map((b) => (
-                  <tr key={b.employee_id} className="hover:bg-slate-50/50 transition-colors">
+                filteredBalances.map((b, i) => (
+                  <tr key={b.employee_id || b.ledger_id || i} className="hover:bg-slate-50/50 transition-colors">
                     <td className="p-4 pl-6">
                       <p className="font-bold text-slate-900">{b.employee_name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
@@ -185,7 +190,7 @@ export default function EmployeeCashBalancesPage() {
                           </button>
                         )}
                         <button 
-                          onClick={() => setSelectedEmployeeId(b.employee_id)} 
+                          onClick={() => setSelectedEmployeeId(b.employee_id || b.ledger_id)} 
                           title="View Summary"
                           className="p-2 rounded-xl bg-sky-50 text-sky-600 hover:bg-sky-100 transition-colors"
                         >
