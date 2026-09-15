@@ -50,6 +50,7 @@ const FinanceCollectionsPage     = React.lazy(() => import("./pages/FinanceColle
 const FinanceClearancesPage      = React.lazy(() => import("./pages/FinanceClearancesPage"));
 const BankVerificationPage       = React.lazy(() => import("./pages/BankVerificationPage"));
 const CustomerKhataPage          = React.lazy(() => import("./pages/CustomerKhataPage"));
+const DueCollectionsPage         = React.lazy(() => import("./pages/DueCollectionsPage"));
 
 // ── Customer 360° — layout + 5 separate tab pages ────────────────────────────
 const CustomerProfileLayout = React.lazy(() => import("./pages/CustomerProfileLayout"));
@@ -158,6 +159,7 @@ const App = () => (
                 <Route path="finance-clearances"  element={<FinanceClearancesPage />} />
                 <Route path="bank-verification"   element={<BankVerificationPage />} />
                 <Route path="customer-khata"      element={<CustomerKhataPage />} />
+                <Route path="due-collection"      element={<DueCollectionsPage />} />
                 <Route path="module/:id"          element={<GenericModulePage />} />
 
                 {/* ── Other ─────────────────────────────────────── */}
