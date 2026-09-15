@@ -14,7 +14,7 @@ export default function ReceiveChequeModal({ voucher, onClose, onSuccess }) {
     try {
       const res = await fetch(`/accounting/vouchers/${voucher._id || voucher.id}/receive-cheque`, {
         method: 'POST',
-        headers: authHdr(),
+        headers: { ...authHdr(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes })
       });
       
@@ -80,3 +80,4 @@ export default function ReceiveChequeModal({ voucher, onClose, onSuccess }) {
     </div>
   );
 }
+

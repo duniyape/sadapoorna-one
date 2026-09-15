@@ -26,7 +26,7 @@ export default function BounceChequeModal({ voucher, onClose, onSuccess }) {
     try {
       const res = await fetch(`/accounting/vouchers/${voucher._id || voucher.id}/bounce`, {
         method: 'POST',
-        headers: authHdr(),
+        headers: { ...authHdr(), 'Content-Type': 'application/json' },
         body: JSON.stringify({
           bounce_reason: formData.bounce_reason,
           penalty_amount: Number(formData.penalty_amount)
@@ -116,3 +116,4 @@ export default function BounceChequeModal({ voucher, onClose, onSuccess }) {
     </div>
   );
 }
+

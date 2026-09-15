@@ -36,15 +36,19 @@ export default function EmployeeCashHandoverModal({ employee, onClose, onSuccess
       
       const res = await fetch('/accounting/employees/cash-handover', {
         method: 'POST',
-        headers: authHdr(),
+        headers: { ...authHdr(), 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
       if (res.ok) {
         onSuccess();
       } else {
-        setError(json.message || json.detail || "Failed to record handover");
+        let errMsg = "Failed to record handover";
+        if (typeof json.detail === 'string') errMsg = json.detail;
+        else if (typeof json.message === 'string') errMsg = json.message;
+        else if (Array.isArray(json.detail) && json.detail.length > 0 && json.detail[0].msg) errMsg = json.detail[0].msg;
+        setError(errMsg);
       }
     } catch (err) {
       setError("Network error recording handover");

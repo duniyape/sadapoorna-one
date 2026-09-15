@@ -18,7 +18,11 @@ export default function EmployeeCashSummaryModal({ employeeId, onClose }) {
         if (res.ok && (json.data || json.success)) {
           setData(json.data || json);
         } else {
-          setError(json.message || json.detail || "Failed to load summary");
+          let errMsg = "Failed to load summary";
+          if (typeof json.detail === 'string') errMsg = json.detail;
+          else if (typeof json.message === 'string') errMsg = json.message;
+          else if (Array.isArray(json.detail) && json.detail.length > 0 && json.detail[0].msg) errMsg = json.detail[0].msg;
+          setError(errMsg);
         }
       } catch (err) {
         setError("Network error fetching employee summary");
@@ -112,14 +116,14 @@ export default function EmployeeCashSummaryModal({ employeeId, onClose }) {
                           <tr key={i} className="hover:bg-slate-50">
                             <td className="px-4 py-3">
                               <p className="font-bold text-slate-800">{fmt(txn.date || txn.created_at)}</p>
-                              {txn.voucher_no && <p className="text-[10px] text-slate-500">{txn.voucher_no}</p>}
+                              {(txn.voucher_no || txn.voucher_number) && <p className="text-[10px] text-slate-500">{txn.voucher_no || txn.voucher_number}</p>}
                             </td>
                             <td className="px-4 py-3 text-slate-700">{txn.narration || '-'}</td>
                             <td className="px-4 py-3 text-right font-black text-emerald-600">
-                              {txn.debit > 0 ? fmtMoney(txn.debit) : '-'}
+                              {(txn.debit || txn.cash_received) > 0 ? fmtMoney(txn.debit || txn.cash_received) : '-'}
                             </td>
                             <td className="px-4 py-3 text-right font-black text-rose-600">
-                              {txn.credit > 0 ? fmtMoney(txn.credit) : '-'}
+                              {(txn.credit || txn.cash_handed_over) > 0 ? fmtMoney(txn.credit || txn.cash_handed_over) : '-'}
                             </td>
                           </tr>
                         ))

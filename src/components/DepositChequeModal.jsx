@@ -17,7 +17,7 @@ export default function DepositChequeModal({ voucher, onClose, onSuccess }) {
     // Fetch bank ledgers for the dropdown
     const fetchLedgers = async () => {
       try {
-        const res = await fetch('/accounting/ledgers?type=Bank', { headers: authHdr() });
+        const res = await fetch('/accounting/ledgers/bank-accounts', { headers: { ...authHdr(), 'Content-Type': 'application/json' } });
         const json = await res.json();
         if (res.ok) {
           const arr = Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
@@ -41,7 +41,7 @@ export default function DepositChequeModal({ voucher, onClose, onSuccess }) {
       };
       const res = await fetch(`/accounting/vouchers/${voucher._id || voucher.id}/deposit-cheque`, {
         method: 'POST',
-        headers: authHdr(),
+        headers: { ...authHdr(), 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       
@@ -94,7 +94,7 @@ export default function DepositChequeModal({ voucher, onClose, onSuccess }) {
             >
               <option value="">-- Select Bank Ledger --</option>
               {ledgers.map(l => (
-                <option key={l._id} value={l.name}>{l.name}</option>
+                <option key={l._id} value={l.ledger_name || l.name}>{l.ledger_name || l.name}</option>
               ))}
               {/* Fallback option if API doesn't return any Banks */}
               <option value="Bank Account (Main)">Bank Account (Main)</option>
@@ -147,3 +147,4 @@ export default function DepositChequeModal({ voucher, onClose, onSuccess }) {
     </div>
   );
 }
+

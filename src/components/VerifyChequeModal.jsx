@@ -21,7 +21,7 @@ export default function VerifyChequeModal({ voucher, onClose, onSuccess }) {
       };
       const res = await fetch(`/accounting/vouchers/${voucher._id || voucher.id}/verify`, {
         method: 'POST',
-        headers: authHdr(),
+        headers: { ...authHdr(), 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       
@@ -102,3 +102,4 @@ export default function VerifyChequeModal({ voucher, onClose, onSuccess }) {
     </div>
   );
 }
+

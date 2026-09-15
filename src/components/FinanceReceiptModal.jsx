@@ -23,7 +23,7 @@ export default function FinanceReceiptModal({ order, onClose, onSuccess }) {
     const fetchOrderDetails = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/orders/v1/${orderId}`, { headers: authHdr() });
+        const res = await fetch(`/orders/v1/${orderId}`, { headers: { ...authHdr(), 'Content-Type': 'application/json' } });
         if (res.ok) {
           const json = await res.json();
           // Adjust based on typical FastAPI response structure
@@ -59,7 +59,7 @@ export default function FinanceReceiptModal({ order, onClose, onSuccess }) {
 
       const res = await fetch(`/accounting/orders/${orderId}/receipt`, {
         method: 'POST',
-        headers: authHdr(),
+        headers: { ...authHdr(), 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       
@@ -208,3 +208,4 @@ export default function FinanceReceiptModal({ order, onClose, onSuccess }) {
     </div>
   );
 }
+
