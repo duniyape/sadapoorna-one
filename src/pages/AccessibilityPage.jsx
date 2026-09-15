@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Lock, Save, ShieldCheck, CheckSquare, Search } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { SALES_OPERATIONS, HR_FLEET_MODULES, SYSTEM_HR_MODULES, INVENTORY_MASTER_MODULES, ACCOUNTING_FINANCE_MODULES } from '../utils/constants';
+import { MASTER_MODULES, DASHBOARD_GROUPS } from '../utils/constants';
 
-const ALL_MODULES_CATEGORIZED = [
-  { category: 'Customer & Sales', items: SALES_OPERATIONS },
-  { category: 'HR, Staff & Fleet', items: HR_FLEET_MODULES },
-  { category: 'Accounting & Finance', items: ACCOUNTING_FINANCE_MODULES },
-  { category: 'Inventory Master', items: INVENTORY_MASTER_MODULES },
-  { category: 'System & HR', items: SYSTEM_HR_MODULES }
-];
+const ALL_MODULES_CATEGORIZED = DASHBOARD_GROUPS.map(group => ({
+  category: group,
+  items: MASTER_MODULES.filter(m => m.dashboardGroup === group)
+}));
 
 export default function AccessibilityPage() {
   const navigate = useNavigate();
@@ -226,7 +223,7 @@ export default function AccessibilityPage() {
   return (
     <div className="max-w-7xl mx-auto mt-2">
       <div className="flex items-center gap-2.5 mb-4">
-        <button onClick={() => navigate('/')} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm transition-all">
+        <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm transition-all">
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div>

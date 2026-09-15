@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
-import { SALES_OPERATIONS, HR_FLEET_MODULES } from '../utils/constants';
+import { MASTER_MODULES } from '../utils/constants';
 
 export default function GenericModulePage() {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ export default function GenericModulePage() {
   const { id } = useParams();
 
   const getModuleById = (moduleId) => {
-    return [...SALES_OPERATIONS, ...HR_FLEET_MODULES].find(m => m.id === moduleId);
+    return MASTER_MODULES.find(m => m.id === moduleId);
   };
 
   const mod = getModuleById(id) || { id: id, title: id.toUpperCase(), icon: FileText, color: 'bg-indigo-100 text-indigo-600' };
