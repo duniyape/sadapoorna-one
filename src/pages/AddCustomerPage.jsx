@@ -332,7 +332,7 @@ export default function AddCustomerPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-3 sticky top-0 bg-white/90 backdrop-blur-md z-10 py-1.5 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <button onClick={() => navigate('/customers')} type="button" className="p-1 rounded bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors">
+          <button onClick={() => navigate(-1)} type="button" className="p-1 rounded bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors">
             <ArrowLeft className="w-3.5 h-3.5" />
           </button>
           <div className="flex items-baseline gap-2">
