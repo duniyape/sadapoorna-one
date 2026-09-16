@@ -11,7 +11,6 @@ const Home                       = React.lazy(() => import("./pages/Home"));
 const AddCustomerPage            = React.lazy(() => import("./pages/AddCustomerPage"));
 const OrdersPage                 = React.lazy(() => import("./pages/OrdersPage"));
 const CustomersDirectoryPage     = React.lazy(() => import("./pages/CustomersDirectoryPage"));
-const StockInventoryPage         = React.lazy(() => import("./pages/StockInventoryPage"));
 const AiSuitePage                = React.lazy(() => import("./pages/AiSuitePage"));
 const BranchProfilePage          = React.lazy(() => import("./pages/BranchProfilePage"));
 const DepartmentPage             = React.lazy(() => import("./pages/DepartmentPage"));
@@ -56,9 +55,8 @@ const DueCollectionsPage         = React.lazy(() => import("./pages/DueCollectio
 const CustomerProfileLayout = React.lazy(() => import("./pages/CustomerProfileLayout"));
 const CustomerProfileTab    = React.lazy(() => import("./pages/CustomerProfileTab"));
 const CustomerOrdersTab     = React.lazy(() => import("./pages/CustomerOrdersTab"));
-const CustomerAgingTab      = React.lazy(() => import("./pages/CustomerAgingTab"));
 const CustomerStatementTab  = React.lazy(() => import("./pages/CustomerStatementTab"));
-const CustomerReceiptTab    = React.lazy(() => import("./pages/CustomerReceiptTab"));
+const CustomerKhataTab      = React.lazy(() => import("./pages/CustomerKhataTab"));
 
 // ── Route guard ───────────────────────────────────────────────────────────────
 const ProtectedRoute = ({ children }) => {
@@ -97,9 +95,8 @@ const App = () => (
                 <Route path="view-customer/:id"   element={<CustomerProfileLayout />}>
                   <Route index                    element={<CustomerProfileTab />} />
                   <Route path="orders"            element={<CustomerOrdersTab />} />
-                  <Route path="aging"             element={<CustomerAgingTab />} />
                   <Route path="statement"         element={<CustomerStatementTab />} />
-                  <Route path="receipt"           element={<CustomerReceiptTab />} />
+                  <Route path="khata"             element={<CustomerKhataTab />} />
                 </Route>
 
                 {/* ── Orders ────────────────────────────────────── */}
@@ -109,7 +106,6 @@ const App = () => (
                 <Route path="create-return-order" element={<CreateReturnOrderPage />} />
 
                 {/* ── Inventory ─────────────────────────────────── */}
-                <Route path="inventory-stock"     element={<StockInventoryPage />} />
                 <Route path="main-inventory"      element={<MainInventoryPage />} />
                 <Route path="warehouse-in"        element={<WarehouseInPage />} />
                 <Route path="warehouse-inventory" element={<WarehouseInventoryPage />} />

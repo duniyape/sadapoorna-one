@@ -9,9 +9,8 @@ import { authHdr } from '../utils/customerHelpers';
 const TABS = [
   { key: 'profile',   label: 'Profile',   Icon: User },
   { key: 'orders',    label: 'Orders',    Icon: ShoppingCart },
-  { key: 'aging',     label: 'Aging',     Icon: BarChart3 },
   { key: 'statement', label: 'Statement', Icon: FileText },
-  { key: 'receipt',   label: 'Receipt',   Icon: Receipt },
+  { key: 'khata',     label: 'Payment',   Icon: Receipt },
 ];
 
 export default function CustomerProfileLayout() {
@@ -27,7 +26,7 @@ export default function CustomerProfileLayout() {
 
   // Derive active tab purely from URL — zero state needed
   const pathTail = location.pathname.split('/').pop();
-  const activeTab = ['orders', 'aging', 'statement', 'receipt'].includes(pathTail) ? pathTail : 'profile';
+  const activeTab = ['orders', 'statement', 'khata'].includes(pathTail) ? pathTail : 'profile';
 
   const goTab = (key) =>
     navigate(key === 'profile' ? `/view-customer/${id}` : `/view-customer/${id}/${key}`);
