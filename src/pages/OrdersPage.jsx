@@ -1025,7 +1025,7 @@ export default function OrdersPage() {
                       <Zap className="w-4 h-4 text-indigo-500" /> Update Order Status
                     </h3>
 
-                    {(selectedOrder.status === "Out for Delivery" || (selectedOrder.type === 'sale_return' && selectedOrder.status === "Confirmed")) && (
+                    {(selectedOrder.status === "Ready to Pick Up" || (selectedOrder.type === 'sale_return' && selectedOrder.status === "Confirmed")) && (
                       <div className="mb-4 space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Delivery Medium</div>
                         <div className="flex gap-4">
@@ -1139,29 +1139,29 @@ export default function OrdersPage() {
                             />
                           )}
                           {selectedOrder.status === "Ready to Pick Up" && canDispatch && (
-                            <SwipeButton
-                              text="Dispatch"
-                              colorClass="bg-indigo-500"
-                              onConfirm={() => {
-                                handleStatusChange(selectedOrder.id || selectedOrder._id, "Out for Delivery");
-                                setSelectedOrder((prev) => ({ ...prev, status: "Out for Delivery" }));
-                              }}
-                            />
-                          )}
-                          {selectedOrder.status === "Out for Delivery" && canDeliver && (
                             <div className={(!deliveryType || (deliveryType === "vehicle" && !selectedDeliveryId)) ? "opacity-50 pointer-events-none" : ""}>
                               <SwipeButton
-                                text="Deliver"
-                                colorClass="bg-emerald-600"
+                                text="Dispatch"
+                                colorClass="bg-indigo-500"
                                 onConfirm={() => {
-                                  handleStatusChange(selectedOrder.id || selectedOrder._id, "Delivered", {
+                                  handleStatusChange(selectedOrder.id || selectedOrder._id, "Out for Delivery", {
                                     delivery_type: deliveryType,
                                     [deliveryType === "vehicle" ? "vehicle_id" : "warehouse_id"]: deliveryType === "vehicle" ? selectedDeliveryId : (selectedOrder.warehouse_id || selectedOrder.warehouse?._id)
                                   });
-                                  setSelectedOrder((prev) => ({ ...prev, status: "Delivered" }));
+                                  setSelectedOrder((prev) => ({ ...prev, status: "Out for Delivery" }));
                                 }}
                               />
                             </div>
+                          )}
+                          {selectedOrder.status === "Out for Delivery" && canDeliver && (
+                            <SwipeButton
+                              text="Deliver"
+                              colorClass="bg-emerald-600"
+                              onConfirm={() => {
+                                handleStatusChange(selectedOrder.id || selectedOrder._id, "Delivered");
+                                setSelectedOrder((prev) => ({ ...prev, status: "Delivered" }));
+                              }}
+                            />
                           )}
                           {(!selectedOrder.status || !["delivered", "cancelled"].includes(selectedOrder.status?.toLowerCase())) && (
                             <button
