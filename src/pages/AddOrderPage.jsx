@@ -138,7 +138,12 @@ export default function AddOrderPage() {
           if (res.ok) {
             const json = await res.json();
             const records = json.data || (Array.isArray(json) ? json : []);
-            const totalStock = records.reduce((sum, r) => sum + (parseFloat(r.unblocked_quantity) || parseFloat(r.available_quantity) || 0), 0);
+            const totalStock = records.reduce((sum, r) => {
+              const unblocked = parseFloat(r.unblocked_quantity);
+              const available = parseFloat(r.available_quantity);
+              const qty = !isNaN(unblocked) ? unblocked : (!isNaN(available) ? available : 0);
+              return sum + qty;
+            }, 0);
             setStockInventory(prev => ({ ...prev, [item.variant_id]: totalStock }));
           } else {
             setStockInventory(prev => ({ ...prev, [item.variant_id]: 0 }));
