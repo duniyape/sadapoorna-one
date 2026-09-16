@@ -5,7 +5,7 @@ import { authHdr, fmt, fmtMoney, Skeleton, StatusBadge } from '../utils/customer
 import ViewOrderModal from '../components/ViewOrderModal';
 
 export default function CustomerOrdersTab() {
-  const { id } = useOutletContext();
+  const { customer } = useOutletContext();
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,8 @@ export default function CustomerOrdersTab() {
     setLoading(true);
     hasFetched.current = true;
     try {
-      const res = await fetch(`/orders/v1?customer_id=${id}&limit=50`, { headers: authHdr() });
+      const customerId = customer?.mongo_id || customer?._id || customer?.id;
+      const res = await fetch(`/orders/v1?page=1&limit=20&record_status=active&customer_id=${customerId}`, { headers: authHdr() });
       const json = res.ok ? await res.json() : {};
       let o = [];
       if (Array.isArray(json.data)) o = json.data;
@@ -29,7 +30,7 @@ export default function CustomerOrdersTab() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [customer]);
 
   useEffect(() => {
     if (!hasFetched.current) fetchOrders();

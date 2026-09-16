@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, User, Truck, Receipt, Tag, ShieldCheck, MapPin, CheckCircle2, Package, IndianRupee } from 'lucide-react';
+import { X, Calendar, User, Truck, Receipt, Tag, ShieldCheck, MapPin, CheckCircle2, Package, IndianRupee, Download } from 'lucide-react';
 import OrderPipeline from './OrderPipeline';
 import { authHdr, fmt, fmtMoney, StatusBadge } from '../utils/customerHelpers';
 
@@ -7,6 +7,28 @@ export default function ViewOrderModal({ orderId, onClose }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadBill = async () => {
+    setIsDownloading(true);
+    try {
+      const res = await fetch(`/orders/get-bill/v1/${orderId}/pdf`, {
+        headers: authHdr()
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.detail || "Failed to fetch invoice");
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Error fetching invoice PDF");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   useEffect(() => {
     if (!orderId) return;
@@ -51,12 +73,24 @@ export default function ViewOrderModal({ orderId, onClose }) {
               ID: {orderId} • {order ? fmt(order.created_at) : 'Loading...'}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-3">
+            {order?.invoice_no && (
+              <button
+                onClick={handleDownloadBill}
+                disabled={isDownloading}
+                className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
+              >
+                {isDownloading ? <div className="w-3.5 h-3.5 border-2 border-indigo-700/30 border-t-indigo-700 rounded-full animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                Download Bill
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Content Body */}
