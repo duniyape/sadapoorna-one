@@ -370,8 +370,8 @@ export default function CustomersDirectoryPage() {
                       </button>
                     )}
                     {canView && (
-                      <button onClick={(e) => { e.stopPropagation(); navigate(`/view-customer/${c.id || c.customer_id}`); }} className="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600" title="View Details">
-                        <FileText className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
+                      <button onClick={(e) => { e.stopPropagation(); navigate(`/view-customer/${c.id || c.customer_id}`); }} className="px-3 py-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold border border-indigo-100 uppercase tracking-wider transition-colors" title="View Details">
+                        VIEW
                       </button>
                     )}
                   </div>
