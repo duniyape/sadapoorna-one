@@ -86,13 +86,6 @@ export const MASTER_MODULES = [
 
   // ── Inventory & Fleet ────────────────────────────────────────────────────────
   {
-    id: 'inventory-stock',
-    label: 'Stock Inventory', title: 'Stock Inventory',
-    icon: Package, color: 'bg-teal-100 text-teal-600 border-teal-200',
-    badge: null, desc: 'Warehouse inventory count', route: '/inventory-stock',
-    dashboardGroup: 'Inventory & Fleet', sidebarGroup: 'Inventory & Fleet',
-  },
-  {
     id: 'main-inventory',
     label: 'Main Inventory', title: 'Main Inventory',
     icon: Boxes, color: 'bg-indigo-100 text-indigo-600 border-indigo-200',
