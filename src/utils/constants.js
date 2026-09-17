@@ -53,6 +53,7 @@ export const MASTER_MODULES = [
     label: 'Create Customer', title: 'Create Customer',
     icon: UserPlus, color: 'bg-pink-100 text-pink-600 border-pink-200',
     badge: 'Hot', desc: 'Register a new customer account', route: '/add-customer',
+    key: ['Assignment'],
     dashboardGroup: 'Sales & Billing', sidebarGroup: 'Sales & Billing',
   },
   {
@@ -60,6 +61,7 @@ export const MASTER_MODULES = [
     label: 'Customer List', title: 'Customers Directory',
     icon: Users, color: 'bg-orange-100 text-orange-600 border-orange-200',
     badge: null, desc: 'View complete client directory', route: '/customers',
+    key: ['Edit', 'View', 'Phone', 'Branch Filter', 'Employee Filter'],
     dashboardGroup: 'Sales & Billing', sidebarGroup: 'Sales & Billing',
   },
   {
@@ -67,6 +69,7 @@ export const MASTER_MODULES = [
     label: 'Orders & Bills', title: 'Orders & Invoices',
     icon: CheckSquare, color: 'bg-sky-100 text-sky-600 border-sky-200',
     badge: null, desc: 'Process new orders & invoices', route: '/orders',
+    key: ['Edit', 'View', 'Confirm', 'Pack', 'Dispatch', 'Deliver'],
     dashboardGroup: 'Sales & Billing', sidebarGroup: 'Sales & Billing',
   },
   {
@@ -257,6 +260,7 @@ export const MASTER_MODULES = [
     label: 'Users', title: 'Users',
     icon: UserCog, color: 'bg-indigo-100 text-indigo-600 border-indigo-200',
     badge: 'New', desc: 'Create & manage staff users', route: '/users',
+    key: ['Create', 'Edit', 'View'],
     dashboardGroup: 'System & HR', sidebarGroup: 'System & HR',
   },
   {

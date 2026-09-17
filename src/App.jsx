@@ -50,6 +50,11 @@ const FinanceClearancesPage      = React.lazy(() => import("./pages/FinanceClear
 const BankVerificationPage       = React.lazy(() => import("./pages/BankVerificationPage"));
 const CustomerKhataPage          = React.lazy(() => import("./pages/CustomerKhataPage"));
 const DueCollectionsPage         = React.lazy(() => import("./pages/DueCollectionsPage"));
+const BulkDispatchPage           = React.lazy(() => import("./pages/BulkDispatchPage"));
+const ManifestsPage              = React.lazy(() => import("./pages/ManifestsPage"));
+const ManifestDetailsPage        = React.lazy(() => import("./pages/ManifestDetailsPage"));
+const StockLedgerPage            = React.lazy(() => import("./pages/StockLedgerPage"));
+const BatchTimelinePage          = React.lazy(() => import("./pages/BatchTimelinePage"));
 
 // ── Customer 360° — layout + 5 separate tab pages ────────────────────────────
 const CustomerProfileLayout = React.lazy(() => import("./pages/CustomerProfileLayout"));
@@ -104,12 +109,17 @@ const App = () => (
                 <Route path="add-order"           element={<AddOrderPage />} />
                 <Route path="edit-order/:id"      element={<AddOrderPage />} />
                 <Route path="create-return-order" element={<CreateReturnOrderPage />} />
+                <Route path="bulk-dispatch"       element={<BulkDispatchPage />} />
+                <Route path="manifests"           element={<ManifestsPage />} />
+                <Route path="manifests/:id"       element={<ManifestDetailsPage />} />
 
                 {/* ── Inventory ─────────────────────────────────── */}
                 <Route path="main-inventory"      element={<MainInventoryPage />} />
                 <Route path="warehouse-in"        element={<WarehouseInPage />} />
                 <Route path="warehouse-inventory" element={<WarehouseInventoryPage />} />
                 <Route path="vehicle-in"          element={<VehicleInPage />} />
+                <Route path="stock-ledger"        element={<StockLedgerPage />} />
+                <Route path="batch-timeline/:batch_no" element={<BatchTimelinePage />} />
 
                 {/* ── Warehouses ────────────────────────────────── */}
                 <Route path="warehouses"          element={<WarehousesDirectoryPage />} />
