@@ -462,12 +462,25 @@ export default function OrdersPage() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 self-start sm:self-auto">
+          <div className="flex flex-col sm:flex-row gap-2 self-start sm:self-auto flex-wrap">
             <button
               onClick={() => navigate("/create-return-order")}
               className="px-5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-2 border border-white/15 transition-all w-full sm:w-auto justify-center"
             >
               <RefreshCw className="w-4 h-4" /> Create Return Order
+            </button>
+            <button
+              onClick={() => navigate("/manifests")}
+              className="px-5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-2 border border-white/15 transition-all w-full sm:w-auto justify-center"
+            >
+              <FileText className="w-4 h-4" /> Trip Sheets
+            </button>
+            <button
+              onClick={() => navigate("/bulk-dispatch")}
+              className="px-5 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 shadow-lg w-full sm:w-auto justify-center transition-all hover:scale-105 border border-violet-400/40"
+              style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)", color: "#fff" }}
+            >
+              <Truck className="w-4 h-4" /> Bulk Out for Delivery
             </button>
             <button
               onClick={() => navigate("/add-order")}
@@ -477,6 +490,7 @@ export default function OrdersPage() {
               <Plus className="w-4 h-4" /> Create New Order
             </button>
           </div>
+
         </div>
       </div>
 
