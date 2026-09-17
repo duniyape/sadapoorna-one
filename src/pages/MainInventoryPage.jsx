@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, Search, Package, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Search, Package, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import WarehouseInventoryPage from './WarehouseInventoryPage';
 
@@ -130,6 +130,12 @@ export default function MainInventoryPage() {
           className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'vehicle' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
         >
           Vehicle Inventory
+        </button>
+        <button 
+          onClick={() => navigate('/stock-ledger')} 
+          className="px-4 py-2 rounded-lg text-sm font-black bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors flex items-center gap-2 border border-indigo-200"
+        >
+          <BookOpen className="w-4 h-4" /> Stock Ledger
         </button>
       </div>
 
