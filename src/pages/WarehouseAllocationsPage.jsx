@@ -1,0 +1,376 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useParams, useNavigate, useOutletContext, Navigate } from 'react-router-dom';
+import { ArrowLeft, Search, Truck, ChevronLeft, ChevronRight, Calendar, Filter, Lock, Building2 } from 'lucide-react';
+import { usePermissions } from '../utils/permissions';
+
+function useDebounce(callback, delay) {
+  const timeoutRef = useRef(null);
+  return useCallback((...args) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      callback(...args);
+    }, delay);
+  }, [callback, delay]);
+}
+
+export default function WarehouseAllocationsPage() {
+  const { warehouse_id } = useParams();
+  const navigate = useNavigate();
+  const { showToast, user } = useOutletContext();
+  const { isAllowed } = usePermissions(user);
+
+
+
+  const [allocations, setAllocations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Data for Filters
+  const [products, setProducts] = useState([]);
+  const [variants, setVariants] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
+  
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const limit = 50;
+
+  // Filters
+  const [allocationType, setAllocationType] = useState('');
+  const [productId, setProductId] = useState('');
+  const [variantId, setVariantId] = useState('');
+  
+  const totalPages = Math.ceil(totalItems / limit);
+
+  // Fetch Products on mount
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { 'Authorization': `Bearer ${token}` };
+        
+        const [pRes, wRes] = await Promise.all([
+          fetch('/products/products/v1?limit=100', { headers }).catch(() => null),
+          fetch('/warehouses/get', { headers }).catch(() => null)
+        ]);
+
+        if (pRes && pRes.ok) {
+          const data = await pRes.json();
+          setProducts(data.data || []);
+        }
+        if (wRes && wRes.ok) {
+          const data = await wRes.json();
+          setWarehouses(data.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch metadata", err);
+      }
+    };
+    fetchMetadata();
+  }, []);
+
+  // Fetch Variants when product changes
+  useEffect(() => {
+    setVariantId(''); // Reset variant when product changes
+    if (!productId) {
+      setVariants([]);
+      return;
+    }
+    const fetchVariants = async () => {
+      try {
+        const res = await fetch(`/products/products/${productId}/variants`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setVariants(data.data || data || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch variants", err);
+      }
+    };
+    fetchVariants();
+  }, [productId]);
+
+  const fetchAllocations = async (currentPage, currentAllocType, currentProductId, currentVariantId) => {
+    if (warehouse_id === 'all') {
+      setIsLoading(false);
+      setAllocations([]);
+      setTotalItems(0);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      let url = `/orders/warehouse-allocations/v1/${warehouse_id}?page=${currentPage}&limit=${limit}`;
+      if (currentAllocType) url += `&allocation_type=${encodeURIComponent(currentAllocType)}`;
+      if (currentProductId) url += `&product_id=${encodeURIComponent(currentProductId)}`;
+      if (currentVariantId) url += `&variant_id=${encodeURIComponent(currentVariantId)}`;
+
+      const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAllocations(data.allocations || []);
+        setTotalItems(data.total || 0);
+      } else {
+        showToast("Failed to fetch allocations");
+      }
+    } catch (err) {
+      console.error("Fetch allocations error", err);
+      showToast("Network error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (warehouse_id) {
+      fetchAllocations(page, allocationType, productId, variantId);
+    } else {
+      // Fallback if accessed without ID
+      navigate('/warehouse-allocations/all', { replace: true });
+    }
+  }, [warehouse_id, page, allocationType, productId, variantId]);
+
+  const getDirectionBadge = (direction, label) => {
+    if (direction === 'INWARD') {
+      return <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded uppercase">{label || direction}</span>;
+    }
+    if (direction === 'OUTWARD') {
+      return <span className="px-2 py-1 bg-rose-100 text-rose-700 text-[10px] font-bold rounded uppercase">{label || direction}</span>;
+    }
+    return <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded uppercase">{label || direction}</span>;
+  };
+
+  // If user lacks permission, redirect or show unauthorized. We can just return a lock screen.
+  if (!isAllowed({ id: 'warehouse-allocations' })) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[80vh] text-center">
+        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+          <Lock className="w-8 h-8 text-slate-400" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-800">Access Denied</h2>
+        <p className="text-slate-500 mt-2">You do not have permission to view warehouse allocations.</p>
+        <button onClick={() => navigate(-1)} className="mt-6 px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium text-sm">
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 leading-tight">Warehouse Allocations</h1>
+            <p className="text-xs text-slate-500 font-medium">Audit logs and stock movements for this warehouse</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
+              <Truck className="w-5 h-5" />
+            </div>
+            <h2 className="text-sm font-bold text-slate-800">Allocation Records</h2>
+          </div>
+          
+          <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+            <div className="relative w-full md:w-48">
+              <Building2 className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+              <select 
+                value={warehouse_id}
+                onChange={(e) => { 
+                  navigate(`/warehouse-allocations/${e.target.value || 'all'}`);
+                }}
+                className="pl-9 pr-3 py-2 w-full rounded-xl border border-slate-200 text-xs font-bold text-indigo-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all bg-indigo-50/50"
+              >
+                <option value="all">All Warehouses</option>
+                {warehouses.map(w => (
+                  <option key={w.id || w._id} value={w.id || w._id}>{w.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="relative w-full md:w-40">
+              <Filter className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+              <select 
+                value={allocationType}
+                onChange={(e) => { setAllocationType(e.target.value); setPage(1); }}
+                className="pl-9 pr-3 py-2 w-full rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all bg-white"
+              >
+                <option value="">All Types</option>
+                <option value="purchase_to_warehouse">Purchase To Warehouse</option>
+                <option value="vehicle_to_warehouse">Vehicle To Warehouse</option>
+                <option value="warehouse_to_warehouse">Warehouse To Warehouse</option>
+                <option value="warehouse_to_vehicle">Warehouse To Vehicle</option>
+              </select>
+            </div>
+
+            <div className="relative w-full md:w-40">
+              <Filter className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+              <select 
+                value={productId}
+                onChange={(e) => { setProductId(e.target.value); setPage(1); }}
+                className="pl-9 pr-3 py-2 w-full rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all bg-white"
+              >
+                <option value="">All Products</option>
+                {products.map(p => (
+                  <option key={p.id || p._id} value={p.id || p._id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="relative w-full md:w-40">
+              <Filter className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+              <select 
+                value={variantId}
+                onChange={(e) => { setVariantId(e.target.value); setPage(1); }}
+                disabled={!productId}
+                className="pl-9 pr-3 py-2 w-full rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all bg-white disabled:bg-slate-50 disabled:text-slate-400"
+              >
+                <option value="">All Variants</option>
+                {variants.map(v => (
+                  <option key={v.id || v._id} value={v.id || v._id}>{v.name} {v.sku ? `(${v.sku})` : ''}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
+              <tr>
+                <th className="p-4">Date & Time</th>
+                <th className="p-4">Movement / Type</th>
+                <th className="p-4">Product Details</th>
+                <th className="p-4 text-center">Qty / Batch</th>
+                <th className="p-4 text-center">Direction</th>
+                <th className="p-4 text-center">Manifest / Order</th>
+                <th className="p-4 text-right">Allocated By</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+              {warehouse_id === 'all' ? (
+                <tr>
+                  <td colSpan="7" className="p-10 text-center text-slate-500 font-bold">
+                    Please select a specific warehouse from the dropdown above to view its allocations.
+                  </td>
+                </tr>
+              ) : isLoading ? (
+                <tr>
+                  <td colSpan="7" className="p-10 text-center text-slate-500 font-bold">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                      Loading allocations...
+                    </div>
+                  </td>
+                </tr>
+              ) : allocations.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="p-10 text-center text-slate-500 font-bold">
+                    No allocation records found for this warehouse.
+                  </td>
+                </tr>
+              ) : (
+                allocations.map((a, idx) => (
+                  <tr key={a._id || idx} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        <div>
+                          <div className="font-bold text-slate-800">
+                            {new Date(a.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </div>
+                          <div className="text-[10px] text-slate-500">
+                            {new Date(a.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg shrink-0 ${
+                          a.direction === 'INWARD' ? 'bg-emerald-100 text-emerald-600' : 
+                          a.direction === 'OUTWARD' ? 'bg-rose-100 text-rose-600' : 'bg-sky-100 text-sky-600'
+                        }`}>
+                          <Truck className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-800 uppercase text-[10px] tracking-wider mb-0.5">
+                            {a.direction_label || a.allocation_type?.replace(/_/g, ' ')}
+                          </div>
+                          <div className="text-[11px] font-semibold text-slate-600 capitalize">
+                            {a.allocation_type?.replace(/_/g, ' ')}
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-1 font-medium">
+                            From: {a.from_location?.type || 'N/A'} → To: {a.to_location?.type || 'N/A'}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="font-bold text-slate-900">{a.product_name || '-'}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">{a.variant_name || '-'} {a.sku ? `(${a.sku})` : ''}</div>
+                    </td>
+                    <td className="p-4 text-center">
+                      <div className="font-black text-indigo-700">{a.quantity || 0}</div>
+                      {a.batch_no && <div className="text-[10px] text-slate-500 font-mono mt-0.5 px-1.5 py-0.5 bg-slate-100 rounded inline-block">{a.batch_no}</div>}
+                    </td>
+                    <td className="p-4 text-center">
+                      {getDirectionBadge(a.direction, a.direction_label)}
+                    </td>
+                    <td className="p-4 text-center">
+                      <div className="font-semibold text-slate-700">{a.manifest_no || '-'}</div>
+                      {a.order_no && <div className="text-[10px] text-indigo-600 font-bold mt-0.5">Order: {a.order_no}</div>}
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="text-sm font-semibold text-slate-700">{a.allocated_by_name || '-'}</div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {!isLoading && totalPages > 0 && (
+          <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="text-xs font-semibold text-slate-500">
+              Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalItems)} of {totalItems} entries
+            </div>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))} 
+                disabled={page <= 1}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <div className="text-xs font-bold text-slate-700 px-2">
+                Page {page} of {totalPages || 1}
+              </div>
+              <button 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+                disabled={page >= totalPages}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

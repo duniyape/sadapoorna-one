@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Building2, Plus, Edit2, MapPin, Phone, Box, CheckCircle2, XCircle, Eye, X, FileText, Hash, UserCircle, Mail } from 'lucide-react';
+import { ArrowLeft, Building2, Plus, Edit2, MapPin, Phone, Box, CheckCircle2, XCircle, Eye, X, FileText, Hash, UserCircle, Mail, List } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Search, Filter } from 'lucide-react';
+import { usePermissions } from '../utils/permissions';
 
 export default function WarehousesDirectoryPage() {
   const navigate = useNavigate();
-  const { showToast } = useOutletContext();
+  const { showToast, user } = useOutletContext();
+  const { isAllowed } = usePermissions(user);
   const [warehouses, setWarehouses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -177,7 +179,7 @@ export default function WarehousesDirectoryPage() {
               <div className="w-24 shrink-0">Status</div>
               <div className="w-32 shrink-0">Type</div>
               <div className="flex-1 min-w-[150px]">Location</div>
-              <div className="w-28 shrink-0 text-right">Actions</div>
+              <div className="w-40 shrink-0 text-right">Actions</div>
             </div>
             
             {warehouses.map((w, i) => (
@@ -239,7 +241,19 @@ export default function WarehousesDirectoryPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="w-auto lg:w-32 shrink-0 flex items-center justify-end gap-1">
+                  <div className="w-auto lg:w-40 shrink-0 flex items-center justify-end gap-1">
+                    <button 
+                      onClick={() => navigate(`/warehouse-allocations/${w.id || w._id}`)}
+                      className={`p-1.5 rounded-md border transition-colors ${
+                        isAllowed({ id: 'warehouse-allocations' }) 
+                          ? 'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100' 
+                          : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-50'
+                      }`}
+                      title={isAllowed({ id: 'warehouse-allocations' }) ? "View Allocations" : "No Permission to View Allocations"}
+                      disabled={!isAllowed({ id: 'warehouse-allocations' })}
+                    >
+                      <List className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
+                    </button>
                     <button 
                       onClick={() => setSelectedWarehouse(w)}
                       className="p-1.5 rounded-md bg-sky-50 border border-sky-100 text-sky-600 hover:bg-sky-100 transition-colors"
