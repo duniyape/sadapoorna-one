@@ -130,6 +130,20 @@ export const MASTER_MODULES = [
     badge: 'New', desc: 'Vendor orders & inventory intake', route: '/purchase-orders',
     dashboardGroup: 'Inventory & Fleet', sidebarGroup: 'Inventory & Fleet',
   },
+  {
+    id: 'warehouse-allocations',
+    label: 'Warehouse Allocations', title: 'Warehouse Allocations',
+    icon: Building2, color: 'bg-emerald-100 text-emerald-600 border-emerald-200',
+    badge: 'New', desc: 'View warehouse stock allocations', route: '/warehouse-allocations',
+    dashboardGroup: null, sidebarGroup: null,
+  },
+  {
+    id: 'vehicle-allocations',
+    label: 'Vehicle Allocations', title: 'Vehicle Allocations',
+    icon: Truck, color: 'bg-emerald-100 text-emerald-600 border-emerald-200',
+    badge: 'New', desc: 'View vehicle stock allocations', route: '/vehicle-allocations',
+    dashboardGroup: null, sidebarGroup: null,
+  },
 
   // ── Inventory Master ─────────────────────────────────────────────────────────
   {

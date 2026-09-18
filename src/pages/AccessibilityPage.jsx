@@ -8,6 +8,14 @@ const ALL_MODULES_CATEGORIZED = DASHBOARD_GROUPS.map(group => ({
   items: MASTER_MODULES.filter(m => m.dashboardGroup === group)
 }));
 
+const unassignedModules = MASTER_MODULES.filter(m => !m.dashboardGroup && m.id !== 'home' && m.id !== 'ai-suite');
+if (unassignedModules.length > 0) {
+  ALL_MODULES_CATEGORIZED.push({
+    category: 'Sub-Modules / Hidden',
+    items: unassignedModules
+  });
+}
+
 export default function AccessibilityPage() {
   const navigate = useNavigate();
   const { showToast } = useOutletContext();

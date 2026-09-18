@@ -25,6 +25,7 @@ const ProductUnitPage            = React.lazy(() => import("./pages/ProductUnitP
 const ProductAttributesPage      = React.lazy(() => import("./pages/ProductAttributesPage"));
 const PackingTypePage            = React.lazy(() => import("./pages/PackingTypePage"));
 const WarehousesDirectoryPage    = React.lazy(() => import("./pages/WarehousesDirectoryPage"));
+const WarehouseAllocationsPage   = React.lazy(() => import("./pages/WarehouseAllocationsPage"));
 const AddWarehousePage           = React.lazy(() => import("./pages/AddWarehousePage"));
 const VehiclesDirectoryPage      = React.lazy(() => import("./pages/VehiclesDirectoryPage"));
 const AddVehiclePage             = React.lazy(() => import("./pages/AddVehiclePage"));
@@ -38,6 +39,7 @@ const VehicleInPage              = React.lazy(() => import("./pages/VehicleInPag
 const AddOrderPage               = React.lazy(() => import("./pages/AddOrderPage"));
 const CreateReturnOrderPage      = React.lazy(() => import("./pages/CreateReturnOrderPage"));
 const MainInventoryPage          = React.lazy(() => import("./pages/MainInventoryPage"));
+const VehicleAllocationsPage     = React.lazy(() => import("./pages/VehicleAllocationsPage"));
 const WhatsAppChatPage           = React.lazy(() => import("./pages/WhatsAppChatPage"));
 const BeatManagementPage         = React.lazy(() => import("./pages/BeatManagementPage"));
 const AccountsMasterPage         = React.lazy(() => import("./pages/AccountsMasterPage"));
@@ -119,10 +121,13 @@ const App = () => (
                 <Route path="warehouse-inventory" element={<WarehouseInventoryPage />} />
                 <Route path="vehicle-in"          element={<VehicleInPage />} />
                 <Route path="stock-ledger"        element={<StockLedgerPage />} />
+                <Route path="vehicle-allocations/:vehicle_id" element={<VehicleAllocationsPage />} />
                 <Route path="batch-timeline/:batch_no" element={<BatchTimelinePage />} />
 
                 {/* ── Warehouses ────────────────────────────────── */}
                 <Route path="warehouses"          element={<WarehousesDirectoryPage />} />
+                <Route path="warehouse-allocations" element={<WarehouseAllocationsPage />} />
+                <Route path="warehouse-allocations/:warehouse_id" element={<WarehouseAllocationsPage />} />
                 <Route path="add-warehouse"       element={<AddWarehousePage />} />
                 <Route path="edit-warehouse/:id"  element={<AddWarehousePage />} />
 
