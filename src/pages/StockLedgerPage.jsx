@@ -34,7 +34,7 @@ export default function StockLedgerPage() {
       const [wRes, vRes, pRes] = await Promise.all([
         fetch('/warehouses/get', { headers }).catch(() => null),
         fetch('/vehicles/get', { headers }).catch(() => null),
-        fetch('/products/products/v1?limit=200', { headers }).catch(() => null)
+        fetch('/products/products/v1?limit=100', { headers }).catch(() => null)
       ]);
 
       if (wRes?.ok) {
@@ -60,15 +60,26 @@ export default function StockLedgerPage() {
 
   // Update variants when product changes
   useEffect(() => {
-    if (productId) {
-      const prod = products.find(p => (p.id || p._id) === productId);
-      setVariants(prod?.variants || []);
-      setVariantId("");
-    } else {
+    setVariantId(""); // Reset variant when product changes
+    if (!productId) {
       setVariants([]);
-      setVariantId("");
+      return;
     }
-  }, [productId, products]);
+    const fetchVariants = async () => {
+      try {
+        const res = await fetch(`/products/products/${productId}/variants`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setVariants(data.data || data || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch variants", err);
+      }
+    };
+    fetchVariants();
+  }, [productId]);
 
   const fetchLedger = useCallback(async () => {
     setIsLoading(true);
