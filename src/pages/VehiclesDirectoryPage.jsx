@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Edit2, MapPin, Truck, CheckCircle2, AlertTriangle, XCircle, Search, Filter, Eye, X, Calendar, ShieldCheck, FileText, Activity, Hash, Box, CreditCard } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, MapPin, Truck, CheckCircle2, AlertTriangle, XCircle, Search, Filter, Eye, X, Calendar, ShieldCheck, FileText, Activity, Hash, Box, CreditCard, List } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { usePermissions } from '../utils/permissions';
 
 export default function VehiclesDirectoryPage() {
   const navigate = useNavigate();
-  const { showToast } = useOutletContext();
+  const { showToast, user } = useOutletContext();
+  const { isAllowed } = usePermissions(user);
   const [vehicles, setVehicles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -270,6 +272,18 @@ export default function VehiclesDirectoryPage() {
                       title="View Vehicle"
                     >
                       <Eye className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
+                    </button>
+                    <button 
+                      onClick={() => navigate(`/vehicle-allocations/${v.id || v._id}`)}
+                      className={`p-1.5 rounded-md border transition-colors ${
+                        isAllowed({ id: 'vehicle-allocations' }) 
+                          ? 'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100' 
+                          : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-50'
+                      }`}
+                      title={isAllowed({ id: 'vehicle-allocations' }) ? "View Allocations" : "No Permission to View Allocations"}
+                      disabled={!isAllowed({ id: 'vehicle-allocations' })}
+                    >
+                      <List className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
                     </button>
                     <button 
                       onClick={() => handleToggleStatus(v)}
