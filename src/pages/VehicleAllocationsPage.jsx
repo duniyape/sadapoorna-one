@@ -16,13 +16,14 @@ function useDebounce(callback, delay) {
 }
 
 export default function VehicleAllocationsPage() {
-  const { vehicle_id } = useParams();
+  const { vehicle_id: paramVehicleId } = useParams();
   const navigate = useNavigate();
   const { showToast, user } = useOutletContext();
   const { isAllowed } = usePermissions(user);
+  const [vehicle_id, setVehicleId] = useState(paramVehicleId || '');
 
-  // If user lacks permission, redirect or show unauthorized. We can just return a lock screen.
-  if (!isAllowed({ id: 'vehicle-allocations' })) {
+  // Allow access if they have permission to 'allocations' (the wrapper) OR 'vehicle-allocations'
+  if (!isAllowed({ id: 'vehicle-allocations' }) && !isAllowed({ id: 'allocations' })) {
     return (
       <div className="flex flex-col items-center justify-center h-[80vh] text-center">
         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
@@ -42,6 +43,7 @@ export default function VehicleAllocationsPage() {
   
   // Products & Variants Data
   const [products, setProducts] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [variants, setVariants] = useState([]);
   
   // Pagination
@@ -57,22 +59,31 @@ export default function VehicleAllocationsPage() {
   
   const totalPages = Math.ceil(totalItems / limit);
 
-  // Fetch Products on mount
+  // Fetch Products and Vehicles on mount
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchMetadata = async () => {
       try {
-        const res = await fetch('/products/products/v1?limit=100', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
+        const token = localStorage.getItem('token');
+        const headers = { 'Authorization': `Bearer ${token}` };
+        
+        const [pRes, vRes] = await Promise.all([
+          fetch('/products/products/v1?limit=100', { headers }).catch(() => null),
+          fetch('/vehicles/get', { headers }).catch(() => null)
+        ]);
+
+        if (pRes && pRes.ok) {
+          const data = await pRes.json();
           setProducts(data.data || []);
         }
+        if (vRes && vRes.ok) {
+          const data = await vRes.json();
+          setVehicles(data.data || []);
+        }
       } catch (err) {
-        console.error("Failed to fetch products", err);
+        console.error("Failed to fetch metadata", err);
       }
     };
-    fetchProducts();
+    fetchMetadata();
   }, []);
 
   // Fetch Variants when product changes
@@ -98,10 +109,18 @@ export default function VehicleAllocationsPage() {
     fetchVariants();
   }, [productId]);
 
-  const fetchAllocations = async (currentPage, currentManifest, currentAllocType, currentProductId, currentVariantId) => {
+  const fetchAllocations = async (currentPage, currentManifest, currentAllocType, currentProductId, currentVariantId, targetVehicleId) => {
+    const vId = targetVehicleId || vehicle_id || 'all';
+    if (vId === 'all') {
+      setIsLoading(false);
+      setAllocations([]);
+      setTotalItems(0);
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      let url = `/orders/vehicle-allocations/v1/${vehicle_id}?page=${currentPage}&limit=${limit}`;
+      let url = `/orders/vehicle-allocations/v1/${vId}?page=${currentPage}&limit=${limit}`;
       if (currentManifest) url += `&manifest_id_or_no=${encodeURIComponent(currentManifest)}`;
       if (currentAllocType) url += `&allocation_type=${encodeURIComponent(currentAllocType)}`;
       if (currentProductId) url += `&product_id=${encodeURIComponent(currentProductId)}`;
@@ -129,9 +148,8 @@ export default function VehicleAllocationsPage() {
   };
 
   useEffect(() => {
-    if (vehicle_id) {
-      fetchAllocations(page, manifestIdOrNo, allocationType, productId, variantId, limit);
-    }
+    const currentVehicleId = vehicle_id || 'all';
+    fetchAllocations(page, manifestIdOrNo, allocationType, productId, variantId, currentVehicleId);
   }, [vehicle_id, page, manifestIdOrNo, allocationType, productId, variantId, limit]);
 
   const debouncedManifestSearch = useDebounce((value) => {
@@ -173,6 +191,20 @@ export default function VehicleAllocationsPage() {
           </div>
           
           <div className="flex flex-col md:flex-row flex-wrap items-center gap-3 w-full md:w-auto">
+            
+            <div className="relative w-full md:w-48">
+              <Truck className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+              <select 
+                value={vehicle_id}
+                onChange={(e) => setVehicleId(e.target.value)}
+                className="pl-9 pr-3 py-2 w-full rounded-xl border border-slate-200 text-xs font-bold text-indigo-700 bg-indigo-50/50 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+              >
+                <option value="">Select a vehicle...</option>
+                {vehicles.map(v => (
+                  <option key={v.id || v._id} value={v.id || v._id}>{v.vehicle_number || v.name}</option>
+                ))}
+              </select>
+            </div>
             
             <div className="relative w-full md:w-40">
               <Filter className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
@@ -247,6 +279,7 @@ export default function VehicleAllocationsPage() {
             <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
               <tr>
                 <th className="p-4">Date & Time</th>
+                <th className="p-4">Movement / Type</th>
                 <th className="p-4">Product Details</th>
                 <th className="p-4 text-center">Qty / Batch</th>
                 <th className="p-4 text-center">Direction</th>
@@ -282,6 +315,27 @@ export default function VehicleAllocationsPage() {
                           </div>
                           <div className="text-[10px] text-slate-500">
                             {new Date(a.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-xl shrink-0 ${
+                          a.direction === 'INWARD' ? 'bg-emerald-100 text-emerald-600' : 
+                          a.direction === 'OUTWARD' ? 'bg-rose-100 text-rose-600' : 'bg-sky-100 text-sky-600'
+                        }`}>
+                          <Truck className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-800 uppercase text-[10px] tracking-wider mb-0.5">
+                            {a.direction_label || a.allocation_type?.replace(/_/g, ' ')}
+                          </div>
+                          <div className="text-[11px] font-semibold text-slate-600 capitalize">
+                            {a.allocation_type?.replace(/_/g, ' ')}
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-1 font-medium">
+                            From: {a.from_location?.type || 'N/A'} → To: {a.to_location?.type || 'N/A'}
                           </div>
                         </div>
                       </div>

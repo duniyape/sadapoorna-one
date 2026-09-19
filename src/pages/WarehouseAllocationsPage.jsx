@@ -16,10 +16,11 @@ function useDebounce(callback, delay) {
 }
 
 export default function WarehouseAllocationsPage() {
-  const { warehouse_id } = useParams();
+  const { warehouse_id: paramWarehouseId } = useParams();
   const navigate = useNavigate();
   const { showToast, user } = useOutletContext();
   const { isAllowed } = usePermissions(user);
+  const [warehouse_id, setWarehouseId] = useState(paramWarehouseId || '');
 
 
 
@@ -93,8 +94,9 @@ export default function WarehouseAllocationsPage() {
     fetchVariants();
   }, [productId]);
 
-  const fetchAllocations = async (currentPage, currentAllocType, currentProductId, currentVariantId) => {
-    if (warehouse_id === 'all') {
+  const fetchAllocations = async (currentPage, currentAllocType, currentProductId, currentVariantId, targetWarehouseId) => {
+    const wId = targetWarehouseId || warehouse_id || 'all';
+    if (wId === 'all') {
       setIsLoading(false);
       setAllocations([]);
       setTotalItems(0);
@@ -103,7 +105,7 @@ export default function WarehouseAllocationsPage() {
 
     setIsLoading(true);
     try {
-      let url = `/orders/warehouse-allocations/v1/${warehouse_id}?page=${currentPage}&limit=${limit}`;
+      let url = `/orders/warehouse-allocations/v1/${wId}?page=${currentPage}&limit=${limit}`;
       if (currentAllocType) url += `&allocation_type=${encodeURIComponent(currentAllocType)}`;
       if (currentProductId) url += `&product_id=${encodeURIComponent(currentProductId)}`;
       if (currentVariantId) url += `&variant_id=${encodeURIComponent(currentVariantId)}`;
@@ -127,12 +129,8 @@ export default function WarehouseAllocationsPage() {
   };
 
   useEffect(() => {
-    if (warehouse_id) {
-      fetchAllocations(page, allocationType, productId, variantId);
-    } else {
-      // Fallback if accessed without ID
-      navigate('/warehouse-allocations/all', { replace: true });
-    }
+    const currentWarehouseId = warehouse_id || 'all';
+    fetchAllocations(page, allocationType, productId, variantId, currentWarehouseId);
   }, [warehouse_id, page, allocationType, productId, variantId]);
 
   const getDirectionBadge = (direction, label) => {
@@ -145,8 +143,8 @@ export default function WarehouseAllocationsPage() {
     return <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded uppercase">{label || direction}</span>;
   };
 
-  // If user lacks permission, redirect or show unauthorized. We can just return a lock screen.
-  if (!isAllowed({ id: 'warehouse-allocations' })) {
+  // Allow access if they have permission to 'allocations' (the wrapper) OR 'warehouse-allocations'
+  if (!isAllowed({ id: 'warehouse-allocations' }) && !isAllowed({ id: 'allocations' })) {
     return (
       <div className="flex flex-col items-center justify-center h-[80vh] text-center">
         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
@@ -189,9 +187,7 @@ export default function WarehouseAllocationsPage() {
               <Building2 className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
               <select 
                 value={warehouse_id}
-                onChange={(e) => { 
-                  navigate(`/warehouse-allocations/${e.target.value || 'all'}`);
-                }}
+                onChange={(e) => setWarehouseId(e.target.value)}
                 className="pl-9 pr-3 py-2 w-full rounded-xl border border-slate-200 text-xs font-bold text-indigo-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all bg-indigo-50/50"
               >
                 <option value="all">All Warehouses</option>
