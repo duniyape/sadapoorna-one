@@ -153,6 +153,7 @@ export default function BulkDispatchPage() {
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   const [selectedDeliveryId, setSelectedDeliveryId] = useState("");
   const [isDispatching, setIsDispatching] = useState(false);
+  const [dispatchError, setDispatchError] = useState(null);
 
   // ── Step 1: Load warehouses ────────────────────────────────────────────────
   useEffect(() => {
@@ -231,24 +232,23 @@ export default function BulkDispatchPage() {
     if (step === 2) fetchOrders();
   }, [step, fetchOrders]);
 
-  // ── Step 3: Load vehicles or warehouses ───────────────────────────────────
+  // ── Step 3: Load vehicles ───────────────────────────────────
   useEffect(() => {
-    if (!deliveryType) { setDeliveryOptions([]); return; }
+    if (!deliveryType || deliveryType === "warehouse") { 
+      setDeliveryOptions([]); 
+      return; 
+    }
     const fetch_ = async () => {
       setIsLoadingOptions(true);
       setSelectedDeliveryId("");
       try {
-        const endpoint = deliveryType === "vehicle" ? "/vehicles/get" : "/warehouses/get";
+        const endpoint = "/vehicles/get";
         const res = await fetch(endpoint, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         if (res.ok) {
           const json = await res.json();
-          // If warehouse delivery, exclude the source warehouse
-          const options = (json.data || []).filter(
-            (item) => deliveryType === "vehicle" || item.id !== selectedWarehouse?.id
-          );
-          setDeliveryOptions(options);
+          setDeliveryOptions(json.data || []);
         }
       } catch {
         showToast("Failed to load delivery options");
@@ -316,8 +316,8 @@ export default function BulkDispatchPage() {
 
   // ── Step 3: Dispatch ───────────────────────────────────────────────────────
   const handleBulkDispatch = async () => {
-    if (!selectedDeliveryId) {
-      showToast("Please select a vehicle or warehouse");
+    if (deliveryType === "vehicle" && !selectedDeliveryId) {
+      showToast("Please select a vehicle");
       return;
     }
     setIsDispatching(true);
@@ -331,10 +331,11 @@ export default function BulkDispatchPage() {
 
       if (deliveryType === "vehicle") {
         payload.vehicle_id = selectedDeliveryId;
+        payload.delivery_type = "vehicle";
       } else {
-        // If the backend doesn't support warehouse_id in bulk-dispatch yet,
-        // we might just omit vehicle_id. Adjust this if backend has a specific field.
-        payload.note = `Bulk transferred to warehouse ID: ${selectedDeliveryId}`;
+        payload.warehouse_id = selectedWarehouse.id || selectedWarehouse._id;
+        payload.delivery_type = "warehouse";
+        payload.note = `Bulk marked as warehouse pickup / local delivery`;
       }
 
       const res = await fetch("/orders/bulk-dispatch/v1", {
@@ -355,11 +356,15 @@ export default function BulkDispatchPage() {
         navigate("/orders");
       } else {
         const err = await res.json().catch(() => ({}));
-        const msg =
-          err.detail ||
-          err.message ||
-          "Bulk dispatch failed. Please try again.";
-        showToast(typeof msg === "string" ? msg : JSON.stringify(msg));
+        if (err.error === "INSUFFICIENT_WAREHOUSE_STOCK" || err.shortages) {
+          setDispatchError(err);
+        } else {
+          const msg =
+            err.detail ||
+            err.message ||
+            "Bulk dispatch failed. Please try again.";
+          showToast(typeof msg === "string" ? msg : JSON.stringify(msg));
+        }
       }
     } catch {
       showToast("Network error during dispatch");
@@ -752,45 +757,43 @@ export default function BulkDispatchPage() {
                   </div>
                   <div className="text-center">
                     <p className="font-black">To Warehouse</p>
-                    <p className="text-[10px] font-medium opacity-70 mt-0.5">Transfer to another warehouse</p>
+                    <p className="text-[10px] font-medium opacity-70 mt-0.5">Local delivery from current warehouse</p>
                   </div>
                   {deliveryType === "warehouse" && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
                 </button>
               </div>
 
               {/* Options Dropdown / List */}
-              {deliveryType && (
+              {deliveryType === "warehouse" && (
+                <div className="mt-4 p-4 text-center text-sm font-medium text-slate-600 bg-slate-50 rounded-xl border border-slate-100">
+                  Will be delivered directly from the assigned source warehouse.
+                </div>
+              )}
+              {deliveryType === "vehicle" && (
                 <div className="mt-2">
                   {isLoadingOptions ? (
                     <div className="flex items-center gap-2 p-4 text-sm text-slate-500">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Loading {deliveryType === "vehicle" ? "vehicles" : "warehouses"}...
+                      Loading vehicles...
                     </div>
                   ) : deliveryOptions.length === 0 ? (
                     <div className="p-4 text-center text-sm text-slate-400 bg-slate-50 rounded-xl border border-slate-100">
-                      No {deliveryType === "vehicle" ? "active vehicles" : "other warehouses"} found
+                      No active vehicles found
                     </div>
                   ) : (
                     <div>
                       <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
-                        Select {deliveryType === "vehicle" ? "Vehicle" : "Destination Warehouse"}
+                        Select Vehicle
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
                         {deliveryOptions.map((opt) => {
                           const optId = opt.id || opt._id;
                           const isSelected = selectedDeliveryId === optId;
                           
-                          let label = optId;
-                          let sub = "";
-                          if (deliveryType === "vehicle") {
-                            label = opt.vehicle_number || opt.name || optId;
-                            const driver = opt.driver_name || opt.driver || "";
-                            const vehicleInfo = [opt.make, opt.model].filter(Boolean).join(" ");
-                            sub = [vehicleInfo, driver].filter(Boolean).join(" • ");
-                          } else {
-                            label = opt.name || opt.code || optId;
-                            sub = opt.address || opt.code || "";
-                          }
+                          let label = opt.vehicle_number || opt.name || optId;
+                          const driver = opt.driver_name || opt.driver || "";
+                          const vehicleInfo = [opt.make, opt.model].filter(Boolean).join(" ");
+                          const sub = [vehicleInfo, driver].filter(Boolean).join(" • ");
                           
                           return (
                             <div
@@ -798,30 +801,23 @@ export default function BulkDispatchPage() {
                               onClick={() => setSelectedDeliveryId(optId)}
                               className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
                                 isSelected
-                                  ? deliveryType === "vehicle"
-                                    ? "border-violet-400 bg-violet-50"
-                                    : "border-emerald-400 bg-emerald-50"
+                                  ? "border-violet-400 bg-violet-50"
                                   : "border-slate-200 bg-white hover:border-slate-300"
                               }`}
                             >
                               <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                                isSelected
-                                  ? deliveryType === "vehicle" ? "bg-violet-100" : "bg-emerald-100"
-                                  : "bg-slate-100"
+                                isSelected ? "bg-violet-100" : "bg-slate-100"
                               }`}>
-                                {deliveryType === "vehicle"
-                                  ? <Truck className={`w-4 h-4 ${isSelected ? "text-violet-600" : "text-slate-400"}`} />
-                                  : <Building2 className={`w-4 h-4 ${isSelected ? "text-emerald-600" : "text-slate-400"}`} />
-                                }
+                                <Truck className={`w-4 h-4 ${isSelected ? "text-violet-600" : "text-slate-400"}`} />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className={`text-sm font-bold truncate ${isSelected ? (deliveryType === "vehicle" ? "text-violet-800" : "text-emerald-800") : "text-slate-700"}`}>
+                                <p className={`text-sm font-bold truncate ${isSelected ? "text-violet-800" : "text-slate-700"}`}>
                                   {label}
                                 </p>
                                 {sub && <p className="text-[10px] text-slate-400 truncate">{sub}</p>}
                               </div>
                               {isSelected && (
-                                <CheckCircle2 className={`w-4 h-4 shrink-0 ${deliveryType === "vehicle" ? "text-violet-600" : "text-emerald-600"}`} />
+                                <CheckCircle2 className={`w-4 h-4 shrink-0 text-violet-600`} />
                               )}
                             </div>
                           );
@@ -846,9 +842,9 @@ export default function BulkDispatchPage() {
             <div className="p-5 border-t border-slate-100 bg-slate-50/60">
               <button
                 onClick={handleBulkDispatch}
-                disabled={!selectedDeliveryId || isDispatching}
+                disabled={(deliveryType === "vehicle" && !selectedDeliveryId) || !deliveryType || isDispatching}
                 className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-base transition-all duration-200 ${
-                  selectedDeliveryId && !isDispatching
+                  ((deliveryType === "vehicle" && selectedDeliveryId) || deliveryType === "warehouse") && !isDispatching
                     ? "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-xl shadow-indigo-200/60 hover:scale-[1.01]"
                     : "bg-slate-200 text-slate-400 cursor-not-allowed"
                 }`}
@@ -870,6 +866,68 @@ export default function BulkDispatchPage() {
         </div>
       )}
 
+      {/* Stock Shortage Error Modal */}
+      {dispatchError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200">
+            <div className="p-6 border-b border-slate-100 bg-rose-50/50">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-6 h-6 text-rose-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-rose-700 leading-tight">Insufficient Stock!</h2>
+                    <p className="text-sm font-medium text-rose-600/80 mt-1">{dispatchError.message}</p>
+                  </div>
+                </div>
+                <button onClick={() => setDispatchError(null)} className="p-2 bg-white rounded-full hover:bg-slate-100 transition-colors shrink-0">
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 max-h-[60vh] overflow-y-auto">
+              <h3 className="text-sm font-bold text-slate-800 mb-4">Stock Shortages Detected:</h3>
+              <div className="space-y-3">
+                {dispatchError.shortages?.map((shortage, idx) => (
+                  <div key={idx} className="p-4 rounded-2xl border border-rose-100 bg-rose-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h4 className="font-bold text-slate-800">{shortage.product_name}</h4>
+                      <p className="text-xs text-slate-500 font-medium mt-1">Variant: {shortage.variant_name} | SKU: {shortage.sku}</p>
+                    </div>
+                    <div className="flex items-center gap-6 shrink-0 bg-white px-4 py-2 rounded-xl border border-rose-100">
+                      <div className="text-center">
+                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Required</p>
+                        <p className="font-black text-slate-700">{shortage.requested_quantity}</p>
+                      </div>
+                      <div className="w-px h-8 bg-slate-100"></div>
+                      <div className="text-center">
+                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Available</p>
+                        <p className="font-black text-amber-600">{shortage.warehouse_physical_stock}</p>
+                      </div>
+                      <div className="w-px h-8 bg-slate-100"></div>
+                      <div className="text-center">
+                        <p className="text-[10px] uppercase font-bold text-rose-500 tracking-wider">Shortfall</p>
+                        <p className="font-black text-rose-600">-{shortage.shortfall}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button
+                onClick={() => setDispatchError(null)}
+                className="px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition-colors"
+              >
+                Understood
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
