@@ -140,7 +140,7 @@ export default function StockLedgerPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
         <div className="flex items-center gap-4">
           <button 
-            onClick={() => navigate("/main-inventory")}
+            onClick={() => navigate(-1)}
             className="p-2.5 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />

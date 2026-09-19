@@ -6,17 +6,7 @@
 
 export const ALWAYS_ALLOWED_IDS = new Set([
   // Navigation
-  'home', 'ai-suite', 'whatsapp',
-  // Sales
-  'beat-mgmt',
-  // Inventory Master
-  'product-units', 'product-attributes', 'packing-types', 'products',
-  'warehouses', 'vehicles', 'vendors', 'purchase-orders',
-  'warehouse-in', 'warehouse-inventory', 'vehicle-in', 'main-inventory',
-  // Accounting & Finance
-  'account-master', 'accounting-vouchers', 'employee-cash',
-  'cheque-management', 'due-collection', 'finance-collections',
-  'finance-clearances', 'bank-verification', 'customer-khata',
+  'home',
 ]);
 
 /**

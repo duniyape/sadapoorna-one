@@ -57,6 +57,9 @@ const ManifestsPage              = React.lazy(() => import("./pages/ManifestsPag
 const ManifestDetailsPage        = React.lazy(() => import("./pages/ManifestDetailsPage"));
 const StockLedgerPage            = React.lazy(() => import("./pages/StockLedgerPage"));
 const BatchTimelinePage          = React.lazy(() => import("./pages/BatchTimelinePage"));
+const BatchStockPage             = React.lazy(() => import("./pages/BatchStockPage"));
+const AllocationsPage            = React.lazy(() => import("./pages/AllocationsPage"));
+const StockInwardingPage         = React.lazy(() => import("./pages/StockInwardingPage"));
 
 // ── Customer 360° — layout + 5 separate tab pages ────────────────────────────
 const CustomerProfileLayout = React.lazy(() => import("./pages/CustomerProfileLayout"));
@@ -120,9 +123,12 @@ const App = () => (
                 <Route path="warehouse-in"        element={<WarehouseInPage />} />
                 <Route path="warehouse-inventory" element={<WarehouseInventoryPage />} />
                 <Route path="vehicle-in"          element={<VehicleInPage />} />
+                <Route path="stock-inwarding"     element={<StockInwardingPage />} />
                 <Route path="stock-ledger"        element={<StockLedgerPage />} />
                 <Route path="vehicle-allocations/:vehicle_id" element={<VehicleAllocationsPage />} />
                 <Route path="batch-timeline/:batch_no" element={<BatchTimelinePage />} />
+                <Route path="batch-stock"         element={<BatchStockPage />} />
+                <Route path="allocations"         element={<AllocationsPage />} />
 
                 {/* ── Warehouses ────────────────────────────────── */}
                 <Route path="warehouses"          element={<WarehousesDirectoryPage />} />

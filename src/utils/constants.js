@@ -4,7 +4,7 @@ import {
   ShieldCheck, Route as RouteIcon, Handshake, UserX, CheckSquare, Bot,
   Home, Building2, Briefcase, BadgeCheck, UserCog, FolderLock, Tags,
   ShoppingCart, BoxSelect, ArrowDownToLine, Boxes, MessageCircle,
-  Layers, Landmark,
+  Layers, Landmark, Activity
 } from 'lucide-react';
 
 /**
@@ -100,13 +100,34 @@ export const MASTER_MODULES = [
     label: 'Warehouse In', title: 'Warehouse In',
     icon: ArrowDownToLine, color: 'bg-emerald-100 text-emerald-600 border-emerald-200',
     badge: 'New', desc: 'Inward unallocated inventory', route: '/warehouse-in',
-    dashboardGroup: 'Inventory & Fleet', sidebarGroup: 'Inventory & Fleet',
+    dashboardGroup: null, sidebarGroup: null,
   },
   {
     id: 'warehouse-inventory',
     label: 'Warehouse Inventory', title: 'Warehouse Inventory',
     icon: Boxes, color: 'bg-indigo-100 text-indigo-600 border-indigo-200',
     badge: 'New', desc: 'View warehouse stock levels', route: '/warehouse-inventory',
+    dashboardGroup: null, sidebarGroup: null,
+  },
+  {
+    id: 'batch-stock',
+    label: 'Batch Stock', title: 'Batch Stock',
+    icon: Boxes, color: 'bg-emerald-100 text-emerald-600 border-emerald-200',
+    badge: 'New', desc: 'Track inventory across batches', route: '/batch-stock',
+    dashboardGroup: 'Inventory & Fleet', sidebarGroup: 'Inventory & Fleet',
+  },
+  {
+    id: 'allocations',
+    label: 'Allocations & Ledger', title: 'Allocations & Ledger',
+    icon: Activity, color: 'bg-indigo-100 text-indigo-600 border-indigo-200',
+    badge: 'New', desc: 'Manage stock tracking and allocations', route: '/allocations',
+    dashboardGroup: 'Inventory & Fleet', sidebarGroup: 'Inventory & Fleet',
+  },
+  {
+    id: 'stock-inwarding',
+    label: 'Inwarding & Transfers', title: 'Stock Inwarding',
+    icon: ArrowRightLeft, color: 'bg-blue-100 text-blue-600 border-blue-200',
+    badge: 'New', desc: 'Manage stock inwarding and transfers', route: '/stock-inwarding',
     dashboardGroup: 'Inventory & Fleet', sidebarGroup: 'Inventory & Fleet',
   },
   {
@@ -114,7 +135,7 @@ export const MASTER_MODULES = [
     label: 'Vehicle In', title: 'Vehicle In',
     icon: ArrowRightLeft, color: 'bg-blue-100 text-blue-600 border-blue-200',
     badge: 'New', desc: 'Transfer warehouse stock to vehicle', route: '/vehicle-in',
-    dashboardGroup: 'Inventory & Fleet', sidebarGroup: 'Inventory & Fleet',
+    dashboardGroup: null, sidebarGroup: null,
   },
   {
     id: 'vehicles',
