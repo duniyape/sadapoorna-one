@@ -494,45 +494,6 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* ── Stat Cards ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard
-          icon={BarChart3}
-          label="Total Orders Today"
-          value="28"
-          color="text-indigo-600"
-          bg="bg-white"
-          border="border-indigo-100"
-          sub="↑ 12% vs yesterday"
-        />
-        <StatCard
-          icon={IndianRupee}
-          label="Today's Order Value"
-          value="₹4.2L"
-          color="text-emerald-600"
-          bg="bg-white"
-          border="border-emerald-100"
-          sub="₹4,20,000 total"
-        />
-        <StatCard
-          icon={Clock}
-          label="Pending Approval"
-          value="3"
-          color="text-amber-600"
-          bg="bg-white"
-          border="border-amber-100"
-          sub="Needs action"
-        />
-        <StatCard
-          icon={Truck}
-          label="Dispatched"
-          value="14"
-          color="text-sky-600"
-          bg="bg-white"
-          border="border-sky-100"
-          sub="Vehicles on route"
-        />
-      </div>
 
       {/* ── Orders Table Card ────────────────────────────────────────────────── */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
@@ -612,14 +573,19 @@ export default function OrdersPage() {
               const custName = ord.customer?.company_name || ord.customer?.business_name || ord.customer?.name || "Unknown";
               const itemsStr = `${ord.items?.length || 0} Items`;
               const totalAmt =
-                ord.total ||
-                ord.items?.reduce((acc, curr) => acc + curr.quantity * curr.rate, 0) ||
+                ord.grand_total || ord.total ||
+                ord.items?.reduce((acc, curr) => {
+                  const qtyPerPkg = curr.quantity_per_package || curr.variant?.quantity_per_package || 1;
+                  const rateType = curr.rate_type || curr.variant?.rate_type || 'per_package';
+                  const multiplier = rateType === 'per_unit' ? qtyPerPkg : 1;
+                  return acc + curr.quantity * multiplier * curr.rate;
+                }, 0) ||
                 0;
 
               return (
                 <div
                   key={orderId}
-                  className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3 relative hover:shadow-md transition-shadow"
+                  className={`p-4 rounded-2xl border shadow-sm flex flex-col gap-3 relative hover:shadow-md transition-shadow ${!ord.invoice_no ? 'bg-rose-50/30 border-rose-200' : 'bg-white border-slate-200/80'}`}
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -636,7 +602,7 @@ export default function OrdersPage() {
                         {custName}
                       </div>
                     </div>
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border h-fit ${ord.invoice_no ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border h-fit ${ord.invoice_no ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
                       {ord.invoice_no ? 'Billed' : 'Unbilled'}
                     </span>
                   </div>
@@ -720,14 +686,18 @@ export default function OrdersPage() {
                   const custName = ord.customer?.company_name || ord.customer?.business_name || ord.customer?.name || "Unknown";
                   const itemsStr = `${ord.items?.length || 0} Items`;
                   const totalAmt =
-                    ord.total ||
-                    ord.items?.reduce((acc, curr) => acc + curr.quantity * curr.rate, 0) ||
-                    0;
+                    ord.grand_total || ord.total ||
+                    ord.items?.reduce((acc, curr) => {
+                      const qtyPerPkg = curr.quantity_per_package || curr.variant?.quantity_per_package || 1;
+                      const rateType = curr.rate_type || curr.variant?.rate_type || 'per_package';
+                      const multiplier = rateType === 'per_unit' ? qtyPerPkg : 1;
+                      return acc + curr.quantity * multiplier * curr.rate;
+                    }, 0) || 0;
 
                   return (
                     <tr
                       key={orderId}
-                      className="hover:bg-indigo-50/30 transition-colors group"
+                      className={`transition-colors group ${!ord.invoice_no ? 'bg-rose-50/20 hover:bg-rose-50/40' : 'hover:bg-indigo-50/30'}`}
                     >
                       <td className="p-4 pl-5">
                         <div className="font-black text-slate-900 text-xs">
@@ -753,8 +723,8 @@ export default function OrdersPage() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${ord.invoice_no ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${ord.invoice_no ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${ord.invoice_no ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${ord.invoice_no ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                           {ord.invoice_no ? 'Billed' : 'Unbilled'}
                         </span>
                       </td>
@@ -927,7 +897,12 @@ export default function OrdersPage() {
                     <div className="text-sm font-black text-emerald-600 leading-tight mt-0.5">
                       ₹{selectedOrder.grand_total?.toLocaleString() ||
                         selectedOrder.total?.toLocaleString() ||
-                        (selectedOrder.items?.reduce((acc, curr) => acc + curr.quantity * curr.rate, 0) || 0).toLocaleString()}
+                        (selectedOrder.items?.reduce((acc, curr) => {
+                          const qtyPerPkg = curr.quantity_per_package || curr.variant?.quantity_per_package || 1;
+                          const rateType = curr.rate_type || curr.variant?.rate_type || 'per_package';
+                          const multiplier = rateType === 'per_unit' ? qtyPerPkg : 1;
+                          return acc + curr.quantity * multiplier * curr.rate;
+                        }, 0) || 0).toLocaleString()}
                     </div>
                   </div>
                 </div>
@@ -970,13 +945,13 @@ export default function OrdersPage() {
                           <td className="px-5 py-4 text-right font-black text-slate-900">{item.quantity}</td>
                           <td className="px-5 py-4 text-right">₹{item.rate}</td>
                           <td className="px-5 py-4 text-right font-semibold text-slate-700">
-                            ₹{item.taxable_amount || item.quantity * item.rate}
+                            ₹{item.taxable_amount || (item.quantity * (item.rate_type === 'per_unit' ? (item.quantity_per_package || item.variant?.quantity_per_package || 1) : 1) * item.rate)}
                           </td>
                           <td className="px-5 py-4 text-right text-slate-500">
                             {item.gst_percent ? `${item.gst_percent}% (₹${item.gst_amount})` : "N/A"}
                           </td>
                           <td className="px-5 py-4 text-right font-black text-slate-800">
-                            ₹{item.total_amount || item.quantity * item.rate}
+                            ₹{item.total_amount || (item.quantity * (item.rate_type === 'per_unit' ? (item.quantity_per_package || item.variant?.quantity_per_package || 1) : 1) * item.rate)}
                           </td>
                         </tr>
                       ))}
@@ -988,7 +963,12 @@ export default function OrdersPage() {
                 <div className="bg-gradient-to-r from-slate-50 to-slate-100/50 p-5 border-t border-slate-200">
                   <div className="flex flex-col items-end gap-2 text-xs">
                     {[
-                      { label: "Subtotal", val: `₹${selectedOrder.subtotal?.toLocaleString() || (selectedOrder.items?.reduce((a, c) => a + c.quantity * c.rate, 0) || 0).toLocaleString()}`, color: "text-slate-600" },
+                      { label: "Subtotal", val: `₹${selectedOrder.subtotal?.toLocaleString() || (selectedOrder.items?.reduce((a, c) => {
+                          const qtyPerPkg = c.quantity_per_package || c.variant?.quantity_per_package || 1;
+                          const rateType = c.rate_type || c.variant?.rate_type || 'per_package';
+                          const multiplier = rateType === 'per_unit' ? qtyPerPkg : 1;
+                          return a + c.quantity * multiplier * c.rate;
+                        }, 0) || 0).toLocaleString()}`, color: "text-slate-600" },
                       { label: "Total GST", val: `₹${selectedOrder.total_gst?.toLocaleString() || 0}`, color: "text-slate-600" },
                       { label: "Other Charges", val: `₹${selectedOrder.other_charges?.toLocaleString() || 0}`, color: "text-slate-600" },
                     ].map(({ label, val, color }) => (
@@ -1023,7 +1003,12 @@ export default function OrdersPage() {
                           ? ((selectedOrder.subtotal || 0) + (selectedOrder.total_gst || 0) + (selectedOrder.other_charges || 0) - (parseFloat(billDiscount) || 0)).toLocaleString()
                           : (selectedOrder.grand_total?.toLocaleString() ||
                               selectedOrder.total?.toLocaleString() ||
-                              (selectedOrder.items?.reduce((acc, curr) => acc + curr.quantity * curr.rate, 0) || 0).toLocaleString())}
+                              (selectedOrder.items?.reduce((acc, curr) => {
+                                const qtyPerPkg = curr.quantity_per_package || curr.variant?.quantity_per_package || 1;
+                                const rateType = curr.rate_type || curr.variant?.rate_type || 'per_package';
+                                const multiplier = rateType === 'per_unit' ? qtyPerPkg : 1;
+                                return acc + curr.quantity * multiplier * curr.rate;
+                              }, 0) || 0).toLocaleString())}
                       </span>
                     </div>
                   </div>

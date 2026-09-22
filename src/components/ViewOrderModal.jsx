@@ -70,7 +70,7 @@ export default function ViewOrderModal({ orderId, onClose }) {
               )}
             </h2>
             <p className="text-xs text-slate-500 font-medium">
-              ID: {orderId} • {order ? fmt(order.created_at) : 'Loading...'}
+              {order ? fmt(order.created_at) : 'Loading...'}
             </p>
           </div>
           <div className="flex items-center gap-3">
