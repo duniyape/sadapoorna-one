@@ -335,10 +335,14 @@ export default function AddOrderPage() {
 
       payload.items = payload.items.map(item => {
         const { id, ...rest } = item;
+        const itemVariants = variants[item.product_id] || [];
+        const variant = itemVariants.find(v => (v.id || v._id) === item.variant_id);
         return {
           ...rest,
           quantity: parseFloat(rest.quantity) || 0,
           rate: parseFloat(rest.rate) || 0,
+          rate_type: variant?.rate_type || 'per_package',
+          quantity_per_package: parseFloat(variant?.quantity_per_package) || 1,
           investors: []
         };
       });
@@ -606,6 +610,20 @@ export default function AddOrderPage() {
                       </td>
                       <td className="p-3">
                         <input type="number" min="0.01" step="0.01" required value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className={`${inputClass} !py-2`} />
+                        
+                        {(() => {
+                          const v = itemVariants.find(v => (v.id || v._id) === item.variant_id);
+                          if (!v) return null;
+                          const pkgName = v.packaging_type?.name || 'Package';
+                          const unitSymbol = v.unit?.symbol || v.base_unit || 'Unit';
+                          const qtyPerPkg = v.quantity_per_package || 1;
+                          return (
+                            <div className="text-[9px] text-slate-500 mt-1.5 font-bold uppercase tracking-wider">
+                              {pkgName}s ({qtyPerPkg} {unitSymbol} / {pkgName})
+                            </div>
+                          );
+                        })()}
+
                         {item.variant_id && stockInventory[item.variant_id] !== undefined && (
                           <div className={`text-[10px] mt-1 font-semibold ${stockInventory[item.variant_id] > 0 || stockInventory[item.variant_id] === 'loading' ? 'text-emerald-600' : 'text-rose-500'}`}>
                             {stockInventory[item.variant_id] === 'loading' ? 'Loading stock...' : `Stock: ${stockInventory[item.variant_id]}`}
@@ -614,9 +632,53 @@ export default function AddOrderPage() {
                       </td>
                       <td className="p-3">
                         <input type="number" min="0" step="0.01" required value={item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} className={`${inputClass} !py-2`} />
+                        {(() => {
+                          const v = itemVariants.find(v => (v.id || v._id) === item.variant_id);
+                          if (!v) return null;
+                          const rateType = v.rate_type || 'per_package';
+                          const pkgName = v.packaging_type?.name || 'Package';
+                          const unitSymbol = v.unit?.symbol || v.base_unit || 'Unit';
+                          return (
+                            <div className="text-[9px] text-indigo-500 mt-1.5 font-bold uppercase tracking-wider">
+                              {rateType === 'per_unit' ? `Enter Rate per ${unitSymbol}` : `Enter Rate per ${pkgName}`}
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="p-3 font-black text-slate-800 text-right">
-                        ₹{((parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <div>
+                          ₹{(() => {
+                            const qtyPerPkg = parseFloat(itemVariants.find(v => (v.id || v._id) === item.variant_id)?.quantity_per_package) || 1;
+                            const rateType = itemVariants.find(v => (v.id || v._id) === item.variant_id)?.rate_type || 'per_package';
+                            const multiplier = rateType === 'per_unit' ? qtyPerPkg : 1;
+                            return ((parseFloat(item.quantity) || 0) * multiplier * (parseFloat(item.rate) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                          })()}
+                        </div>
+                        {(() => {
+                          const v = itemVariants.find(v => (v.id || v._id) === item.variant_id);
+                          if (!v) return null;
+                          const rateType = v.rate_type || 'per_package';
+                          const qtyPerPkg = parseFloat(v.quantity_per_package) || 1;
+                          const qty = parseFloat(item.quantity) || 0;
+                          const rate = parseFloat(item.rate) || 0;
+                          const pkgName = v.packaging_type?.name || 'pkg';
+                          const unitSymbol = v.unit?.symbol || v.base_unit || 'unit';
+                          
+                          if (rateType === 'per_unit' && qtyPerPkg !== 1) {
+                            return (
+                              <div className="text-[10px] text-slate-500 mt-1 font-semibold leading-tight">
+                                {qty} {pkgName} × {qtyPerPkg} {unitSymbol} = {qty * qtyPerPkg} {unitSymbol}s <br/>
+                                {qty * qtyPerPkg} × ₹{rate}
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <div className="text-[10px] text-slate-500 mt-1 font-semibold leading-tight">
+                                {qty} {pkgName} × ₹{rate}
+                              </div>
+                            );
+                          }
+                        })()}
                       </td>
                       <td className="p-3 text-center">
                         {formData.items.length > 1 && (
@@ -654,7 +716,13 @@ export default function AddOrderPage() {
               <div className="flex justify-between items-center text-slate-900 border-t border-slate-200 pt-3">
                 <span className="font-bold text-sm uppercase tracking-wider">Grand Total</span>
                 <span className="font-black text-2xl text-emerald-600">
-                  ₹{formData.items.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ₹{formData.items.reduce((sum, item) => {
+                    const itemVariants = variants[item.product_id] || [];
+                    const qtyPerPkg = parseFloat(itemVariants.find(v => (v.id || v._id) === item.variant_id)?.quantity_per_package) || 1;
+                    const rateType = itemVariants.find(v => (v.id || v._id) === item.variant_id)?.rate_type || 'per_package';
+                    const multiplier = rateType === 'per_unit' ? qtyPerPkg : 1;
+                    return sum + ((parseFloat(item.quantity) || 0) * multiplier * (parseFloat(item.rate) || 0));
+                  }, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
