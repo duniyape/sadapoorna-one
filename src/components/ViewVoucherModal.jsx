@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Receipt, Calendar, CreditCard, Hash, FileText } from 'lucide-react';
-import { authHdr, fmt, fmtMoney } from '../utils/customerHelpers';
+import { authHdr, fmt, fmtMoney, fmtDateTime, formatVoucherNumber } from '../utils/customerHelpers';
 
 export default function ViewVoucherModal({ voucherId, onClose }) {
   const [voucher, setVoucher] = useState(null);
@@ -40,11 +40,11 @@ export default function ViewVoucherModal({ voucherId, onClose }) {
           <div>
             <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
               <Receipt className="w-5 h-5 text-indigo-500" />
-              Voucher {voucher?.voucher_no || voucher?.id?.slice(-6) || voucherId.slice(-6)}
+              Voucher {formatVoucherNumber(voucher, voucherId)}
             </h2>
             <p className="text-xs text-slate-500 font-medium">
-              {voucher?.voucher_no && `Ref: ${voucher.voucher_no} • `} 
-              {voucher ? fmt(voucher.date || voucher.created_at) : 'Loading...'}
+              {voucher && `Ref: ${formatVoucherNumber(voucher, voucherId)} • `} 
+              {voucher ? fmtDateTime(voucher.date || voucher.created_at) : 'Loading...'}
             </p>
           </div>
           <button

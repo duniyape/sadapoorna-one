@@ -29,8 +29,9 @@ const EMPTY_PRODUCT = {
   brand_id: '', description: '', hsn_code: '', base_unit: '',
 };
 const EMPTY_VARIANT = {
-  name: '', packaging_type: '', quantity: '',
+  name: '', packaging_type: '', quantity_per_package: '',
   unit: '', sku: '', selling_price: '', purchase_price: '', gst_percent: '',
+  rate_type: 'per_package',
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -301,9 +302,9 @@ function VariantForm({ initial, baseUnit, onSave, isSaving, onCancel }) {
             </select>
           </div>
           <div>
-            <label className={labelClass}>Quantity *</label>
-            <input type="number" required min="0.01" step="0.01" value={form.quantity}
-              onChange={e => handle('quantity', e.target.value)}
+            <label className={labelClass}>Quantity per Package *</label>
+            <input type="number" required min="0.01" step="0.01" value={form.quantity_per_package}
+              onChange={e => handle('quantity_per_package', e.target.value)}
               placeholder="e.g. 1" className={inputClass} />
           </div>
           <div>
@@ -316,6 +317,15 @@ function VariantForm({ initial, baseUnit, onSave, isSaving, onCancel }) {
                   {u.name}{u.symbol ? ` (${u.symbol})` : ''}
                 </option>
               ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Rate Type *</label>
+            <select required value={form.rate_type}
+              onChange={e => handle('rate_type', e.target.value)}
+              className={selectClass}>
+              <option value="per_package">Per Package</option>
+              <option value="per_unit">Per Unit</option>
             </select>
           </div>
         </div>
@@ -520,7 +530,12 @@ function ProductsList({ showToast, onAddVariant, onEditProduct }) {
                           <p className="text-[11px] font-bold text-slate-800 truncate">{v.name}</p>
                           <p className="text-[10px] text-slate-500 flex flex-wrap gap-2">
                             <span>SKU: <b>{v.sku}</b></span>
-                            <span>Qty: <b>{v.quantity} {v.unit?.name || v.unit}</b></span>
+                            <span>Qty: <b>{v.quantity_per_package || v.quantity} {v.unit?.name || v.unit}</b></span>
+                            {v.rate_type && (
+                              <span className="text-[9px] text-indigo-600 font-bold uppercase bg-indigo-50 px-1 rounded border border-indigo-200">
+                                {v.rate_type.replace('_', ' ')}
+                              </span>
+                            )}
                             <span>₹{v.selling_price}</span>
                             <span>GST: {v.gst_percent}%</span>
                             <span className="text-emerald-600 font-bold">Stock: {v.stock_quantity}</span>
@@ -620,12 +635,13 @@ export default function AddProductPage() {
         body: JSON.stringify({
           name:           formData.name,
           packaging_type_id: formData.packaging_type_id || formData.packaging_type, // fallback in case of old data
-          quantity:       parseFloat(formData.quantity),
+          quantity_per_package: parseFloat(formData.quantity_per_package),
           unit_id:        formData.unit_id,
           sku:            formData.sku,
           selling_price:  parseFloat(formData.selling_price),
           purchase_price: parseFloat(formData.purchase_price),
           gst_percent:    parseFloat(formData.gst_percent),
+          rate_type:      formData.rate_type,
         }),
       });
       const data = await res.json();

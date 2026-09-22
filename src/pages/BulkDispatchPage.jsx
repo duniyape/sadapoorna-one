@@ -756,7 +756,7 @@ export default function BulkDispatchPage() {
                     <Building2 className={`w-6 h-6 ${deliveryType === "warehouse" ? "text-emerald-600" : "text-slate-400"}`} />
                   </div>
                   <div className="text-center">
-                    <p className="font-black">To Warehouse</p>
+                    <p className="font-black">From Warehouse</p>
                     <p className="text-[10px] font-medium opacity-70 mt-0.5">Local delivery from current warehouse</p>
                   </div>
                   {deliveryType === "warehouse" && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}

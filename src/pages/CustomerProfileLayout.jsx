@@ -29,7 +29,7 @@ export default function CustomerProfileLayout() {
   const activeTab = ['orders', 'statement', 'khata'].includes(pathTail) ? pathTail : 'profile';
 
   const goTab = (key) =>
-    navigate(key === 'profile' ? `/view-customer/${id}` : `/view-customer/${id}/${key}`);
+    navigate(key === 'profile' ? `/view-customer/${id}` : `/view-customer/${id}/${key}`, { replace: true });
 
   // ── Fetch customer + branches + employees in ONE parallel round-trip ────────
   useEffect(() => {
@@ -108,7 +108,7 @@ export default function CustomerProfileLayout() {
       {/* Action bar */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => navigate('/customers')}
+          onClick={() => navigate(-1)}
           className="p-1.5 rounded-lg bg-white shadow-sm border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />

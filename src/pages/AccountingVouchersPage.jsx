@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Search, Filter, Calendar, Receipt, Edit2, Trash2, Eye } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { fmtMoney, fmt } from '../utils/customerHelpers';
+import { fmtMoney, fmt, fmtDateTime, formatVoucherNumber } from '../utils/customerHelpers';
 import ViewVoucherModal from '../components/ViewVoucherModal';
 
 export default function AccountingVouchersPage() {
@@ -152,8 +152,8 @@ export default function AccountingVouchersPage() {
                 vouchers.map(v => (
                   <tr key={v._id || v.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="p-4 pl-6">
-                      <div className="font-bold text-slate-900">{v.voucher_no || v.id?.slice(-6)}</div>
-                      <div className="text-xs text-slate-500">{fmt(v.date || v.created_at)}</div>
+                      <div className="font-bold text-slate-900">{formatVoucherNumber(v)}</div>
+                      <div className="text-xs text-slate-500">{fmtDateTime(v.date || v.created_at)}</div>
                     </td>
                     <td className="p-4">
                       <div className="flex flex-col gap-1 items-start">

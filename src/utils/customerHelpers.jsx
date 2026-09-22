@@ -8,6 +8,24 @@ export const fmt = (iso) => {
   return isNaN(d) ? 'N/A' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
+export const fmtDateTime = (iso) => {
+  if (!iso) return 'N/A';
+  const d = new Date(iso);
+  return isNaN(d) ? 'N/A' : d.toLocaleString('en-IN', { 
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true
+  });
+};
+
+export const formatVoucherNumber = (v, fallbackId = '') => {
+  if (!v) return 'N/A';
+  if (v.voucher_number) return v.voucher_number;
+  if (v.voucher_no) return v.voucher_no;
+  if (v.human_readable_id) return v.human_readable_id;
+  const id = v._id || v.id || v.voucher_id || fallbackId;
+  return id ? `VCH-${id.toString().slice(-6).toUpperCase()}` : 'N/A';
+};
+
 export const fmtMoney = (v) => {
   const n = parseFloat(v) || 0;
   return `₹${Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

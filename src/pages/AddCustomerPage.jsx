@@ -97,6 +97,8 @@ export default function AddCustomerPage() {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [createdCustomer, setCreatedCustomer] = useState(null);
   const [originalMobile, setOriginalMobile] = useState('');
+  const [showGpsModal, setShowGpsModal] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
 
   // Check if the user has Assignment permission for add-customer
   const hasAssignmentPermission = user?.access?.frontend_icons?.find(
@@ -433,19 +435,7 @@ export default function AddCustomerPage() {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                      (pos) => {
-                        handleChange('location', { lat: pos.coords.latitude, lng: pos.coords.longitude });
-                        showToast('GPS Location captured successfully!', 'success');
-                      },
-                      (err) => showToast('Failed to get location. Please allow location access.', 'error')
-                    );
-                  } else {
-                    showToast('Geolocation is not supported by this browser.', 'error');
-                  }
-                }}
+                onClick={() => setShowGpsModal(true)}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-md border text-[10px] font-bold transition-all shadow-sm ${formData.location ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
               >
                 <MapPin className="w-3.5 h-3.5" />
@@ -635,6 +625,90 @@ export default function AddCustomerPage() {
           onClose={() => navigate('/customers')}
           onSuccess={() => navigate('/customers')}
         />
+      )}
+      {/* GPS Permission Modal */}
+      {showGpsModal && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-fade-in">
+            {/* Top colored strip */}
+            <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 to-emerald-500" />
+            
+            <div className="p-6 text-center">
+              {/* Icon */}
+              <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MapPin className="w-10 h-10 text-indigo-600" />
+              </div>
+
+              <h2 className="text-lg font-bold text-slate-900 mb-1">Allow Location Access</h2>
+              <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                We need your GPS location to pin this customer's exact address on the map for accurate delivery tracking.
+              </p>
+
+              {/* Steps */}
+              <div className="bg-slate-50 rounded-xl p-4 text-left mb-6 space-y-2.5">
+                {[
+                  { step: '1', text: 'Click "Allow Location" below' },
+                  { step: '2', text: 'Browser will ask for permission — click Allow' },
+                  { step: '3', text: 'Location auto-captured & pinned on map ✓' },
+                ].map(({ step, text }) => (
+                  <div key={step} className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0">{step}</span>
+                    <span className="text-sm text-slate-700 font-medium">{text}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Buttons */}
+              <button
+                onClick={async () => {
+                  if (!navigator.geolocation) {
+                    showToast('Geolocation not supported by this browser.', 'error');
+                    setShowGpsModal(false);
+                    return;
+                  }
+                  setGpsLoading(true);
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      handleChange('location', { lat: pos.coords.latitude, lng: pos.coords.longitude });
+                      showToast('📍 GPS Location captured successfully!', 'success');
+                      setGpsLoading(false);
+                      setShowGpsModal(false);
+                    },
+                    (err) => {
+                      setGpsLoading(false);
+                      setShowGpsModal(false);
+                      if (err.code === 1) {
+                        showToast('Location blocked! Click the 🔒 lock icon in address bar → Allow Location.', 'error');
+                      } else if (err.code === 2) {
+                        showToast('Location unavailable on this network/device.', 'error');
+                      } else {
+                        showToast('Location request timed out. Please try again.', 'error');
+                      }
+                    },
+                    { timeout: 20000, maximumAge: 10000 }
+                  );
+                }}
+                disabled={gpsLoading}
+                className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-indigo-200 disabled:opacity-60 mb-2"
+              >
+                {gpsLoading ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    Getting Location...
+                  </>
+                ) : (
+                  <><MapPin className="w-4 h-4" /> Allow Location & Capture GPS</>
+                )}
+              </button>
+              <button
+                onClick={() => setShowGpsModal(false)}
+                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-sm transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div >
   );
