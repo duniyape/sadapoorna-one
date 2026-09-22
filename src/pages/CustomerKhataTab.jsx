@@ -41,6 +41,24 @@ export default function CustomerKhataTab() {
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successData, setSuccessData] = useState(null);
+  
+  const [bankLedgers, setBankLedgers] = useState([]);
+
+  useEffect(() => {
+    const fetchLedgers = async () => {
+      try {
+        const res = await fetch('/accounting/ledgers/bank-accounts', { headers: { ...authHdr(), 'Content-Type': 'application/json' } });
+        const json = await res.json();
+        if (res.ok) {
+          const arr = Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
+          setBankLedgers(arr);
+        }
+      } catch (err) {
+        console.error("Failed to fetch bank ledgers", err);
+      }
+    };
+    fetchLedgers();
+  }, []);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -482,14 +500,17 @@ export default function CustomerKhataTab() {
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-xs font-black uppercase text-slate-500 tracking-wider">Receiving Bank *</label>
-                            <input 
-                              type="text" 
+                            <select 
                               required
-                              placeholder="Bank Name"
                               value={formData.bankAccountName}
                               onChange={(e) => setFormData({...formData, bankAccountName: e.target.value})}
                               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-teal-500 text-sm font-bold bg-slate-50"
-                            />
+                            >
+                              <option value="">-- Select Bank Account --</option>
+                              {bankLedgers.map(l => (
+                                <option key={l._id || l.id} value={l.ledger_name || l.name}>{l.ledger_name || l.name}</option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                       )}
