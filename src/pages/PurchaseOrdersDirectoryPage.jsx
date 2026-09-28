@@ -519,39 +519,7 @@ export default function PurchaseOrdersDirectoryPage() {
               </div>
 
               {/* Status Update & Notes */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                {/* Quick Status Update */}
-                <div className="bg-white p-5 rounded-[1.5rem] border border-slate-200 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-                      <Info className="w-4 h-4 text-indigo-500" /> Update Order Status
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {['Pending', 'Confirmed', 'Ready to Pick Up', 'Out for Delivery', 'Delivered', 'Cancelled'].map(status => (
-                        <button
-                          key={status}
-                          disabled={selectedOrder.status?.toLowerCase() === status.toLowerCase() || selectedOrder.status?.toLowerCase() === 'delivered' || selectedOrder.status?.toLowerCase() === 'cancelled'}
-                          onClick={() => handleUpdateStatus(selectedOrder.id, status)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
-                            selectedOrder.status?.toLowerCase() === status.toLowerCase() 
-                              ? getStatusColor(status) 
-                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed'
-                          }`}
-                        >
-                          {status}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  {['delivered', 'cancelled'].includes(selectedOrder.status?.toLowerCase()) && (
-                    <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-[10px] text-slate-500 font-medium">
-                      This order is {selectedOrder.status}. The status cannot be changed further.
-                    </div>
-                  )}
-                </div>
-
-                {/* Notes & Terms */}
+              {/* Notes & Terms */}
                 <div className="bg-white p-5 rounded-[1.5rem] border border-slate-200 shadow-sm">
                   <div className="space-y-4">
                     <div>
@@ -562,9 +530,6 @@ export default function PurchaseOrdersDirectoryPage() {
                     </div>
                   </div>
                 </div>
-
-              </div>
-
             </div>
           </div>
         </div>

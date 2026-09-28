@@ -4,7 +4,7 @@ import {
   ShieldCheck, Route as RouteIcon, Handshake, UserX, CheckSquare, Bot,
   Home, Building2, Briefcase, BadgeCheck, UserCog, FolderLock, Tags,
   ShoppingCart, BoxSelect, ArrowDownToLine, Boxes, MessageCircle,
-  Layers, Landmark, Activity
+  Layers, Landmark, Activity, MapPin
 } from 'lucide-react';
 
 /**
@@ -38,6 +38,13 @@ export const MASTER_MODULES = [
     icon: Bot, color: 'bg-violet-100 text-violet-600 border-violet-200',
     badge: 'Gemini', desc: 'AI-powered insights & automation', route: '/ai-suite',
     dashboardGroup: null, sidebarGroup: 'Main Dashboard',
+  },
+  {
+    id: 'live-location',
+    label: 'Live Location Map', title: 'Live Location Map',
+    icon: MapPin, color: 'bg-emerald-100 text-emerald-600 border-emerald-200',
+    badge: 'Live', desc: 'Real-time team location tracking', route: '/live-location',
+    dashboardGroup: 'System & HR', sidebarGroup: 'System & HR',
   },
 
   // ── Sales & Billing ──────────────────────────────────────────────────────────

@@ -60,6 +60,7 @@ const BatchTimelinePage          = React.lazy(() => import("./pages/BatchTimelin
 const BatchStockPage             = React.lazy(() => import("./pages/BatchStockPage"));
 const AllocationsPage            = React.lazy(() => import("./pages/AllocationsPage"));
 const StockInwardingPage         = React.lazy(() => import("./pages/StockInwardingPage"));
+const LiveLocationPage           = React.lazy(() => import("./pages/LiveLocationPage"));
 
 // ── Customer 360° — layout + 5 separate tab pages ────────────────────────────
 const CustomerProfileLayout = React.lazy(() => import("./pages/CustomerProfileLayout"));
@@ -183,6 +184,7 @@ const App = () => (
                 <Route path="ai-suite"            element={<AiSuitePage />} />
                 <Route path="whatsapp"            element={<WhatsAppChatPage />} />
                 <Route path="beat-mgmt"           element={<BeatManagementPage />} />
+                <Route path="live-location"       element={<LiveLocationPage />} />
       </Route>
     </Routes>
   </BrowserRouter>
