@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { MapPin, Navigation, StopCircle, Layers } from "lucide-react";
 import { useLiveLocation } from "../hooks/useLiveLocation";
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -19,6 +19,7 @@ export default function LiveLocationPage() {
   const { 
     tracking, 
     location, 
+    locationHistory,
     usersLocations, 
     error, 
     startTracking, 
@@ -101,6 +102,21 @@ export default function LiveLocationPage() {
                 Location data will appear here once tracking starts.
              </div>
           )}
+          
+          {/* Movement Log */}
+          {locationHistory && locationHistory.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <p className="text-xs font-bold text-slate-500 mb-2">MOVEMENT LOG</p>
+              <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 h-[80px] overflow-y-auto custom-scrollbar">
+                {locationHistory.map((loc, idx) => (
+                  <div key={idx} className="flex gap-2 items-center mb-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+                    <span>Moved to: {loc[0].toFixed(5)}, {loc[1].toFixed(5)}</span>
+                  </div>
+                )).reverse()}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* All Users Locations Card */}
@@ -173,6 +189,12 @@ export default function LiveLocationPage() {
                   <div className="text-xs text-slate-500">Active Tracking</div>
                 </Popup>
               </Marker>
+            )}
+            {locationHistory && locationHistory.length > 1 && (
+              <Polyline 
+                positions={locationHistory} 
+                pathOptions={{ color: 'indigo', weight: 4, opacity: 0.7, dashArray: '5, 10' }} 
+              />
             )}
           </MapContainer>
         </div>

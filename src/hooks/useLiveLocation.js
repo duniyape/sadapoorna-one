@@ -8,6 +8,7 @@ export const useLiveLocation = () => {
   
   const [tracking, setTracking] = useState(false);
   const [location, setLocation] = useState(null);
+  const [locationHistory, setLocationHistory] = useState([]);
   const [error, setError] = useState(null);
   const [usersLocations, setUsersLocations] = useState([]);
 
@@ -67,9 +68,11 @@ export const useLiveLocation = () => {
               longitude: initialPosition.coords.longitude,
               accuracy: initialPosition.coords.accuracy,
               speed: initialPosition.coords.speed,
-              heading: initialPosition.coords.heading
+              heading: initialPosition.coords.heading,
+              timestamp: Date.now()
             };
             setLocation(initialLocData);
+            setLocationHistory([[initialPosition.coords.latitude, initialPosition.coords.longitude]]);
             if (ws.readyState === WebSocket.OPEN) {
               ws.send(JSON.stringify(initialLocData));
             }
@@ -81,10 +84,12 @@ export const useLiveLocation = () => {
                   longitude: position.coords.longitude,
                   accuracy: position.coords.accuracy,
                   speed: position.coords.speed,
-                  heading: position.coords.heading
+                  heading: position.coords.heading,
+                  timestamp: Date.now()
                 };
 
                 setLocation(locationData);
+                setLocationHistory(prev => [...prev, [position.coords.latitude, position.coords.longitude]]);
 
                 if (ws.readyState === WebSocket.OPEN) {
                   ws.send(JSON.stringify(locationData));
@@ -158,6 +163,7 @@ export const useLiveLocation = () => {
 
       setTracking(false);
       setLocation(null);
+      // Optional: don't clear history immediately if you want to keep the trail visible after stopping
     } catch (err) {
       console.error(err);
       setError("Failed to stop tracking.");
@@ -199,6 +205,7 @@ export const useLiveLocation = () => {
   return {
     tracking,
     location,
+    locationHistory,
     usersLocations,
     error,
     startTracking,

@@ -194,7 +194,7 @@ function ProductForm({ initial, onSave, isSaving, onCancel }) {
             <label className={labelClass}>Description</label>
             <textarea
               rows={2}
-              value={form.description}
+              value={form.description || ""}
               onChange={e => handle('description', e.target.value)}
               placeholder="Short product description..."
               className={inputClass}
@@ -590,7 +590,7 @@ export default function AddProductPage() {
     setIsSaving(true);
     try {
       const isEdit = !!editingProduct?.id;
-      const url = isEdit ? `/products/get/${editingProduct.id}` : '/products/products/v1';
+      const url = isEdit ? `/products/products/${editingProduct.id}` : '/products/products/v1';
       const res = await fetch(url, {
         method: 'POST',
         headers: authHeaders(),
