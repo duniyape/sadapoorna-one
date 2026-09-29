@@ -1,8 +1,10 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { CheckCircle2, X, AlertCircle, Info } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
+import { useLocationSocket } from '../hooks/useLocationSocket';
+import { useGeolocation } from '../hooks/useGeolocation';
 
 // ── Page loader fallback ──────────────────────────────────────────────────────
 const PageLoader = () => (
@@ -24,10 +26,79 @@ const TOAST_CONFIG = {
 export default function DashboardLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [toast, setToast] = useState(null); // { msg, type }
+  const [toast, setToast] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState(null);
+  const [trackingStarted, setTrackingStarted] = useState(false);
 
+  const currentUserId = user?.id || user?._id || localStorage.getItem('userId');
+
+  // ── Real-time WS location state (updated from other users' broadcasts) ──────
+  const [liveLocations, setLiveLocations] = useState([]);
+
+  const handleLiveUpdate = useCallback((update) => {
+    if (typeof update.latitude !== 'number' || typeof update.longitude !== 'number') return;
+    setLiveLocations((prev) => {
+      const idx = prev.findIndex((l) => l.user_id === update.user_id);
+      const newLoc = {
+        user_id: update.user_id,
+        latitude: update.latitude,
+        longitude: update.longitude,
+        accuracy: update.accuracy,
+        speed: update.speed,
+        heading: update.heading,
+        tracking: true,
+        updated_at: update.updated_at,
+      };
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = { ...copy[idx], ...newLoc };
+        return copy;
+      }
+      return [...prev, newLoc];
+    });
+  }, []);
+
+  // WebSocket auto-connects as soon as userId is available — just like Archive
+  const { sendLocation } = useLocationSocket(currentUserId, handleLiveUpdate);
+
+  // GPS auto-starts once user is loaded
+  const { position } = useGeolocation(!!currentUserId);
+
+  // Auto-call /location/start once user is available
+  useEffect(() => {
+    if (!currentUserId || trackingStarted) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    fetch('/location/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          console.log('[AutoTrack] Tracking started for user:', currentUserId);
+          setTrackingStarted(true);
+        }
+      })
+      .catch(() => {
+        // Backend might already have it started — mark as started anyway
+        setTrackingStarted(true);
+      });
+  }, [currentUserId, trackingStarted]);
+
+  // Send GPS position via WebSocket whenever it updates
+  useEffect(() => {
+    if (!position || !currentUserId || !trackingStarted) return;
+    sendLocation(position.latitude, position.longitude, {
+      accuracy: position.accuracy,
+      speed: position.speed,
+      heading: position.heading,
+    });
+  }, [position, currentUserId, trackingStarted, sendLocation]);
+
+  // Fetch logged-in user profile
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem('token');
@@ -50,11 +121,6 @@ export default function DashboardLayout() {
     fetchUser();
   }, []);
 
-  /**
-   * showToast(message)            → green success toast
-   * showToast(message, 'error')   → red error toast
-   * showToast(message, 'info')    → blue info toast
-   */
   const showToast = (msg, type = 'success') => {
     if (!msg || typeof msg !== 'string') return;
     setToast({ msg, type });
@@ -66,7 +132,7 @@ export default function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-[#F4F6FA] text-slate-800 font-sans flex flex-col md:flex-row antialiased overflow-x-hidden">
-      
+
       {/* Toast Notification Banner */}
       {toast && (
         <div className={`fixed top-4 left-4 right-4 sm:left-auto sm:right-6 z-[9999] ${cfg.bg} text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-between sm:justify-start gap-3 border ${cfg.border} animate-in fade-in`}>
@@ -88,10 +154,10 @@ export default function DashboardLayout() {
         />
       )}
 
-      <Sidebar 
-        sidebarCollapsed={sidebarCollapsed} 
-        setSidebarCollapsed={setSidebarCollapsed} 
-        mobileMenuOpen={mobileMenuOpen} 
+      <Sidebar
+        sidebarCollapsed={sidebarCollapsed}
+        setSidebarCollapsed={setSidebarCollapsed}
+        mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
         showToast={showToast}
         user={user}
@@ -101,9 +167,9 @@ export default function DashboardLayout() {
       <main className={`flex-1 min-w-0 flex flex-col min-h-screen transition-all duration-300 ${
         sidebarCollapsed ? 'md:ml-16' : 'md:ml-56'
       }`}>
-        <Navbar 
-          sidebarCollapsed={sidebarCollapsed} 
-          setMobileMenuOpen={setMobileMenuOpen} 
+        <Navbar
+          sidebarCollapsed={sidebarCollapsed}
+          setMobileMenuOpen={setMobileMenuOpen}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           user={user}
@@ -111,7 +177,7 @@ export default function DashboardLayout() {
 
         <div className="pt-16 sm:pt-20 p-3 sm:p-6 max-w-7xl mx-auto w-full space-y-4">
           <Suspense fallback={<PageLoader />}>
-            <Outlet context={{ showToast, searchQuery, user }} />
+            <Outlet context={{ showToast, searchQuery, user, liveLocations, currentUserId, trackingStarted }} />
           </Suspense>
         </div>
       </main>

@@ -15,6 +15,7 @@ export default defineConfig({
       '^/(branches|masters|users|auth|data-access-hierarchy|access|customer|product-units|attributes|products|variants|get|packing-types|whatsapp|whatsapp-webhook|warehouses|vehicles|vendors|orders|inventory|beats|accounting|location)/': {
         target: API_BASE_URL,
         changeOrigin: true,
+        ws: true,
         headers: {
           'ngrok-skip-browser-warning': 'true'
         },

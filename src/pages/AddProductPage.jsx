@@ -39,11 +39,11 @@ const EMPTY_VARIANT = {
 // ═══════════════════════════════════════════════════════════════════════════════
 function ProductForm({ initial, onSave, isSaving, onCancel }) {
   const [form, setForm] = useState(initial || EMPTY_PRODUCT);
-  const [categories, setCategories]     = useState([]);
+  const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
-  const [brands, setBrands]             = useState([]);
+  const [brands, setBrands] = useState([]);
   const [productUnits, setProductUnits] = useState([]);
-  const [attrLoading, setAttrLoading]   = useState(true);
+  const [attrLoading, setAttrLoading] = useState(true);
 
   // Sync form when editing a different product
   useEffect(() => { setForm(initial || EMPTY_PRODUCT); }, [initial]);
@@ -52,14 +52,14 @@ function ProductForm({ initial, onSave, isSaving, onCancel }) {
   useEffect(() => {
     const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     Promise.all([
-      fetch('/attributes/category/v1',     { headers }).then(r => r.json()).catch(() => ({})),
+      fetch('/attributes/category/v1', { headers }).then(r => r.json()).catch(() => ({})),
       fetch('/attributes/sub-category/v1', { headers }).then(r => r.json()).catch(() => ({})),
-      fetch('/attributes/brand/v1',        { headers }).then(r => r.json()).catch(() => ({})),
-      fetch('/product-units/v1',           { headers }).then(r => r.json()).catch(() => ({})),
+      fetch('/attributes/brand/v1', { headers }).then(r => r.json()).catch(() => ({})),
+      fetch('/product-units/v1', { headers }).then(r => r.json()).catch(() => ({})),
     ]).then(([cats, subs, brs, units]) => {
-      setCategories(cats.data    || []);
+      setCategories(cats.data || []);
       setSubCategories(subs.data || []);
-      setBrands(brs.data         || []);
+      setBrands(brs.data || []);
       setProductUnits(Array.isArray(units) ? units : (units.data || []));
     }).finally(() => setAttrLoading(false));
   }, []); // ← empty deps: runs once only, no loop
@@ -235,14 +235,14 @@ function VariantForm({ initial, baseUnit, onSave, isSaving, onCancel }) {
   const [form, setForm] = useState(getInitialForm());
   const [packingTypes, setPackingTypes] = useState([]);
   const [productUnits, setProductUnits] = useState([]);
-  const [attrLoading, setAttrLoading]   = useState(true);
+  const [attrLoading, setAttrLoading] = useState(true);
 
   // Fetch dropdowns ONCE
   useEffect(() => {
     const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     Promise.all([
       fetch('/packing-types/get/v1', { headers }).then(r => r.json()).catch(() => ({})),
-      fetch('/product-units/v1',     { headers }).then(r => r.json()).catch(() => ({})),
+      fetch('/product-units/v1', { headers }).then(r => r.json()).catch(() => ({})),
     ]).then(([packTypes, units]) => {
       setPackingTypes(Array.isArray(packTypes) ? packTypes : (packTypes.data || []));
       setProductUnits(Array.isArray(units) ? units : (units.data || []));
@@ -382,13 +382,13 @@ function VariantForm({ initial, baseUnit, onSave, isSaving, onCancel }) {
 // PRODUCTS LIST  — infinite-loop-free fetch
 // ═══════════════════════════════════════════════════════════════════════════════
 function ProductsList({ showToast, onAddVariant, onEditProduct }) {
-  const [products, setProducts]     = useState([]);
-  const [loading, setLoading]       = useState(false);
-  const [search, setSearch]         = useState('');
-  const [page, setPage]             = useState(1);
-  const [total, setTotal]           = useState(0);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [expandedId, setExpandedId] = useState(null);
-  const [variants, setVariants]     = useState({});
+  const [variants, setVariants] = useState({});
   const [variantLoading, setVariantLoading] = useState({});
 
   // Use a ref for showToast so it's never a stale/changing dep
@@ -403,7 +403,7 @@ function ProductsList({ showToast, onAddVariant, onEditProduct }) {
     try {
       const params = new URLSearchParams({ page, limit: LIMIT });
       if (search.trim()) params.set('search', search.trim());
-      const res  = await fetch(`/products/products/v1?${params}`, { headers: authHeaders() });
+      const res = await fetch(`/products/products/v1?${params}`, { headers: authHeaders() });
       const data = await res.json();
       if (res.ok && data.success) {
         setProducts(data.data || []);
@@ -429,7 +429,7 @@ function ProductsList({ showToast, onAddVariant, onEditProduct }) {
     }
     setVariantLoading(p => ({ ...p, [productId]: true }));
     try {
-      const res  = await fetch(`/products/products/${productId}/variants?limit=50`, { headers: authHeaders() });
+      const res = await fetch(`/products/products/${productId}/variants?limit=50`, { headers: authHeaders() });
       const data = await res.json();
       if (res.ok && data.success) {
         setVariants(p => ({ ...p, [productId]: data.data || [] }));
@@ -581,8 +581,8 @@ export default function AddProductPage() {
   const navigate = useNavigate();
   const { showToast } = useOutletContext();
 
-  const [activeTab, setActiveTab]       = useState('list');
-  const [isSaving, setIsSaving]         = useState(false);
+  const [activeTab, setActiveTab] = useState('list');
+  const [isSaving, setIsSaving] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [variantPanel, setVariantPanel] = useState(null); // { product, variant? }
 
@@ -596,13 +596,13 @@ export default function AddProductPage() {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({
-          name:           formData.name,
-          category_id:    formData.category_id    || null,
+          name: formData.name,
+          category_id: formData.category_id || null,
           subcategory_id: formData.subcategory_id || null,
-          brand_id:       formData.brand_id       || null,
-          description:    formData.description    || null,
-          hsn_code:       formData.hsn_code       || null,
-          base_unit:      formData.base_unit,
+          brand_id: formData.brand_id || null,
+          description: formData.description || null,
+          hsn_code: formData.hsn_code || null,
+          base_unit: formData.base_unit,
         }),
       });
       const data = await res.json();
@@ -634,15 +634,15 @@ export default function AddProductPage() {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({
-          name:           formData.name,
+          name: formData.name,
           packaging_type_id: formData.packaging_type_id || formData.packaging_type, // fallback in case of old data
           quantity_per_package: parseFloat(formData.quantity_per_package),
-          unit_id:        formData.unit_id,
-          sku:            formData.sku,
-          selling_price:  parseFloat(formData.selling_price),
+          unit_id: formData.unit_id,
+          sku: formData.sku,
+          selling_price: parseFloat(formData.selling_price),
           purchase_price: parseFloat(formData.purchase_price),
-          gst_percent:    parseFloat(formData.gst_percent),
-          rate_type:      formData.rate_type,
+          gst_percent: parseFloat(formData.gst_percent),
+          rate_type: formData.rate_type,
         }),
       });
       const data = await res.json();
@@ -671,14 +671,14 @@ export default function AddProductPage() {
   };
 
   const isVariantTab = activeTab === 'variant';
-  const isCreateTab  = activeTab === 'create';
-  const isListTab    = activeTab === 'list';
+  const isCreateTab = activeTab === 'create';
+  const isListTab = activeTab === 'list';
 
   const pageTitle = isVariantTab
     ? `${variantPanel?.variant ? 'Edit' : 'Add'} Variant — ${variantPanel?.product?.name}`
     : isCreateTab
-    ? editingProduct ? `Edit — ${editingProduct.name}` : 'Add New Product'
-    : 'Products';
+      ? editingProduct ? `Edit — ${editingProduct.name}` : 'Add New Product'
+      : 'Products';
 
   return (
     <div className="max-w-5xl mx-auto pb-20">
@@ -716,9 +716,8 @@ export default function AddProductPage() {
               return (
                 <button key={tab.id}
                   onClick={() => { setActiveTab(tab.id); setEditingProduct(null); setVariantPanel(null); }}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-bold transition-all ${
-                    activeTab === tab.id ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:text-slate-800'
-                  }`}>
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-bold transition-all ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:text-slate-800'
+                    }`}>
                   <Icon className="w-3 h-3" /> {tab.label}
                 </button>
               );
