@@ -256,7 +256,7 @@ function VariantForm({ initial, baseUnit, onSave, isSaving, onCancel }) {
   const handle = (field, val) => setForm(p => ({ ...p, [field]: val }));
   const handleSubmit = e => {
     e.preventDefault();
-    // Find unit_id matching form.unit (which is locked to baseUnit string)
+    // Find unit_id matching form.unit
     const matchingUnit = productUnits.find(u => u.name === form.unit || u.symbol === form.unit);
     const unit_id = matchingUnit ? (matchingUnit.id || matchingUnit._id) : '';
     onSave({ ...form, unit_id });
@@ -308,10 +308,11 @@ function VariantForm({ initial, baseUnit, onSave, isSaving, onCancel }) {
               placeholder="e.g. 1" className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>Unit (Locked to Base Unit) *</label>
+            <label className={labelClass}>Unit *</label>
             <select required value={form.unit}
-              disabled={true} className={`${selectClass} bg-slate-100 cursor-not-allowed opacity-80 text-slate-500`}>
-              <option value={form.unit}>{form.unit || 'Loading...'}</option>
+              onChange={e => handle('unit', e.target.value)}
+              className={selectClass}>
+              <option value="">-- Select Unit --</option>
               {productUnits.map(u => (
                 <option key={u.id || u._id} value={u.symbol || u.name}>
                   {u.name}{u.symbol ? ` (${u.symbol})` : ''}
