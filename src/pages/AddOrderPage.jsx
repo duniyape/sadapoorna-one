@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Building2, Calendar, FileText, ShoppingCart, CheckCircle2, Plus, Trash2, Search, X } from 'lucide-react';
 import { useNavigate, useOutletContext, useParams, useLocation } from 'react-router-dom';
+import { usePermissions } from '../utils/permissions';
 
 export default function AddOrderPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
-  const { showToast } = useOutletContext();
+  const { showToast, user } = useOutletContext();
+  const { hasActionPermission } = usePermissions(user);
+  
   const isEditMode = !!id;
+  const canAssignEmployee = hasActionPermission('orders', 'Assign Employee');
 
   // Customer pre-selected when arriving from CustomerProfilePage
   const preselectedCustomer = location.state?.preselectedCustomer || null;
@@ -20,7 +24,7 @@ export default function AddOrderPage() {
     payment_mode: 'Cash on Delivery',
     branch_id: '',
     warehouse_id: '',
-    assigned_employee_id: '',
+    assigned_employee_id: !isEditMode && user ? (user.id || user._id) : '',
     items: [
       {
         id: Date.now(),
@@ -55,6 +59,12 @@ export default function AddOrderPage() {
   const [stockInventory, setStockInventory] = useState({});
   const [branches, setBranches] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
+
+  useEffect(() => {
+    if (!isEditMode && user && !formData.assigned_employee_id) {
+      setFormData(prev => ({ ...prev, assigned_employee_id: user.id || user._id }));
+    }
+  }, [user, isEditMode]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -560,13 +570,20 @@ export default function AddOrderPage() {
               </select>
             </div>
 
-            <div className="lg:col-span-2">
-              <label className={labelClass}>Assigned Employee *</label>
-              <select required value={formData.assigned_employee_id} onChange={e => handleChange('assigned_employee_id', e.target.value)} className={inputClass}>
-                <option value="">Select Employee...</option>
-                {employees.map(e => <option key={e.id || e._id} value={e.id || e._id}>{e.name || e.first_name || 'Unnamed Employee'}</option>)}
-              </select>
-            </div>
+            {canAssignEmployee && (
+              <div className="lg:col-span-2">
+                <label className={labelClass}>Assigned Employee *</label>
+                <select 
+                  required 
+                  value={formData.assigned_employee_id} 
+                  onChange={e => handleChange('assigned_employee_id', e.target.value)} 
+                  className={inputClass}
+                >
+                  <option value="">Select Employee...</option>
+                  {employees.map(e => <option key={e.id || e._id} value={e.id || e._id}>{e.name || e.first_name || 'Unnamed Employee'}</option>)}
+                </select>
+              </div>
+            )}
           </div>
         </div>
 

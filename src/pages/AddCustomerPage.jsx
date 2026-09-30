@@ -86,7 +86,8 @@ export default function AddCustomerPage() {
     assigned_employee_id: '',
     beat_id: '',
     documents: [],
-    location: null
+    location: null,
+    status: 'active'
   });
 
   const [docInput, setDocInput] = useState({ type: 'PAN', document_number: '' });
@@ -243,7 +244,8 @@ export default function AddCustomerPage() {
       branch_id: formData.branch_id,
       assigned_employee_id: formData.assigned_employee_id,
       beat_id: formData.beat_id || null,
-      location: formData.location || null
+      location: formData.location || null,
+      status: formData.status || 'active'
     };
 
     console.log("Customer JSON Payload:");
@@ -397,6 +399,20 @@ export default function AddCustomerPage() {
               <label className={labelClass}>Alternate Mobile</label>
               <input type="tel" value={formData.alternate_mobile} onChange={e => handleChange('alternate_mobile', e.target.value)} placeholder="Optional" className={inputClass} />
             </div>
+
+            {isEditMode && (
+              <div>
+                <label className={labelClass}>Customer Status</label>
+                <select
+                  value={formData.status || 'active'}
+                  onChange={e => handleChange('status', e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
