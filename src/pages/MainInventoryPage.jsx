@@ -425,6 +425,10 @@ function UnblockedInventoryTab() {
                    <td className="p-4">
                      <div className="font-bold text-slate-900 text-sm">{item.product_name || 'N/A'}</div>
                      <div className="text-xs text-slate-500 mt-0.5">{item.variant_name || 'N/A'} {item.sku ? `(${item.sku})` : ''}</div>
+                     <div className="flex items-center gap-2 mt-1.5 text-[11px]">
+                       <span className="text-slate-400 font-medium">MRP: <span className={item.mrp > (item.selling_price || item.sale_price || 0) ? "line-through" : ""}>₹{item.mrp || 0}</span></span>
+                       <span className="font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">Sale: ₹{item.selling_price || item.sale_price || item.rate || 0}</span>
+                     </div>
                    </td>
                    <td className="p-4 text-right font-bold text-slate-600 text-sm">{item.available_quantity || 0}</td>
                    <td className="p-4 text-right font-semibold text-rose-500">{item.blocked_quantity || 0}</td>
