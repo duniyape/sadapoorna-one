@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, UserPlus, Phone, FileText, Edit2, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, UserPlus, Phone, FileText, Edit2, ShieldAlert, ShieldCheck, ChevronRight } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Search, Filter } from 'lucide-react';
 import OtpVerificationModal from '../components/OtpVerificationModal';
@@ -77,17 +77,22 @@ export default function CustomersDirectoryPage() {
           url += `&branch_id=${selectedBranchFilter}`;
         }
 
+        const getMongoId = (rawId) => {
+          const emp = allEmployees.find(e => (e.id || e.employee_id) === rawId || (e.mongo_id || e._id) === rawId);
+          return emp ? (emp.mongo_id || emp._id || emp.id) : rawId;
+        };
+
         if (selectedEmployeeFilter !== 'all') {
-          url += `&assigned_employee_id=${selectedEmployeeFilter}`;
+          url += `&assigned_employee_id=${getMongoId(selectedEmployeeFilter)}`;
         } else {
           // Flatten access_tree to get all allowed IDs for "all" selection
           const allowedIds = new Set();
-          allowedIds.add(user.id || user._id);
+          allowedIds.add(getMongoId(user.id || user._id));
           
           const traverse = (nodes) => {
             if (!nodes || !Array.isArray(nodes)) return;
             nodes.forEach(node => {
-              allowedIds.add(node.id);
+              allowedIds.add(getMongoId(node.id));
               if (node.children && node.children.length > 0) {
                 traverse(node.children);
               }
@@ -135,8 +140,11 @@ export default function CustomersDirectoryPage() {
         setIsLoading(false);
       }
     };
-    fetchCustomers();
-  }, [selectedEmployeeFilter, selectedBranchFilter, user, page, searchTerm]);
+    // Only fetch when allEmployees is loaded so we can map IDs correctly
+    if (allEmployees.length > 0 || selectedEmployeeFilter !== 'all') {
+      fetchCustomers();
+    }
+  }, [selectedEmployeeFilter, selectedBranchFilter, user, page, searchTerm, allEmployees]);
 
   const getFilterOptions = (accessList) => {
     if (!accessList || !Array.isArray(accessList)) return [];
@@ -288,8 +296,9 @@ export default function CustomersDirectoryPage() {
             {filteredCustomers.map((c, i) => (
               <div 
                 key={c.id || i} 
-                onClick={() => navigate(`/view-customer/${c.id || c.customer_id}`)}
-                className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-3 px-4 py-3 lg:py-2.5 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all text-xs cursor-pointer"
+                className={`flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-3 px-4 py-3 lg:py-2.5 rounded-xl border shadow-sm hover:shadow-md transition-all text-xs group ${
+                  c.status === 'inactive' ? 'bg-slate-50 border-slate-200 opacity-75 grayscale-[20%]' : 'bg-white border-slate-100'
+                }`}
               >
                 
                 {/* Mobile Top Row / Desktop Left side */}
@@ -316,8 +325,9 @@ export default function CustomersDirectoryPage() {
 
                   {/* Mobile Status */}
                   <div className="lg:hidden shrink-0">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      c.status === 'Overdue' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold capitalize ${
+                      c.status === 'Overdue' ? 'bg-rose-100 text-rose-700' : 
+                      c.status === 'inactive' ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-700'
                     }`}>
                       {c.status}
                     </span>
@@ -330,8 +340,9 @@ export default function CustomersDirectoryPage() {
                 </div>
 
                 <div className="hidden lg:block w-20 shrink-0">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                    c.status === 'Overdue' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold capitalize ${
+                    c.status === 'Overdue' ? 'bg-rose-100 text-rose-700' : 
+                    c.status === 'inactive' ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-700'
                   }`}>
                     {c.status}
                   </span>

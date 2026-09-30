@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { 
   ArrowLeft, Search, Filter, AlertCircle, Wallet, 
   ArrowUpRight, ArrowDownLeft, Clock, FileText,
@@ -14,6 +14,42 @@ export default function DueCollectionsPage() {
   const [data, setData] = useState([]);
   const [summary, setSummary] = useState(null);
   const [pagination, setPagination] = useState(null);
+
+  const { user } = useOutletContext();
+  const [selectedEmployeeFilter, setSelectedEmployeeFilter] = useState('all');
+  const [allEmployees, setAllEmployees] = useState([]);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await fetch('/users/get', { headers: authHdr() });
+        if (res.ok) {
+          const data = await res.json();
+          setAllEmployees(data.data || data.users || data || []);
+        }
+      } catch (e) { console.error(e); }
+    };
+    fetchEmployees();
+  }, []);
+
+  const getFilterOptions = (accessList) => {
+    if (!accessList || !Array.isArray(accessList)) return [];
+    let result = [];
+    const traverse = (nodes) => {
+      nodes.forEach(node => {
+        result.push({ id: node.id, name: node.name });
+        if (node.children && node.children.length > 0) traverse(node.children);
+      });
+    };
+    traverse(accessList);
+    const unique = [];
+    const seen = new Set();
+    for (const item of result) {
+      if (!seen.has(item.id)) { seen.add(item.id); unique.push(item); }
+    }
+    return unique;
+  };
+  const filterOptions = user?.access_tree?.access ? getFilterOptions(user.access_tree.access) : [];
 
   // Filters
   const [search, setSearch] = useState('');
@@ -34,6 +70,27 @@ export default function DueCollectionsPage() {
       });
       if (search.trim()) params.append('search', search.trim());
 
+      const getMongoId = (rawId) => {
+        const emp = allEmployees.find(e => (e.id || e.employee_id) === rawId || (e.mongo_id || e._id) === rawId);
+        return emp ? (emp.mongo_id || emp._id || emp.id) : rawId;
+      };
+
+      if (selectedEmployeeFilter !== 'all') {
+        params.append('assigned_employee_id', getMongoId(selectedEmployeeFilter));
+      } else {
+        const allowedIds = new Set();
+        allowedIds.add(getMongoId(user?.id || user?._id));
+        const traverse = (nodes) => {
+          if (!nodes || !Array.isArray(nodes)) return;
+          nodes.forEach(node => {
+            allowedIds.add(getMongoId(node.id));
+            if (node.children && node.children.length > 0) traverse(node.children);
+          });
+        };
+        if (user?.access_tree && user.access_tree.access) traverse(user.access_tree.access);
+        params.append('assigned_employee_id', Array.from(allowedIds).join(','));
+      }
+
       const res = await fetch(`/accounting/customers/due?${params}`, {
         headers: authHdr()
       });
@@ -51,14 +108,16 @@ export default function DueCollectionsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, sortBy, sortOrder, search]);
+  }, [page, limit, sortBy, sortOrder, search, selectedEmployeeFilter, allEmployees, user]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchDueCustomers();
-    }, 400); // Debounce search
-    return () => clearTimeout(timer);
-  }, [fetchDueCustomers]);
+    if (allEmployees.length > 0 || selectedEmployeeFilter !== 'all') {
+      const timer = setTimeout(() => {
+        fetchDueCustomers();
+      }, 400); // Debounce search
+      return () => clearTimeout(timer);
+    }
+  }, [fetchDueCustomers, allEmployees.length, selectedEmployeeFilter]);
 
   const handlePageChange = (newPage) => {
     if (newPage > 0 && (!pagination || newPage <= pagination.total_pages)) {
@@ -134,7 +193,22 @@ export default function DueCollectionsPage() {
           />
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+          {filterOptions.length > 0 && (
+            <div className="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-200">
+              <Filter className="w-4 h-4 text-slate-400 ml-2" />
+              <select
+                value={selectedEmployeeFilter}
+                onChange={(e) => { setSelectedEmployeeFilter(e.target.value); setPage(1); }}
+                className="bg-transparent border-none text-xs font-bold text-slate-700 py-1.5 pl-2 pr-6 focus:ring-0 cursor-pointer"
+              >
+                <option value="all">All Associates</option>
+                {filterOptions.map(opt => (
+                  <option key={opt.id} value={opt.id}>{opt.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-200">
             <Filter className="w-4 h-4 text-slate-400 ml-2" />
             <select

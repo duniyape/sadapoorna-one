@@ -143,6 +143,8 @@ export default function OrdersPage() {
   const [orderType, setOrderType] = useState("sale");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [selectedEmployeeFilter, setSelectedEmployeeFilter] = useState("all");
+  const [allEmployees, setAllEmployees] = useState([]);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [page, setPage] = useState(1);
@@ -163,6 +165,38 @@ export default function OrdersPage() {
   const canDeliver = orderPermissions.includes('Deliver');
   const canView = orderPermissions.includes('View');
   const canEdit = orderPermissions.includes('Edit');
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await fetch('/users/get', { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+        if (res.ok) {
+          const data = await res.json();
+          setAllEmployees(data.data || data.users || data || []);
+        }
+      } catch (e) { console.error(e); }
+    };
+    fetchEmployees();
+  }, []);
+
+  const getFilterOptions = (accessList) => {
+    if (!accessList || !Array.isArray(accessList)) return [];
+    let result = [];
+    const traverse = (nodes) => {
+      nodes.forEach(node => {
+        result.push({ id: node.id, name: node.name });
+        if (node.children && node.children.length > 0) traverse(node.children);
+      });
+    };
+    traverse(accessList);
+    const unique = [];
+    const seen = new Set();
+    for (const item of result) {
+      if (!seen.has(item.id)) { seen.add(item.id); unique.push(item); }
+    }
+    return unique;
+  };
+  const filterOptions = user?.access_tree?.access ? getFilterOptions(user.access_tree.access) : [];
 
   const [ordersList, setOrdersList] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -339,6 +373,27 @@ export default function OrdersPage() {
       if (fromDate) url += `&from_date=${encodeURIComponent(fromDate)}`;
       if (toDate) url += `&to_date=${encodeURIComponent(toDate)}`;
 
+      const getMongoId = (rawId) => {
+        const emp = allEmployees.find(e => (e.id || e.employee_id) === rawId || (e.mongo_id || e._id) === rawId);
+        return emp ? (emp.mongo_id || emp._id || emp.id) : rawId;
+      };
+
+      if (selectedEmployeeFilter !== 'all') {
+        url += `&assigned_employee_id=${getMongoId(selectedEmployeeFilter)}`;
+      } else {
+        const allowedIds = new Set();
+        allowedIds.add(getMongoId(user.id || user._id));
+        const traverse = (nodes) => {
+          if (!nodes || !Array.isArray(nodes)) return;
+          nodes.forEach(node => {
+            allowedIds.add(getMongoId(node.id));
+            if (node.children && node.children.length > 0) traverse(node.children);
+          });
+        };
+        if (user.access_tree && user.access_tree.access) traverse(user.access_tree.access);
+        url += `&assigned_employee_id=${Array.from(allowedIds).join(',')}`;
+      }
+
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
@@ -359,8 +414,10 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, [filter, searchTerm, fromDate, toDate, page, orderType]);
+    if (allEmployees.length > 0 || selectedEmployeeFilter !== 'all') {
+      fetchOrders();
+    }
+  }, [filter, searchTerm, fromDate, toDate, page, orderType, selectedEmployeeFilter, allEmployees]);
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -516,6 +573,18 @@ export default function OrdersPage() {
               <option value="billed">Billed (Invoice Generated)</option>
               <option value="unbilled">Unbilled (No Invoice)</option>
             </select>
+            {filterOptions.length > 0 && (
+              <select
+                value={selectedEmployeeFilter}
+                onChange={(e) => { setSelectedEmployeeFilter(e.target.value); setPage(1); }}
+                className="px-3 py-2 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 w-full sm:w-auto bg-white transition-all cursor-pointer shadow-sm"
+              >
+                <option value="all">All Associates</option>
+                {filterOptions.map(opt => (
+                  <option key={opt.id} value={opt.id}>{opt.name}</option>
+                ))}
+              </select>
+            )}
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
             <select
