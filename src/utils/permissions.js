@@ -29,5 +29,20 @@ export function usePermissions(user) {
     });
   };
 
-  return { isAllowed };
+  const hasActionPermission = (moduleId, actionName) => {
+    if (!user) return false;
+    
+    const modulePerm = allowedIcons.find((iconData) => {
+      if (typeof iconData === 'object') return iconData.icon === moduleId;
+      return false;
+    });
+    
+    if (!modulePerm || !Array.isArray(modulePerm.buttons)) {
+      return false;
+    }
+    
+    return modulePerm.buttons.includes(actionName);
+  };
+
+  return { isAllowed, hasActionPermission };
 }

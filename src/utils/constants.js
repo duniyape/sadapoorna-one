@@ -72,11 +72,18 @@ export const MASTER_MODULES = [
     dashboardGroup: 'Sales & Billing', sidebarGroup: 'Sales & Billing',
   },
   {
+    id: 'bulk-customer-transfer',
+    label: 'Bulk Transfer', title: 'Bulk Customer Transfer',
+    icon: ArrowRightLeft, color: 'bg-indigo-100 text-indigo-600 border-indigo-200',
+    badge: 'Tools', desc: 'Transfer multiple customers to a new associate', route: '/bulk-customer-transfer',
+    dashboardGroup: 'Sales & Billing', sidebarGroup: 'Sales & Billing',
+  },
+  {
     id: 'orders',
     label: 'Orders & Bills', title: 'Orders & Invoices',
     icon: CheckSquare, color: 'bg-sky-100 text-sky-600 border-sky-200',
     badge: null, desc: 'Process new orders & invoices', route: '/orders',
-    key: ['Edit', 'View', 'Confirm', 'Pack', 'Dispatch', 'Deliver'],
+    key: ['Edit', 'View', 'Confirm', 'Pack', 'Dispatch', 'Deliver', 'Assign Employee'],
     dashboardGroup: 'Sales & Billing', sidebarGroup: 'Sales & Billing',
   },
   {
