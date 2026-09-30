@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 // Change only this one URL to point all API calls to a different server
-const API_BASE_URL = 'http://192.168.29.145:8000/'
+const API_BASE_URL = 'https://api.sadapoorna.in/'
 
 // https://vite.dev/config/
 export default defineConfig({
