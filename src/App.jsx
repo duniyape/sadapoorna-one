@@ -11,6 +11,7 @@ const Home                       = React.lazy(() => import("./pages/Home"));
 const AddCustomerPage            = React.lazy(() => import("./pages/AddCustomerPage"));
 const OrdersPage                 = React.lazy(() => import("./pages/OrdersPage"));
 const CustomersDirectoryPage     = React.lazy(() => import("./pages/CustomersDirectoryPage"));
+const BulkCustomerTransferPage   = React.lazy(() => import("./pages/BulkCustomerTransferPage"));
 const AiSuitePage                = React.lazy(() => import("./pages/AiSuitePage"));
 const BranchProfilePage          = React.lazy(() => import("./pages/BranchProfilePage"));
 const DepartmentPage             = React.lazy(() => import("./pages/DepartmentPage"));
@@ -101,6 +102,7 @@ const App = () => (
                 <Route path="customers"           element={<CustomersDirectoryPage />} />
                 <Route path="add-customer"        element={<AddCustomerPage />} />
                 <Route path="edit-customer/:id"   element={<AddCustomerPage />} />
+                <Route path="bulk-customer-transfer" element={<BulkCustomerTransferPage />} />
 
                 {/* Customer 360° — nested layout + tab pages */}
                 <Route path="view-customer/:id"   element={<CustomerProfileLayout />}>
