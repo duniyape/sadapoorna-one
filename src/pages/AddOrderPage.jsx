@@ -109,7 +109,36 @@ export default function AddOrderPage() {
         setIsSearchingCustomer(true);
         try {
           const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
-          const cRes = await fetch(`/customer/list?search=${encodeURIComponent(customerSearchTerm)}&limit=10`, { headers });
+          let url = `/customer/list?search=${encodeURIComponent(customerSearchTerm)}&limit=10`;
+
+          if (user) {
+            const getMongoId = (rawId) => {
+              const emp = employees.find(e => (e.id || e.employee_id) === rawId || (e.mongo_id || e._id) === rawId);
+              return emp ? (emp.mongo_id || emp._id || emp.id) : rawId;
+            };
+
+            const allowedIds = new Set();
+            allowedIds.add(getMongoId(user.id || user._id));
+            
+            const traverse = (nodes) => {
+              if (!nodes || !Array.isArray(nodes)) return;
+              nodes.forEach(node => {
+                allowedIds.add(getMongoId(node.id));
+                if (node.children && node.children.length > 0) {
+                  traverse(node.children);
+                }
+              });
+            };
+            
+            if (user.access_tree && user.access_tree.access) {
+              traverse(user.access_tree.access);
+            }
+            
+            const commaSeparatedIds = Array.from(allowedIds).join(',');
+            url += `&assigned_employee_id=${commaSeparatedIds}`;
+          }
+
+          const cRes = await fetch(url, { headers });
           if (cRes.ok) {
             const cData = await cRes.json();
             setCustomerSuggestions(cData.data || []);
@@ -126,7 +155,7 @@ export default function AddOrderPage() {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [customerSearchTerm, selectedCustomerObj]);
+  }, [customerSearchTerm, selectedCustomerObj, user, employees]);
 
   // Clear cached stock when warehouse changes so it fetches fresh data for the new warehouse
   useEffect(() => {
