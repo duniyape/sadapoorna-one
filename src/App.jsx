@@ -73,6 +73,7 @@ const CustomerKhataTab      = React.lazy(() => import("./pages/CustomerKhataTab"
 // ── Route guard ───────────────────────────────────────────────────────────────
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("token");
+  console.log("[DEBUG] ProtectedRoute checked token:", token ? "FOUND" : "MISSING", "Current URL:", window.location.href);
   if (!token) return <Navigate to="/login" replace />;
   return children;
 };
