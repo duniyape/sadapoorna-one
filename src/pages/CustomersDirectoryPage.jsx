@@ -16,8 +16,9 @@ export default function CustomersDirectoryPage() {
   const [allEmployees, setAllEmployees] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCustomers, setTotalCustomers] = useState(0);
   const [verifyingCustomer, setVerifyingCustomer] = useState(null);
-  const limit = 5;
+  const limit = 10;
 
   const handleSendOtpAndVerify = async (customer) => {
     try {
@@ -128,6 +129,7 @@ export default function CustomersDirectoryPage() {
             })));
             if (json.pagination) {
               setTotalPages(json.pagination.total_pages || 1);
+              setTotalCustomers(json.pagination.total_items || json.pagination.total || 0);
             }
           } else {
             setCustomers([]); // Clear if no data
@@ -206,7 +208,10 @@ export default function CustomersDirectoryPage() {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Customer List</h1>
-            <p className="text-xs text-slate-500">Registered grain buyers and accounts ledger</p>
+            <p className="text-xs text-slate-500">
+              Registered grain buyers and accounts ledger 
+              {totalCustomers > 0 && <span className="ml-2 font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Total: {totalCustomers}</span>}
+            </p>
           </div>
         </div>
         <button
