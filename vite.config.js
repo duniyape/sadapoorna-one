@@ -19,6 +19,9 @@ export default defineConfig({
         short_name: 'Sadapoorna',
         description: 'Sadapoorna Business Suite',
         theme_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
+        id: '/',
         icons: [
           {
             src: 'favicon.svg',
