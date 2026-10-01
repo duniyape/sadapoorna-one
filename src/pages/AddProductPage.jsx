@@ -395,7 +395,7 @@ function ProductsList({ showToast, onAddVariant, onEditProduct }) {
   const toastRef = useRef(showToast);
   useEffect(() => { toastRef.current = showToast; }, [showToast]);
 
-  const LIMIT = 20;
+  const LIMIT = 100;
 
   // ── Fetch products — stable deps: only page and search ──────────────────────
   const fetchProducts = useCallback(async () => {
