@@ -133,6 +133,25 @@ export default function AddPurchaseOrderPage() {
               other_charges: po.other_charges || 0,
               notes: po.notes || ''
             });
+
+            // ── Auto-fetch variants for all existing items ──────────────────
+            const headers2 = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+            const uniqueProductIds = [...new Set(
+              po.items?.map(item => item.product_id).filter(Boolean) || []
+            )];
+            uniqueProductIds.forEach(async (productId) => {
+              try {
+                const vRes = await fetch(`/products/products/${productId}/variants`, { headers: headers2 });
+                if (vRes.ok) {
+                  const vData = await vRes.json();
+                  if (vData.success && vData.data) {
+                    setVariants(prev => ({ ...prev, [productId]: vData.data }));
+                  }
+                }
+              } catch (err) {
+                console.error('Failed to fetch variants for product', productId, err);
+              }
+            });
           }
         } else {
           showToast('Failed to fetch purchase order details');
