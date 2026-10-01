@@ -43,6 +43,7 @@ export default function AddPurchaseOrderPage() {
   // Per-item product search state
   const [productSearches, setProductSearches] = useState({}); // index -> search text
   const [productDropdownOpen, setProductDropdownOpen] = useState({}); // index -> bool
+  const [dropdownRects, setDropdownRects] = useState({}); // index -> {top, left, width}
   const debounceTimers = useRef({});
 
   // Fetch reference data
@@ -446,7 +447,7 @@ export default function AddPurchaseOrderPage() {
             </button>
           </div>
           
-          <div className="overflow-x-auto">
+          <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
@@ -464,65 +465,18 @@ export default function AddPurchaseOrderPage() {
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/50 align-top transition-colors">
                       <td className="p-3">
-                        {/* Searchable product dropdown with 3s debounce */}
-                        <div className="relative">
-                          <div className="relative">
-                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" />
-                            <input
-                              type="text"
-                              placeholder="Search product..."
-                              value={productSearches[index] !== undefined
-                                ? productSearches[index]
-                                : (products.find(p => (p.id || p._id) === item.product_id)?.name || '')}
-                              onChange={e => {
-                                const val = e.target.value;
-                                setProductSearches(prev => ({ ...prev, [index]: val }));
-                                setProductDropdownOpen(prev => ({ ...prev, [index]: true }));
-                                // Clear previous debounce timer
-                                if (debounceTimers.current[index]) clearTimeout(debounceTimers.current[index]);
-                                // Auto-close dropdown after 3s of no typing
-                                debounceTimers.current[index] = setTimeout(() => {
-                                  setProductDropdownOpen(prev => ({ ...prev, [index]: false }));
-                                }, 3000);
-                              }}
-                              onFocus={() => {
-                                setProductSearches(prev => ({ ...prev, [index]: '' }));
-                                setProductDropdownOpen(prev => ({ ...prev, [index]: true }));
-                              }}
-                              className={`${inputClass} !py-2 pl-8`}
-                            />
-                          </div>
-                          {productDropdownOpen[index] && (
-                            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                              {products
-                                .filter(p => {
-                                  const q = (productSearches[index] || '').toLowerCase();
-                                  return !q || p.name.toLowerCase().includes(q);
-                                })
-                                .map(p => (
-                                  <button
-                                    type="button"
-                                    key={p.id || p._id}
-                                    className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
-                                    onClick={() => {
-                                      handleItemChange(index, 'product_id', p.id || p._id);
-                                      setProductSearches(prev => ({ ...prev, [index]: p.name }));
-                                      setProductDropdownOpen(prev => ({ ...prev, [index]: false }));
-                                      if (debounceTimers.current[index]) clearTimeout(debounceTimers.current[index]);
-                                    }}
-                                  >
-                                    {p.name}
-                                  </button>
-                                ))}
-                              {products.filter(p => {
-                                const q = (productSearches[index] || '').toLowerCase();
-                                return !q || p.name.toLowerCase().includes(q);
-                              }).length === 0 && (
-                                <div className="px-3 py-3 text-xs text-slate-400 text-center">No products found</div>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                        <select
+                          required
+                          value={item.product_id}
+                          onChange={e => handleItemChange(index, 'product_id', e.target.value)}
+                          className={`${inputClass} !py-2`}
+                          size={1}
+                        >
+                          <option value="">-- Select Product --</option>
+                          {products.map(p => (
+                            <option key={p.id || p._id} value={p.id || p._id}>{p.name}</option>
+                          ))}
+                        </select>
                       </td>
                       <td className="p-3">
                         <select required value={item.variant_id} onChange={e => handleItemChange(index, 'variant_id', e.target.value)} className={`${inputClass} !py-2`} disabled={!item.product_id}>
