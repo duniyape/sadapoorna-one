@@ -170,6 +170,9 @@ export default function OrdersPage() {
   const canBulkOut = orderPermissions.includes('Bulk Out for Delivery');
   const canCreateOrder = orderPermissions.includes('Create New Order');
   const canGenerateBill = orderPermissions.includes('Bill Generated');
+  const canCollectPayment = orderPermissions.includes('Collect Payment');
+  const canPDFBill = orderPermissions.includes('PDF Bill');
+  const canResendBill = orderPermissions.includes('Resend Bill');
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -1286,36 +1289,44 @@ export default function OrdersPage() {
                                       Generate Bill
                                     </button>
                                   )}
-                                  <button
-                                    onClick={() => setShowFinanceModal(true)}
-                                    className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
-                                  >
-                                    <IndianRupee className="w-4 h-4" />
-                                    Collect Payment
-                                  </button>
+                                  {canCollectPayment && (
+                                    <button
+                                      onClick={() => setShowFinanceModal(true)}
+                                      className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
+                                    >
+                                      <IndianRupee className="w-4 h-4" />
+                                      Collect Payment
+                                    </button>
+                                  )}
                                 </div>
                               ) : (
                                 <>
-                                  <button
-                                    onClick={() => setShowFinanceModal(true)}
-                                    className="w-full px-4 py-3 rounded-xl text-xs font-black bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all border border-indigo-200 flex items-center justify-center gap-2"
-                                  >
-                                    <IndianRupee className="w-4 h-4" /> Collect Payment
-                                  </button>
-                                  <button
-                                    onClick={handleViewInvoice}
-                                    disabled={isFetchingInvoice}
-                                    className="w-full px-4 py-2.5 rounded-xl text-xs font-black bg-sky-600 text-white hover:bg-sky-700 transition-all shadow-lg shadow-sky-600/20 disabled:opacity-50 flex items-center justify-center gap-1.5"
-                                  >
-                                    {isFetchingInvoice ? "Loading..." : <><Download className="w-3.5 h-3.5" /> PDF Bill</>}
-                                  </button>
-                                  <button
-                                    onClick={handleResendWhatsApp}
-                                    disabled={isResendingWhatsApp}
-                                    className="w-full px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
-                                  >
-                                    {isResendingWhatsApp ? "Sending..." : "Resend Bill on WhatsApp"}
-                                  </button>
+                                  {canCollectPayment && (
+                                    <button
+                                      onClick={() => setShowFinanceModal(true)}
+                                      className="w-full px-4 py-3 rounded-xl text-xs font-black bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all border border-indigo-200 flex items-center justify-center gap-2"
+                                    >
+                                      <IndianRupee className="w-4 h-4" /> Collect Payment
+                                    </button>
+                                  )}
+                                  {canPDFBill && (
+                                    <button
+                                      onClick={handleViewInvoice}
+                                      disabled={isFetchingInvoice}
+                                      className="w-full px-4 py-2.5 rounded-xl text-xs font-black bg-sky-600 text-white hover:bg-sky-700 transition-all shadow-lg shadow-sky-600/20 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                    >
+                                      {isFetchingInvoice ? "Loading..." : <><Download className="w-3.5 h-3.5" /> PDF Bill</>}
+                                    </button>
+                                  )}
+                                  {canResendBill && (
+                                    <button
+                                      onClick={handleResendWhatsApp}
+                                      disabled={isResendingWhatsApp}
+                                      className="w-full px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                      {isResendingWhatsApp ? "Sending..." : "Resend Bill on WhatsApp"}
+                                    </button>
+                                  )}
                                 </>
                               )}
                             </div>

@@ -83,7 +83,7 @@ export const MASTER_MODULES = [
     label: 'Orders & Bills', title: 'Orders & Invoices',
     icon: CheckSquare, color: 'bg-sky-100 text-sky-600 border-sky-200',
     badge: null, desc: 'Process new orders & invoices', route: '/orders',
-    key: ['Edit', 'View', 'Confirm', 'Pack', 'Dispatch', 'Deliver', 'Assign Employee', 'Create Return Order', 'Trip Sheets', 'Bulk Out for Delivery', 'Create New Order', 'Bill Generated'],
+    key: ['Edit', 'View', 'Confirm', 'Pack', 'Dispatch', 'Deliver', 'Assign Employee', 'Create Return Order', 'Trip Sheets', 'Bulk Out for Delivery', 'Create New Order', 'Bill Generated', 'Collect Payment', 'PDF Bill', 'Resend Bill'],
     dashboardGroup: 'Sales & Billing', sidebarGroup: 'Sales & Billing',
   },
   {
