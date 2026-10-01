@@ -66,7 +66,7 @@ export default function AddPurchaseOrderPage() {
         }
 
         // Fetch ALL products (no limit)
-        const pRes = await fetch('/products/products/v1?page=1&limit=1000', { headers });
+        const pRes = await fetch('/products/products/v1?page=1&limit=100', { headers });
         if (pRes.ok) {
           const pData = await pRes.json();
           if (pData.data) setProducts(pData.data);
