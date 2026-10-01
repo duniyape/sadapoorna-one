@@ -12,7 +12,8 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       // Single catch-all proxy — all API requests go to API_BASE_URL
-      '^/(branches|masters|users|auth|data-access-hierarchy|access|customer|customers|product-units|attributes|products|variants|get|packing-types|whatsapp|whatsapp-webhook|warehouses|vehicles|vendors|orders|inventory|beats|accounting|location)/': {
+      // whatsapp-webhook removed temporarily per user request
+      '^/(branches|masters|users|auth|data-access-hierarchy|access|customer|customers|product-units|attributes|products|variants|get|packing-types|whatsapp|warehouses|vehicles|vendors|orders|inventory|beats|accounting|location)/': {
         target: API_BASE_URL,
         changeOrigin: true,
         ws: true,
