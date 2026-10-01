@@ -169,6 +169,7 @@ export default function OrdersPage() {
   const canTripSheets = orderPermissions.includes('Trip Sheets');
   const canBulkOut = orderPermissions.includes('Bulk Out for Delivery');
   const canCreateOrder = orderPermissions.includes('Create New Order');
+  const canGenerateBill = orderPermissions.includes('Bill Generated');
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -1003,41 +1004,47 @@ export default function OrdersPage() {
                   </div>
                 </div>
                 <div className="overflow-x-auto pb-2">
-                  <table className="w-full text-left text-xs min-w-[600px]">
-                    <thead className="bg-slate-50/50 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100">
-                      <tr>
-                        <th className="px-5 py-3">Product / Variant</th>
-                        <th className="px-5 py-3 text-right">Qty</th>
-                        <th className="px-5 py-3 text-right">Rate</th>
-                        <th className="px-5 py-3 text-right">Taxable</th>
-                        <th className="px-5 py-3 text-right">GST</th>
-                        <th className="px-5 py-3 text-right">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 font-medium">
-                      {selectedOrder.items?.map((item, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-5 py-4">
-                            <div className="font-bold text-slate-800">{item.product_name || "Product"}</div>
-                            <div className="text-[10px] text-slate-500 mt-0.5">
-                              {item.variant_name || "Variant"} {item.sku ? `(${item.sku})` : ""}
-                            </div>
-                          </td>
-                          <td className="px-5 py-4 text-right font-black text-slate-900">{item.quantity}</td>
-                          <td className="px-5 py-4 text-right">₹{item.rate}</td>
-                          <td className="px-5 py-4 text-right font-semibold text-slate-700">
-                            ₹{item.taxable_amount || (item.quantity * (item.rate_type === 'per_unit' ? (item.quantity_per_package || item.variant?.quantity_per_package || 1) : 1) * item.rate)}
-                          </td>
-                          <td className="px-5 py-4 text-right text-slate-500">
-                            {item.gst_percent ? `${item.gst_percent}% (₹${item.gst_amount})` : "N/A"}
-                          </td>
-                          <td className="px-5 py-4 text-right font-black text-slate-800">
-                            ₹{item.total_amount || (item.quantity * (item.rate_type === 'per_unit' ? (item.quantity_per_package || item.variant?.quantity_per_package || 1) : 1) * item.rate)}
-                          </td>
+                  {!selectedOrder.items || selectedOrder.items.length === 0 || (selectedOrder.items.length === 1 && !selectedOrder.items[0].product_id && !selectedOrder.items[0].product_name) || selectedOrder.invoice_no === 'OPENING-BAL' ? (
+                    <div className="px-5 py-8 text-center text-slate-500 font-bold bg-white">
+                      No physical items associated with this ledger record.
+                    </div>
+                  ) : (
+                    <table className="w-full text-left text-xs min-w-[600px]">
+                      <thead className="bg-slate-50/50 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100">
+                        <tr>
+                          <th className="px-5 py-3">Product / Variant</th>
+                          <th className="px-5 py-3 text-right">Qty</th>
+                          <th className="px-5 py-3 text-right">Rate</th>
+                          <th className="px-5 py-3 text-right">Taxable</th>
+                          <th className="px-5 py-3 text-right">GST</th>
+                          <th className="px-5 py-3 text-right">Total</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-medium">
+                        {selectedOrder.items?.map((item, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-5 py-4">
+                              <div className="font-bold text-slate-800">{item.product_name || "Product"}</div>
+                              <div className="text-[10px] text-slate-500 mt-0.5">
+                                {item.variant_name || "Variant"} {item.sku ? `(${item.sku})` : ""}
+                              </div>
+                            </td>
+                            <td className="px-5 py-4 text-right font-black text-slate-900">{item.quantity}</td>
+                            <td className="px-5 py-4 text-right">₹{item.rate}</td>
+                            <td className="px-5 py-4 text-right font-semibold text-slate-700">
+                              ₹{item.taxable_amount || (item.quantity * (item.rate_type === 'per_unit' ? (item.quantity_per_package || item.variant?.quantity_per_package || 1) : 1) * item.rate)}
+                            </td>
+                            <td className="px-5 py-4 text-right text-slate-500">
+                              {item.gst_percent ? `${item.gst_percent}% (₹${item.gst_amount})` : "N/A"}
+                            </td>
+                            <td className="px-5 py-4 text-right font-black text-slate-800">
+                              ₹{item.total_amount || (item.quantity * (item.rate_type === 'per_unit' ? (item.quantity_per_package || item.variant?.quantity_per_package || 1) : 1) * item.rate)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
 
                 {/* Financial Totals */}
@@ -1270,13 +1277,15 @@ export default function OrdersPage() {
                             <div className="flex flex-col gap-2 w-full">
                               {!selectedOrder.invoice_no ? (
                                 <div className="flex gap-2 w-full">
-                                  <button
-                                    onClick={() => { setShowBillMode(true); setBillDiscount(selectedOrder.discount || ""); }}
-                                    className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
-                                  >
-                                    <FileText className="w-4 h-4" />
-                                    Generate Bill
-                                  </button>
+                                  {canGenerateBill && (
+                                    <button
+                                      onClick={() => { setShowBillMode(true); setBillDiscount(selectedOrder.discount || ""); }}
+                                      className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
+                                    >
+                                      <FileText className="w-4 h-4" />
+                                      Generate Bill
+                                    </button>
+                                  )}
                                   <button
                                     onClick={() => setShowFinanceModal(true)}
                                     className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
