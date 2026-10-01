@@ -30,7 +30,7 @@ const EMPTY_PRODUCT = {
 };
 const EMPTY_VARIANT = {
   name: '', packaging_type: '', quantity_per_package: '',
-  unit: '', sku: '', selling_price: '', purchase_price: '', gst_percent: '',
+  unit: '', sku: '', selling_price: '', mrp: '', gst_percent: '',
   rate_type: 'per_package',
 };
 
@@ -348,9 +348,9 @@ function VariantForm({ initial, baseUnit, onSave, isSaving, onCancel }) {
               placeholder="0.00" className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>Purchase Price (₹) *</label>
-            <input type="number" required min="0" step="0.01" value={form.purchase_price}
-              onChange={e => handle('purchase_price', e.target.value)}
+            <label className={labelClass}>MRP (₹) *</label>
+            <input type="number" required min="0" step="0.01" value={form.mrp}
+              onChange={e => handle('mrp', e.target.value)}
               placeholder="0.00" className={inputClass} />
           </div>
           <div>
@@ -640,7 +640,7 @@ export default function AddProductPage() {
           unit_id: formData.unit_id,
           sku: formData.sku,
           selling_price: parseFloat(formData.selling_price),
-          purchase_price: parseFloat(formData.purchase_price),
+          mrp: parseFloat(formData.mrp),
           gst_percent: parseFloat(formData.gst_percent),
           rate_type: formData.rate_type,
         }),
