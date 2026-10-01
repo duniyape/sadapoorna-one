@@ -185,35 +185,25 @@ export default function AddPurchaseOrderPage() {
     });
 
     if (field === 'product_id' && value) {
-      if (!variants[value]) {
-        try {
-          const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
-          const res = await fetch(`/products/products/${value}/variants`, { headers });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.success && data.data) {
-              setVariants(prev => ({ ...prev, [value]: data.data }));
-              if (data.data.length === 1) {
-                setFormData(prev => {
-                  const newItems = [...prev.items];
-                  newItems[index].variant_id = data.data[0].id || data.data[0]._id;
-                  return { ...prev, items: newItems };
-                });
-              }
+      // Always fetch fresh from API so newly added variants are always shown
+      try {
+        const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+        const res = await fetch(`/products/products/${value}/variants`, { headers });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data) {
+            setVariants(prev => ({ ...prev, [value]: data.data }));
+            if (data.data.length === 1) {
+              setFormData(prev => {
+                const newItems = [...prev.items];
+                newItems[index].variant_id = data.data[0].id || data.data[0]._id;
+                return { ...prev, items: newItems };
+              });
             }
           }
-        } catch (err) {
-          console.error("Failed to fetch variants", err);
         }
-      } else {
-        const productVariants = variants[value];
-        if (productVariants && productVariants.length === 1) {
-          setFormData(prev => {
-            const newItems = [...prev.items];
-            newItems[index].variant_id = productVariants[0].id || productVariants[0]._id;
-            return { ...prev, items: newItems };
-          });
-        }
+      } catch (err) {
+        console.error("Failed to fetch variants", err);
       }
     }
   };
@@ -386,24 +376,6 @@ export default function AddPurchaseOrderPage() {
             <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-widest mt-0.5">Inventory & Logistics</p>
           </div>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => navigate('/purchase-orders')}
-            className="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors shadow-sm"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isSaving}
-            className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-2 shadow-md transition-colors disabled:opacity-50"
-          >
-            {isSaving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create Order')}
-            {!isSaving && <CheckCircle2 className="w-4 h-4" />}
-          </button>
-        </div>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -461,9 +433,6 @@ export default function AddPurchaseOrderPage() {
           <div className={cardHeaderClass}>
             <div className="p-1.5 bg-emerald-100 rounded-lg"><ShoppingCart className="w-4 h-4 text-emerald-600" /></div>
             <h2 className="text-xs font-black text-slate-800 uppercase tracking-wider flex-1">2. Order Items</h2>
-            <button type="button" onClick={addItem} className="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5 transition-colors border border-emerald-200">
-              <Plus className="w-3.5 h-3.5" /> Add Item
-            </button>
           </div>
           
           <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
@@ -639,6 +608,34 @@ export default function AddPurchaseOrderPage() {
         </div>
 
       </form>
+
+      {/* Bottom Action Bar */}
+      <div className="flex items-center justify-between mt-6 pt-5 border-t border-slate-200">
+        <button
+          type="button"
+          onClick={addItem}
+          className="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center gap-2 transition-colors border border-emerald-200 shadow-sm"
+        >
+          <Plus className="w-4 h-4" /> Add Item
+        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/purchase-orders')}
+            className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors shadow-sm"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={isSaving}
+            className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm flex items-center gap-2 shadow-md transition-colors disabled:opacity-50"
+          >
+            {isSaving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create Order')}
+            {!isSaving && <CheckCircle2 className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
