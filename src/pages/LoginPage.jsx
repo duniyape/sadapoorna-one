@@ -18,7 +18,7 @@ export default function LoginPage() {
       navigate('/', { replace: true });
     }
   }, [navigate]);
-  
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -61,10 +61,10 @@ export default function LoginPage() {
 
   return (
     <div className="h-screen w-full flex overflow-hidden bg-[#f8f9fc] selection:bg-red-500/30 font-sans">
-      
+
       {/* Left Column - Brand & Product Experience */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-[#060B19] overflow-hidden flex-col p-12">
-        
+
         {/* Animated Background Gradients & Glows */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 animate-glow-pulse"></div>
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/4 animate-glow-pulse" style={{ animationDelay: '2s' }}></div>
@@ -80,7 +80,7 @@ export default function LoginPage() {
         {/* Main Content */}
         <div className="relative z-20 max-w-md">
           <h1 className="text-4xl xl:text-5xl font-extrabold text-white tracking-tight leading-[1.15] mb-4">
-            Manage <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">Smarter.</span><br/>
+            Manage <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">Smarter.</span><br />
             Grow <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Faster.</span>
           </h1>
           <p className="text-slate-400 text-sm xl:text-base font-medium mb-6 leading-relaxed">
@@ -132,8 +132,8 @@ export default function LoginPage() {
                   </div>
                   <div className="h-36 bg-[#1a2138] rounded-xl p-3 border border-indigo-500/10 shadow-sm flex flex-col justify-between">
                     <div className="flex justify-between">
-                       <div className="h-2 w-20 bg-slate-500/40 rounded"></div>
-                       <div className="h-2 w-10 bg-slate-500/20 rounded"></div>
+                      <div className="h-2 w-20 bg-slate-500/40 rounded"></div>
+                      <div className="h-2 w-10 bg-slate-500/20 rounded"></div>
                     </div>
                     {/* Mock chart lines */}
                     <div className="flex items-end gap-1.5 h-20">
@@ -160,7 +160,7 @@ export default function LoginPage() {
 
       {/* Right Column - Login Form */}
       <div className="flex-1 flex flex-col justify-center items-center p-6 relative animate-slide-up-fade overflow-y-auto custom-scrollbar">
-        
+
         {/* Dark Mode Toggle (Decorative) */}
         <div className="absolute top-6 right-6">
           <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 transition-colors border border-slate-200 shadow-sm">
@@ -169,11 +169,11 @@ export default function LoginPage() {
         </div>
 
         <div className="w-full max-w-[380px] bg-white rounded-3xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] border border-slate-100 p-8 relative">
-          
+
           <div className="lg:hidden mb-6 flex justify-center">
-             <div className="scale-110">
-               <SadapoornaLogo />
-             </div>
+            <div className="scale-110">
+              <SadapoornaLogo />
+            </div>
           </div>
 
           {/* Avatar Icon */}
@@ -200,8 +200,8 @@ export default function LoginPage() {
                 <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 group-focus-within:text-red-500 transition-colors pointer-events-none">
                   <User className="w-4 h-4" />
                 </div>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -218,7 +218,7 @@ export default function LoginPage() {
                 <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 group-focus-within:text-red-500 transition-colors pointer-events-none">
                   <Lock className="w-4 h-4" />
                 </div>
-                <input 
+                <input
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
@@ -226,7 +226,7 @@ export default function LoginPage() {
                   className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all shadow-sm placeholder-slate-400 font-medium text-slate-800"
                   placeholder="Enter your password"
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 focus:outline-none"
@@ -242,21 +242,19 @@ export default function LoginPage() {
                 <div className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-colors border ${rememberMe ? 'bg-red-500 border-red-500' : 'bg-white border-slate-300 group-hover:border-red-400'}`}>
                   {rememberMe && <CheckCircle2 className="w-2.5 h-2.5 text-white" />}
                 </div>
-                <input 
-                  type="checkbox" 
-                  className="sr-only" 
+                <input
+                  type="checkbox"
+                  className="sr-only"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                 />
                 <span className="text-[11px] font-semibold text-slate-600 select-none">Remember me</span>
               </label>
-              <a href="#" className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors">
-                Forgot Password?
-              </a>
+
             </div>
 
             {/* Submit Button */}
-            <button 
+            <button
               type="submit"
               disabled={isLoading}
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 hover:from-red-700 hover:via-pink-700 hover:to-purple-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 group mt-3 disabled:opacity-70 disabled:hover:translate-y-0"
@@ -276,7 +274,7 @@ export default function LoginPage() {
             Don't have an account? <a href="#" className="text-indigo-600 font-bold hover:underline">Contact Admin</a>
           </p>
         </div>
-        
+
         {/* Mobile Copyright */}
         <div className="mt-6 lg:hidden text-center opacity-60">
           <p className="text-slate-400 text-[10px]">
