@@ -15,7 +15,17 @@ window.fetch = async (input, init) => {
     // Combine the base URL with the relative path
     input = API_BASE_URL + input;
   }
-  return originalFetch(input, init);
+  
+  const response = await originalFetch(input, init);
+  
+  // Globally handle token expiration (401 Unauthorized)
+  if (response.status === 401 && window.location.pathname !== '/login') {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  }
+  
+  return response;
 };
 
 // Disable scroll wheel changing number inputs globally
