@@ -436,7 +436,7 @@ export default function AddPurchaseOrderPage() {
           </div>
           
           <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
                   <th className="p-3 w-1/4 min-w-[180px]">Product *</th>
@@ -610,26 +610,26 @@ export default function AddPurchaseOrderPage() {
       </form>
 
       {/* Bottom Action Bar */}
-      <div className="flex items-center justify-between mt-6 pt-5 border-t border-slate-200">
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-6 pt-5 border-t border-slate-200">
         <button
           type="button"
           onClick={addItem}
-          className="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center gap-2 transition-colors border border-emerald-200 shadow-sm"
+          className="px-4 py-3 sm:py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-sm sm:text-xs flex items-center justify-center gap-2 transition-colors border border-emerald-200 shadow-sm"
         >
           <Plus className="w-4 h-4" /> Add Item
         </button>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <button
             type="button"
             onClick={() => navigate('/purchase-orders')}
-            className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors shadow-sm"
+            className="px-5 py-3 sm:py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-sm sm:text-xs transition-colors shadow-sm text-center"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={isSaving}
-            className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm flex items-center gap-2 shadow-md transition-colors disabled:opacity-50"
+            className="px-6 py-3 sm:py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-colors disabled:opacity-50"
           >
             {isSaving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create Order')}
             {!isSaving && <CheckCircle2 className="w-4 h-4" />}
