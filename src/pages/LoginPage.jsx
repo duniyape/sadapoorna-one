@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SadapoornaLogo from '../components/SadapoornaLogo';
 import { User, Lock, Eye, EyeOff, CheckCircle2, ShieldCheck, Zap, Moon } from 'lucide-react';
@@ -11,6 +11,13 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // If user is already logged in, redirect them directly to the dashboard
+    if (localStorage.getItem('token')) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
   
   const handleLogin = async (e) => {
     e.preventDefault();
