@@ -20,8 +20,8 @@ export default function AddPurchaseOrderPage() {
         id: Date.now(), // temp id for React key
         product_id: '',
         variant_id: '',
-        quantity: 1,
-        rate: 0,
+        quantity: '',
+        rate: '',
         investors: []
       }
     ],
@@ -121,8 +121,8 @@ export default function AddPurchaseOrderPage() {
                 id: Math.random(),
                 product_id: item.product_id || '',
                 variant_id: item.variant_id || '',
-                quantity: item.quantity || 1,
-                rate: item.rate || 0,
+                quantity: item.quantity || '',
+                rate: item.rate === 0 ? '' : (item.rate || ''),
                 investors: item.investors?.map(inv => ({
                   id: Math.random(),
                   investor_id: inv.investor_id || '',
@@ -166,7 +166,8 @@ export default function AddPurchaseOrderPage() {
     };
     
     fetchPO();
-  }, [id, isEditMode, navigate, showToast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isEditMode]);
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -217,8 +218,8 @@ export default function AddPurchaseOrderPage() {
           id: Date.now(),
           product_id: '',
           variant_id: '',
-          quantity: 1,
-          rate: 0,
+          quantity: '',
+          rate: '',
           investors: []
         }
       ]
@@ -473,7 +474,7 @@ export default function AddPurchaseOrderPage() {
                         </select>
                       </td>
                       <td className="p-3">
-                        <input type="number" min="0.01" step="0.01" required value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className={`${inputClass} !py-2`} />
+                        <input type="number" min="0.01" step="0.01" required value={item.quantity === 0 ? '' : item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className={`${inputClass} !py-2`} />
                         {(() => {
                           const v = itemVariants.find(v => (v.id || v._id) === item.variant_id);
                           if (!v) return null;
@@ -488,7 +489,7 @@ export default function AddPurchaseOrderPage() {
                         })()}
                       </td>
                       <td className="p-3">
-                        <input type="number" min="0" step="0.01" required value={item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} className={`${inputClass} !py-2`} />
+                        <input type="number" min="0" step="0.01" required value={item.rate === 0 ? '' : item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} className={`${inputClass} !py-2`} />
                         {(() => {
                           const v = itemVariants.find(v => (v.id || v._id) === item.variant_id);
                           if (!v) return null;
@@ -551,6 +552,15 @@ export default function AddPurchaseOrderPage() {
               </tbody>
             </table>
           </div>
+          <div className="p-3 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+            <button
+              type="button"
+              onClick={addItem}
+              className="px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center gap-2 transition-colors border border-emerald-200 shadow-sm"
+            >
+              <Plus className="w-4 h-4" /> Add Item
+            </button>
+          </div>
         </div>
 
         {/* Totals & Notes */}
@@ -610,14 +620,7 @@ export default function AddPurchaseOrderPage() {
       </form>
 
       {/* Bottom Action Bar */}
-      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-6 pt-5 border-t border-slate-200">
-        <button
-          type="button"
-          onClick={addItem}
-          className="px-4 py-3 sm:py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-sm sm:text-xs flex items-center justify-center gap-2 transition-colors border border-emerald-200 shadow-sm"
-        >
-          <Plus className="w-4 h-4" /> Add Item
-        </button>
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-4 mt-6 pt-5 border-t border-slate-200">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <button
             type="button"

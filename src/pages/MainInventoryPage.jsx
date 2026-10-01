@@ -17,7 +17,16 @@ function useDebounce(callback, delay) {
 
 export default function MainInventoryPage() {
   const navigate = useNavigate();
-  const { showToast } = useOutletContext();
+  const { showToast, user } = useOutletContext();
+
+  const allowedIcons = user?.access?.frontend_icons || user?.designation?.frontend_icons || [];
+  const inventoryPermissions = allowedIcons.find(iconData => typeof iconData === 'object' && iconData.icon === 'main-inventory')?.buttons || [];
+  
+  const canMain = inventoryPermissions.includes('Main Inventory');
+  const canWarehouse = inventoryPermissions.includes('Warehouse Inventory');
+  const canSalesStock = inventoryPermissions.includes('Stock Available for Sales');
+  const canVehicle = inventoryPermissions.includes('Vehicle Inventory');
+  const canStockLedger = inventoryPermissions.includes('Stock Ledger');
 
   const [inventory, setInventory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,6 +35,14 @@ export default function MainInventoryPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('main');
+  
+  useEffect(() => {
+    if (!canMain && activeTab === 'main') {
+      if (canWarehouse) setActiveTab('warehouse');
+      else if (canSalesStock) setActiveTab('sales_stock');
+      else if (canVehicle) setActiveTab('vehicle');
+    }
+  }, [canMain, canWarehouse, canSalesStock, canVehicle, activeTab]);
   const limit = 20;
 
   const fetchInventory = async (currentPage, currentSearch) => {
@@ -107,36 +124,46 @@ export default function MainInventoryPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
-        <button 
-          onClick={() => setActiveTab('main')} 
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'main' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-        >
-          Main Inventory
-        </button>
-        <button 
-          onClick={() => setActiveTab('warehouse')} 
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'warehouse' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-        >
-          Warehouse Inventory
-        </button>
-        <button 
-          onClick={() => setActiveTab('sales_stock')} 
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'sales_stock' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-        >
-          Stock Available for Sales
-        </button>
-        <button 
-          onClick={() => setActiveTab('vehicle')} 
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'vehicle' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-        >
-          Vehicle Inventory
-        </button>
-        <button 
-          onClick={() => navigate('/stock-ledger')} 
-          className="px-4 py-2 rounded-lg text-sm font-black bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors flex items-center gap-2 border border-indigo-200"
-        >
-          <BookOpen className="w-4 h-4" /> Stock Ledger
-        </button>
+        {canMain && (
+          <button 
+            onClick={() => setActiveTab('main')} 
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'main' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+          >
+            Main Inventory
+          </button>
+        )}
+        {canWarehouse && (
+          <button 
+            onClick={() => setActiveTab('warehouse')} 
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'warehouse' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+          >
+            Warehouse Inventory
+          </button>
+        )}
+        {canSalesStock && (
+          <button 
+            onClick={() => setActiveTab('sales_stock')} 
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'sales_stock' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+          >
+            Stock Available for Sales
+          </button>
+        )}
+        {canVehicle && (
+          <button 
+            onClick={() => setActiveTab('vehicle')} 
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'vehicle' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+          >
+            Vehicle Inventory
+          </button>
+        )}
+        {canStockLedger && (
+          <button 
+            onClick={() => navigate('/stock-ledger')} 
+            className="px-4 py-2 rounded-lg text-sm font-black bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors flex items-center gap-2 border border-indigo-200"
+          >
+            <BookOpen className="w-4 h-4" /> Stock Ledger
+          </button>
+        )}
       </div>
 
       {activeTab === 'main' && (

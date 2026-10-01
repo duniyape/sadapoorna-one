@@ -30,8 +30,8 @@ export default function AddOrderPage() {
         id: Date.now(),
         product_id: '',
         variant_id: '',
-        quantity: 1,
-        rate: 0,
+        quantity: '',
+        rate: '',
         investors: []
       }
     ],
@@ -226,8 +226,8 @@ export default function AddOrderPage() {
                 id: Math.random(),
                 product_id: item.product_id || '',
                 variant_id: item.variant_id || '',
-                quantity: item.quantity || 1,
-                rate: item.rate || 0,
+                quantity: item.quantity || '',
+                rate: item.rate === 0 ? '' : (item.rate || ''),
                 investors: []
               })) || [],
               discount: ord.discount || 0,
@@ -248,7 +248,8 @@ export default function AddOrderPage() {
     };
 
     fetchOrder();
-  }, [id, isEditMode, navigate, showToast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isEditMode]);
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -309,8 +310,8 @@ export default function AddOrderPage() {
           id: Date.now(),
           product_id: '',
           variant_id: '',
-          quantity: 1,
-          rate: 0,
+          quantity: '',
+          rate: '',
           investors: []
         }
       ]
@@ -417,7 +418,7 @@ export default function AddOrderPage() {
 
   return (
     <div className="max-w-6xl mx-auto pb-20">
-      <div className="flex items-center justify-between mb-6 sticky top-0 bg-slate-50/90 backdrop-blur-md z-20 py-3 border-b border-slate-200/50">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sticky top-0 bg-slate-50/90 backdrop-blur-md z-20 py-3 border-b border-slate-200/50 gap-3">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate('/orders')} type="button" className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors shadow-sm">
             <ArrowLeft className="w-4 h-4" />
@@ -428,24 +429,6 @@ export default function AddOrderPage() {
             </h1>
             <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-widest mt-0.5">Sales & Billing</p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => navigate('/orders')}
-            className="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors shadow-sm"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isSaving}
-            className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-2 shadow-md transition-colors disabled:opacity-50"
-          >
-            {isSaving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create Order')}
-            {!isSaving && <CheckCircle2 className="w-4 h-4" />}
-          </button>
         </div>
       </div>
 
@@ -591,20 +574,17 @@ export default function AddOrderPage() {
           <div className={cardHeaderClass}>
             <div className="p-1.5 bg-emerald-100 rounded-lg"><ShoppingCart className="w-4 h-4 text-emerald-600" /></div>
             <h2 className="text-xs font-black text-slate-800 uppercase tracking-wider flex-1">2. Order Items</h2>
-            <button type="button" onClick={addItem} className="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5 transition-colors border border-emerald-200">
-              <Plus className="w-3.5 h-3.5" /> Add Item
-            </button>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto pb-2">
+            <table className="w-full text-left border-collapse min-w-[1000px]">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                  <th className="p-3 w-1/3 min-w-[200px]">Product *</th>
-                  <th className="p-3 w-1/3 min-w-[200px]">Variant *</th>
-                  <th className="p-3 w-24">Qty *</th>
-                  <th className="p-3 w-28">Rate (₹) *</th>
-                  <th className="p-3 w-32 text-right">Total (₹)</th>
+                  <th className="p-3 min-w-[250px] w-[30%]">Product *</th>
+                  <th className="p-3 min-w-[250px] w-[30%]">Variant *</th>
+                  <th className="p-3 min-w-[120px] w-[12%]">Qty *</th>
+                  <th className="p-3 min-w-[140px] w-[13%]">Rate (₹) *</th>
+                  <th className="p-3 min-w-[140px] w-[15%] text-right">Total (₹)</th>
                   <th className="p-3 w-10 text-center"></th>
                 </tr>
               </thead>
@@ -614,19 +594,19 @@ export default function AddOrderPage() {
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/50 align-top transition-colors">
                       <td className="p-3">
-                        <select required value={item.product_id} onChange={e => handleItemChange(index, 'product_id', e.target.value)} className={`${inputClass} !py-2`}>
+                        <select required value={item.product_id} onChange={e => handleItemChange(index, 'product_id', e.target.value)} className={`${inputClass} !py-2 truncate`}>
                           <option value="">Select Product...</option>
                           {products.map(p => <option key={p.id || p._id} value={p.id || p._id}>{p.name}</option>)}
                         </select>
                       </td>
                       <td className="p-3">
-                        <select required value={item.variant_id} onChange={e => handleItemChange(index, 'variant_id', e.target.value)} className={`${inputClass} !py-2`} disabled={!item.product_id}>
+                        <select required value={item.variant_id} onChange={e => handleItemChange(index, 'variant_id', e.target.value)} className={`${inputClass} !py-2 truncate`} disabled={!item.product_id}>
                           <option value="">Select Variant...</option>
                           {itemVariants.map(v => <option key={v.id || v._id} value={v.id || v._id}>{v.name} ({v.sku})</option>)}
                         </select>
                       </td>
                       <td className="p-3">
-                        <input type="number" min="0.01" step="0.01" required value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className={`${inputClass} !py-2`} />
+                        <input type="number" min="0.01" step="0.01" required value={item.quantity === 0 ? '' : item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className={`${inputClass} !py-2`} />
                         
                         {(() => {
                           const v = itemVariants.find(v => (v.id || v._id) === item.variant_id);
@@ -648,7 +628,7 @@ export default function AddOrderPage() {
                         )}
                       </td>
                       <td className="p-3">
-                        <input type="number" min="0" step="0.01" required value={item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} className={`${inputClass} !py-2`} />
+                        <input type="number" min="0" step="0.01" required value={item.rate === 0 ? '' : item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} className={`${inputClass} !py-2`} />
                         {(() => {
                           const v = itemVariants.find(v => (v.id || v._id) === item.variant_id);
                           if (!v) return null;
@@ -710,6 +690,11 @@ export default function AddOrderPage() {
               </tbody>
             </table>
           </div>
+          <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+            <button type="button" onClick={addItem} className="px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-colors border border-emerald-200 shadow-sm">
+              <Plus className="w-4 h-4" /> Add Item
+            </button>
+          </div>
         </div>
 
         <div className={cardClass}>
@@ -745,8 +730,25 @@ export default function AddOrderPage() {
             </div>
           </div>
         </div>
-
       </form>
+
+      <div className="mt-8 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pb-8">
+        <button
+          type="button"
+          onClick={() => navigate('/orders')}
+          className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors shadow-sm text-center"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={isSaving}
+          className="w-full sm:w-auto px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-50"
+        >
+          {isSaving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create Order')}
+          {!isSaving && <CheckCircle2 className="w-4 h-4" />}
+        </button>
+      </div>
     </div>
   );
 }

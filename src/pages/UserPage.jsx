@@ -748,7 +748,8 @@ export default function UserPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider first:rounded-tl-lg">Name</th>
+                  <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider first:rounded-tl-lg">User ID</th>
+                  <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Name</th>
                   <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Dept</th>
                   <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Role</th>
                   <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Status</th>
@@ -762,6 +763,11 @@ export default function UserPage() {
                   const uid = user.user_id || user.id || user._id;
                   return (
                     <tr key={uid} className="hover:bg-slate-50/80 transition-colors group">
+                      <td className="py-3 px-3">
+                        <span className="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                          {user.employee_id || user.user_id || uid.slice(-6).toUpperCase()}
+                        </span>
+                      </td>
                       <td className="py-3 px-3">
                         <div className="flex items-center gap-2">
                           {user.profile_photo ? (

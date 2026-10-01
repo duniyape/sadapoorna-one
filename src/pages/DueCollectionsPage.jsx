@@ -181,55 +181,54 @@ export default function DueCollectionsPage() {
       )}
 
       {/* Filters & Actions */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="relative w-full md:w-96">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex-wrap">
+        <div className="relative flex-1 w-full min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input 
             type="text" 
             placeholder="Search customer name, phone, ID..." 
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 transition-all"
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
           />
         </div>
 
-        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-          {filterOptions.length > 0 && (
-            <div className="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-200">
-              <Filter className="w-4 h-4 text-slate-400 ml-2" />
-              <select
-                value={selectedEmployeeFilter}
-                onChange={(e) => { setSelectedEmployeeFilter(e.target.value); setPage(1); }}
-                className="bg-transparent border-none text-xs font-bold text-slate-700 py-1.5 pl-2 pr-6 focus:ring-0 cursor-pointer"
-              >
-                <option value="all">All Associates</option>
-                {filterOptions.map(opt => (
-                  <option key={opt.id} value={opt.id}>{opt.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
-          <div className="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-200">
-            <Filter className="w-4 h-4 text-slate-400 ml-2" />
+        {filterOptions.length > 0 && (
+          <div className="relative w-full sm:w-auto min-w-[150px]">
+            <Filter className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 z-10" />
             <select
-              value={sortBy}
-              onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
-              className="bg-transparent border-none text-xs font-bold text-slate-700 py-1.5 pl-2 pr-6 focus:ring-0 cursor-pointer"
+              value={selectedEmployeeFilter}
+              onChange={(e) => { setSelectedEmployeeFilter(e.target.value); setPage(1); }}
+              className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer relative"
             >
-              <option value="total_outstanding">Highest Outstanding</option>
-              <option value="total_overdue">Highest Overdue</option>
-              <option value="max_dpd">Max DPD (Days Past Due)</option>
-              <option value="oldest_due_date">Oldest Due Date</option>
+              <option value="all">All Associates</option>
+              {filterOptions.map(opt => (
+                <option key={opt.id} value={opt.id}>{opt.name}</option>
+              ))}
             </select>
           </div>
-          
-          <button 
-            onClick={() => { setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc'); setPage(1); }}
-            className="p-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100 font-black text-xs px-4 transition-colors"
+        )}
+
+        <div className="relative w-full sm:w-auto min-w-[150px]">
+          <Filter className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 z-10" />
+          <select
+            value={sortBy}
+            onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
+            className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer relative"
           >
-            {sortOrder.toUpperCase()}
-          </button>
+            <option value="total_outstanding">Highest Outstanding</option>
+            <option value="total_overdue">Highest Overdue</option>
+            <option value="max_dpd">Max DPD (Days Past Due)</option>
+            <option value="oldest_due_date">Oldest Due Date</option>
+          </select>
         </div>
+        
+        <button 
+          onClick={() => { setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc'); setPage(1); }}
+          className="w-full sm:w-auto px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100 font-black text-xs transition-colors shadow-sm text-center"
+        >
+          {sortOrder.toUpperCase()}
+        </button>
       </div>
 
       {/* Main Table */}

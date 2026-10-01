@@ -83,7 +83,7 @@ export const MASTER_MODULES = [
     label: 'Orders & Bills', title: 'Orders & Invoices',
     icon: CheckSquare, color: 'bg-sky-100 text-sky-600 border-sky-200',
     badge: null, desc: 'Process new orders & invoices', route: '/orders',
-    key: ['Edit', 'View', 'Confirm', 'Pack', 'Dispatch', 'Deliver', 'Assign Employee'],
+    key: ['Edit', 'View', 'Confirm', 'Pack', 'Dispatch', 'Deliver', 'Assign Employee', 'Create Return Order', 'Trip Sheets', 'Bulk Out for Delivery', 'Create New Order'],
     dashboardGroup: 'Sales & Billing', sidebarGroup: 'Sales & Billing',
   },
   {
@@ -107,6 +107,7 @@ export const MASTER_MODULES = [
     label: 'Main Inventory', title: 'Main Inventory',
     icon: Boxes, color: 'bg-indigo-100 text-indigo-600 border-indigo-200',
     badge: 'New', desc: 'Consolidated inventory view', route: '/main-inventory',
+    key: ['Main Inventory', 'Warehouse Inventory', 'Stock Available for Sales', 'Vehicle Inventory', 'Stock Ledger'],
     dashboardGroup: 'Inventory & Fleet', sidebarGroup: 'Inventory & Fleet',
   },
   {

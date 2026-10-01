@@ -344,7 +344,7 @@ export default function StockLedgerPage() {
                       {row.action_label}
                     </div>
                     <div className="text-xs font-bold text-slate-600 mt-1.5 font-mono">
-                      {row.document_no}
+                      {row.reference_no || row.invoice_no || (row.document_no?.length === 24 ? `#...${row.document_no.slice(-6)}` : row.document_no)}
                     </div>
                   </td>
 

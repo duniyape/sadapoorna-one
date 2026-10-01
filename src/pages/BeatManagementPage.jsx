@@ -184,15 +184,15 @@ export default function BeatManagementPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap gap-4 items-center">
-        <div className="flex items-center gap-2 text-slate-500 font-medium text-sm">
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row flex-wrap gap-4 items-start sm:items-center">
+        <div className="flex items-center gap-2 text-slate-500 font-medium text-sm hidden sm:flex">
           <Filter className="w-4 h-4" /> Filters:
         </div>
 
         <select
           value={dayFilter}
           onChange={(e) => setDayFilter(e.target.value)}
-          className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          className="w-full sm:w-auto text-sm border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
         >
           <option value="">All Days</option>
           {DAYS_OF_WEEK.map(day => <option key={day} value={day}>{day}</option>)}
@@ -201,21 +201,21 @@ export default function BeatManagementPage() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          className="w-full sm:w-auto text-sm border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
         >
           <option value="">All Statuses</option>
           <option value="ACTIVE">Active</option>
           <option value="INACTIVE">Inactive</option>
         </select>
 
-        <div className="relative">
+        <div className="relative w-full sm:w-auto flex-1">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Filter by User ID"
             value={userFilter}
             onChange={(e) => setUserFilter(e.target.value)}
-            className="pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 w-48"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
           />
         </div>
       </div>

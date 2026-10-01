@@ -115,7 +115,8 @@ export default function CustomersDirectoryPage() {
           if (json.status && json.data) {
             setCustomers(json.data.map(c => ({
               id: c.id || c.mongo_id,
-              name: c.company_name || c.name || 'Unknown',
+              name: c.name || c.company_name || 'Unknown',
+              company_name: c.company_name || c.business_name || '',
               owner: c.name || 'N/A',
               type: c.customer_type || 'business',
               customer_id: c.id || c.customer_id || 'N/A', 
@@ -310,12 +311,19 @@ export default function CustomersDirectoryPage() {
                   
                   {/* Name & Mobile Customer ID */}
                   <div className="flex-1 min-w-0 lg:w-48 lg:shrink-0 lg:flex-none">
-                    <div className="font-bold text-slate-900 truncate text-sm lg:text-xs flex items-center gap-1.5" title={c.name}>
-                      {c.name}
-                      {c.phone_verified ? (
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 inline-block" title="Phone Verified" />
-                      ) : (
-                        <ShieldAlert className="w-3.5 h-3.5 text-orange-400 inline-block" title="Phone Unverified" />
+                    <div className="font-bold text-slate-900 text-sm lg:text-xs flex flex-col justify-center gap-0.5" title={c.name}>
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span className="truncate">{c.name}</span>
+                        {c.phone_verified ? (
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0 inline-block" title="Phone Verified" />
+                        ) : (
+                          <ShieldAlert className="w-3.5 h-3.5 text-orange-400 shrink-0 inline-block" title="Phone Unverified" />
+                        )}
+                      </div>
+                      {(c.company_name) && (
+                        <div className="text-[10px] text-slate-500 font-medium truncate flex flex-col leading-tight mt-1">
+                          <span className="font-bold text-slate-600 truncate" title={c.company_name}>{c.company_name}</span>
+                        </div>
                       )}
                     </div>
                     <div className="lg:hidden text-slate-500 font-medium truncate mt-0.5 text-[10px]">

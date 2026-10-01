@@ -165,6 +165,10 @@ export default function OrdersPage() {
   const canDeliver = orderPermissions.includes('Deliver');
   const canView = orderPermissions.includes('View');
   const canEdit = orderPermissions.includes('Edit');
+  const canCreateReturn = orderPermissions.includes('Create Return Order');
+  const canTripSheets = orderPermissions.includes('Trip Sheets');
+  const canBulkOut = orderPermissions.includes('Bulk Out for Delivery');
+  const canCreateOrder = orderPermissions.includes('Create New Order');
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -520,32 +524,40 @@ export default function OrdersPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 self-start sm:self-auto flex-wrap">
-            <button
-              onClick={() => navigate("/create-return-order")}
-              className="px-5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-2 border border-white/15 transition-all w-full sm:w-auto justify-center"
-            >
-              <RefreshCw className="w-4 h-4" /> Create Return Order
-            </button>
-            <button
-              onClick={() => navigate("/manifests")}
-              className="px-5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-2 border border-white/15 transition-all w-full sm:w-auto justify-center"
-            >
-              <FileText className="w-4 h-4" /> Trip Sheets
-            </button>
-            <button
-              onClick={() => navigate("/bulk-dispatch")}
-              className="px-5 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 shadow-lg w-full sm:w-auto justify-center transition-all hover:scale-105 border border-violet-400/40"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)", color: "#fff" }}
-            >
-              <Truck className="w-4 h-4" /> Bulk Out for Delivery
-            </button>
-            <button
-              onClick={() => navigate("/add-order")}
-              className="px-5 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 shadow-lg w-full sm:w-auto justify-center transition-all hover:scale-105"
-              style={{ background: "linear-gradient(135deg, #dc2626, #9f1239)", color: "#fff" }}
-            >
-              <Plus className="w-4 h-4" /> Create New Order
-            </button>
+            {canCreateReturn && (
+              <button
+                onClick={() => navigate("/create-return-order")}
+                className="px-5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-2 border border-white/15 transition-all w-full sm:w-auto justify-center"
+              >
+                <RefreshCw className="w-4 h-4" /> Create Return Order
+              </button>
+            )}
+            {canTripSheets && (
+              <button
+                onClick={() => navigate("/manifests")}
+                className="px-5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-2 border border-white/15 transition-all w-full sm:w-auto justify-center"
+              >
+                <FileText className="w-4 h-4" /> Trip Sheets
+              </button>
+            )}
+            {canBulkOut && (
+              <button
+                onClick={() => navigate("/bulk-dispatch")}
+                className="px-5 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 shadow-lg w-full sm:w-auto justify-center transition-all hover:scale-105 border border-violet-400/40"
+                style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)", color: "#fff" }}
+              >
+                <Truck className="w-4 h-4" /> Bulk Out for Delivery
+              </button>
+            )}
+            {canCreateOrder && (
+              <button
+                onClick={() => navigate("/add-order")}
+                className="px-5 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 shadow-lg w-full sm:w-auto justify-center transition-all hover:scale-105"
+                style={{ background: "linear-gradient(135deg, #dc2626, #9f1239)", color: "#fff" }}
+              >
+                <Plus className="w-4 h-4" /> Create New Order
+              </button>
+            )}
           </div>
 
         </div>
@@ -720,8 +732,8 @@ export default function OrdersPage() {
         </div>
 
         {/* Desktop View */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700">
+        <div className="hidden md:block overflow-x-auto pb-4">
+          <table className="w-full text-left text-xs text-slate-700 min-w-[900px]">
             <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100 text-[10px]">
               <tr>
                 <th className="p-4 pl-5">Order ID</th>
@@ -990,8 +1002,8 @@ export default function OrdersPage() {
                     GST: {selectedOrder.gst_type || "including"}
                   </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
+                <div className="overflow-x-auto pb-2">
+                  <table className="w-full text-left text-xs min-w-[600px]">
                     <thead className="bg-slate-50/50 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100">
                       <tr>
                         <th className="px-5 py-3">Product / Variant</th>
