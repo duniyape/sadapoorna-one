@@ -62,6 +62,7 @@ const BatchStockPage             = React.lazy(() => import("./pages/BatchStockPa
 const AllocationsPage            = React.lazy(() => import("./pages/AllocationsPage"));
 const StockInwardingPage         = React.lazy(() => import("./pages/StockInwardingPage"));
 const LiveLocationPage           = React.lazy(() => import("./pages/LiveLocationPage"));
+const DeliveryMasterPage         = React.lazy(() => import("./pages/DeliveryMasterPage"));
 
 // ── Customer 360° — layout + 5 separate tab pages ────────────────────────────
 const CustomerProfileLayout = React.lazy(() => import("./pages/CustomerProfileLayout"));
@@ -145,6 +146,7 @@ const App = () => (
                 <Route path="vehicles"            element={<VehiclesDirectoryPage />} />
                 <Route path="add-vehicle"         element={<AddVehiclePage />} />
                 <Route path="edit-vehicle/:id"    element={<AddVehiclePage />} />
+                <Route path="delivery-master"     element={<DeliveryMasterPage />} />
 
                 {/* ── Vendors ───────────────────────────────────── */}
                 <Route path="vendors"             element={<VendorsDirectoryPage />} />

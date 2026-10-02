@@ -160,6 +160,14 @@ export const MASTER_MODULES = [
     dashboardGroup: 'Inventory & Fleet', sidebarGroup: 'Inventory & Fleet',
   },
   {
+    id: 'delivery-master',
+    label: 'Delivery Master', title: 'Delivery Master (Trip Session)',
+    icon: MapPin, color: 'bg-purple-100 text-purple-600 border-purple-200',
+    badge: 'Live', desc: 'Manage and lock live delivery trips', route: '/delivery-master',
+    key: ['View', 'Start Trip', 'Reorder Route', 'End Trip'],
+    dashboardGroup: 'Inventory & Fleet', sidebarGroup: 'Inventory & Fleet',
+  },
+  {
     id: 'purchase-orders',
     label: 'Purchase Orders', title: 'Purchase Orders',
     icon: ShoppingCart, color: 'bg-indigo-100 text-indigo-600 border-indigo-200',
