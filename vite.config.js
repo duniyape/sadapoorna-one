@@ -13,7 +13,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({ 
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.png'],
       manifest: {
         name: 'Sadapoorna',
         short_name: 'Sadapoorna',
@@ -24,9 +24,9 @@ export default defineConfig({
         id: '/',
         icons: [
           {
-            src: 'favicon.svg',
+            src: 'favicon.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any maskable'
           }
         ]
