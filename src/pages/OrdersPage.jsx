@@ -655,7 +655,7 @@ export default function OrdersPage() {
           ) : (
             ordersList.map((ord) => {
               const orderId = ord.id || ord._id;
-              const custName = ord.customer?.company_name || ord.customer?.business_name || ord.customer?.name || "Unknown";
+              const custName = ord.customer?.company_name ? `${ord.customer.company_name} (${ord.customer.name || ""})` : (ord.customer?.name || ord.customer?.business_name || "Unknown");
               const itemsStr = `${ord.items?.length || 0} Items`;
               const totalAmt =
                 ord.grand_total || ord.total ||
@@ -683,7 +683,10 @@ export default function OrdersPage() {
                           {formatDate(ord.invoice_date || ord.created_at || ord.createdAt || ord.date)}
                         </div>
                       </div>
-                      <div className="font-bold text-slate-900 text-sm mt-0.5">
+                      <div 
+                        className="font-bold text-slate-900 text-sm mt-0.5 cursor-pointer hover:text-indigo-600 transition-colors"
+                        onClick={() => navigate(`/view-customer/${ord.customer_id || ord.customer?._id || ord.customer?.id}`)}
+                      >
                         {custName}
                       </div>
                     </div>
@@ -768,7 +771,7 @@ export default function OrdersPage() {
               ) : (
                 ordersList.map((ord) => {
                   const orderId = ord.id || ord._id;
-                  const custName = ord.customer?.company_name || ord.customer?.business_name || ord.customer?.name || "Unknown";
+                  const custName = ord.customer?.company_name ? `${ord.customer.company_name} (${ord.customer.name || ""})` : (ord.customer?.name || ord.customer?.business_name || "Unknown");
                   const itemsStr = `${ord.items?.length || 0} Items`;
                   const totalAmt =
                     ord.grand_total || ord.total ||
@@ -794,7 +797,12 @@ export default function OrdersPage() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <div className="font-bold text-slate-800">{custName}</div>
+                        <div 
+                          className="font-bold text-slate-800 cursor-pointer hover:text-indigo-600 transition-colors"
+                          onClick={() => navigate(`/view-customer/${ord.customer_id || ord.customer?._id || ord.customer?.id}`)}
+                        >
+                          {custName}
+                        </div>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-1.5 text-slate-500 font-semibold">
@@ -946,8 +954,14 @@ export default function OrdersPage() {
                   </div>
                   <div className="min-w-0">
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Customer</div>
-                    <div className="text-xs font-bold text-slate-800 leading-tight mt-0.5 truncate">
-                      {selectedOrder.customer?.company_name || selectedOrder.customer?.name || "Unknown"}
+                    <div 
+                      className="text-xs font-bold text-slate-800 leading-tight mt-0.5 truncate cursor-pointer hover:text-indigo-600 transition-colors"
+                      onClick={() => {
+                        const custId = selectedOrder.customer_id || selectedOrder.customer?._id || selectedOrder.customer?.id;
+                        if(custId) navigate(`/view-customer/${custId}`);
+                      }}
+                    >
+                      {selectedOrder.customer?.company_name ? `${selectedOrder.customer.company_name} (${selectedOrder.customer.name || ""})` : (selectedOrder.customer?.name || selectedOrder.customer?.business_name || "Unknown")}
                     </div>
                   </div>
                 </div>

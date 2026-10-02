@@ -270,7 +270,12 @@ export default function DueCollectionsPage() {
                           {c.customer_name?.charAt(0)?.toUpperCase() || 'C'}
                         </div>
                         <div>
-                          <p className="font-black text-slate-900 tracking-wide text-[13px]">{c.customer_name}</p>
+                          <p 
+                            className="font-black text-slate-900 tracking-wide text-[13px] cursor-pointer hover:text-indigo-600 transition-colors"
+                            onClick={() => navigate(`/view-customer/${c.customer_id}`)}
+                          >
+                            {c.company_name ? `${c.company_name} (${c.customer_name})` : c.customer_name}
+                          </p>
                           <div className="flex items-center gap-2 mt-1">
                             {c.custom_id && (
                               <span className="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 uppercase tracking-widest">
