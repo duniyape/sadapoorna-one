@@ -12,6 +12,22 @@ export class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
+    // Check if it's a dynamic import failure (new version deployed while user had app open)
+    const isChunkLoadError = error?.name === 'ChunkLoadError' || 
+      (error?.message && error.message.includes('Failed to fetch dynamically imported module'));
+
+    if (isChunkLoadError) {
+      const reloadKey = 'chunk_reload_attempt';
+      const lastReload = sessionStorage.getItem(reloadKey);
+      
+      // Auto-reload to fetch the new code, but prevent infinite reload loops (wait at least 10s before trying again)
+      if (!lastReload || Date.now() - parseInt(lastReload) > 10000) {
+        sessionStorage.setItem(reloadKey, Date.now().toString());
+        window.location.reload();
+        return;
+      }
+    }
+
     this.setState({ errorInfo });
     console.error("ErrorBoundary caught an error", error, errorInfo);
   }
