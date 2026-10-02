@@ -436,9 +436,9 @@ function UnblockedInventoryTab() {
           <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
             <tr>
               <th className="p-4">Product Details</th>
-              <th className="p-4 text-right text-slate-600">Total Stock</th>
+              <th className="p-4 text-right font-black text-emerald-700 bg-emerald-50/50">Available for Sale</th>
               <th className="p-4 text-right text-rose-600">Blocked (Orders)</th>
-              <th className="p-4 text-right font-black text-emerald-700 bg-emerald-50/50">Unblocked (Available)</th>
+              <th className="p-4 text-right text-slate-600">Total Stock</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -457,9 +457,9 @@ function UnblockedInventoryTab() {
                        <span className="font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">Sale: ₹{item.selling_price || item.sale_price || item.rate || 0}</span>
                      </div>
                    </td>
-                   <td className="p-4 text-right font-bold text-slate-600 text-sm">{item.available_quantity || 0}</td>
-                   <td className="p-4 text-right font-semibold text-rose-500">{item.blocked_quantity || 0}</td>
                    <td className="p-4 text-right font-black text-emerald-700 text-sm bg-emerald-50/30">{item.unblocked_quantity || 0}</td>
+                   <td className="p-4 text-right font-semibold text-rose-500">{item.blocked_quantity || 0}</td>
+                   <td className="p-4 text-right font-bold text-slate-600 text-sm">{item.available_quantity || 0}</td>
                  </tr>
                ))
             )}

@@ -496,20 +496,26 @@ export default function AddOrderPage() {
                             className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
                             onClick={() => {
                               setSelectedCustomerObj(c);
-                              const dispName = (c.company_name || c.business_name) 
-                                ? (c.name && c.name !== (c.company_name || c.business_name) ? `${c.company_name || c.business_name} (${c.name})` : (c.company_name || c.business_name))
-                                : (c.name || 'Unnamed Customer');
+                              const company = c.shop_name || c.company_name || c.business_name;
+                              const person = c.name;
+                              const dispName = company && person && company !== person ? `${company} (${person})` : (company || person || 'Unnamed Customer');
                               setCustomerSearchTerm(dispName);
                               handleChange('customer_id', c.mongo_id || c._id || c.id);
                               setShowCustomerDropdown(false);
                             }}
                           >
-                            <div className="font-bold text-slate-800 text-sm">
-                              {(c.company_name || c.business_name) 
-                                ? (c.name && c.name !== (c.company_name || c.business_name) ? `${c.company_name || c.business_name} (${c.name})` : (c.company_name || c.business_name))
-                                : (c.name || 'Unnamed Customer')}
-                            </div>
-                            <div className="text-xs text-slate-500">{c.email || c.phone || 'No contact info'}</div>
+                            {(() => {
+                              const company = c.shop_name || c.company_name || c.business_name;
+                              const person = c.name;
+                              return (
+                                <>
+                                  <div className="font-bold text-slate-800 text-sm">{company || person || 'Unnamed Customer'}</div>
+                                  {company && person && company !== person && (
+                                    <div className="text-xs text-slate-500 mt-0.5">{person}</div>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         ))
                       ) : (
@@ -522,9 +528,11 @@ export default function AddOrderPage() {
                 <div className="flex items-center justify-between p-2.5 border border-indigo-200 bg-indigo-50/50 rounded-xl">
                   <div>
                     <div className="font-bold text-indigo-900 text-sm">
-                      {(selectedCustomerObj.company_name || selectedCustomerObj.business_name) 
-                        ? (selectedCustomerObj.name && selectedCustomerObj.name !== (selectedCustomerObj.company_name || selectedCustomerObj.business_name) ? `${selectedCustomerObj.company_name || selectedCustomerObj.business_name} (${selectedCustomerObj.name})` : (selectedCustomerObj.company_name || selectedCustomerObj.business_name))
-                        : (selectedCustomerObj.name || 'Unnamed Customer')}
+                      {(() => {
+                        const company = selectedCustomerObj.shop_name || selectedCustomerObj.company_name || selectedCustomerObj.business_name;
+                        const person = selectedCustomerObj.name;
+                        return company && person && company !== person ? `${company} (${person})` : (company || person || 'Unnamed Customer');
+                      })()}
                     </div>
                   </div>
                   <button
