@@ -265,6 +265,20 @@ export default function OrdersPage() {
     });
   };
 
+  const formatDateTime = (isoString) => {
+    if (!isoString) return "N/A";
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return "N/A";
+    return d.toLocaleString("en-IN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
   const handleGenerateBill = async () => {
     setIsGeneratingBill(true);
     try {
@@ -939,7 +953,7 @@ export default function OrdersPage() {
                   </h2>
                   <p className="text-xs font-semibold text-slate-400 mt-0.5 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5" />
-                    {formatDate(selectedOrder.invoice_date || selectedOrder.created_at || selectedOrder.createdAt || selectedOrder.date)}
+                    {formatDateTime(selectedOrder.invoice_date || selectedOrder.created_at || selectedOrder.createdAt || selectedOrder.date)}
                   </p>
                 </div>
               </div>
