@@ -296,7 +296,11 @@ export default function DeliveryMasterPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-3 mt-1 text-[11px]">
-                        <span className="text-slate-500 font-medium truncate">{stop.address || 'No Address'}</span>
+                        <span className="text-slate-500 font-medium truncate">
+                          {typeof stop.address === 'object' && stop.address !== null 
+                            ? [stop.address.address, stop.address.city, stop.address.pincode].filter(Boolean).join(', ') 
+                            : (stop.address || 'No Address')}
+                        </span>
                         <span className="font-bold text-indigo-600 shrink-0">₹{stop.grand_total}</span>
                       </div>
                     </div>
