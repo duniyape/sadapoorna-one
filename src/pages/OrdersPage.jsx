@@ -405,7 +405,8 @@ export default function OrdersPage() {
         url += `&assigned_employee_id=${getMongoId(selectedEmployeeFilter)}`;
       } else {
         const allowedIds = new Set();
-        allowedIds.add(getMongoId(user.id || user._id));
+        const userId = user?.id || user?._id;
+        if (userId) allowedIds.add(getMongoId(userId));
         const traverse = (nodes) => {
           if (!nodes || !Array.isArray(nodes)) return;
           nodes.forEach(node => {
@@ -413,7 +414,7 @@ export default function OrdersPage() {
             if (node.children && node.children.length > 0) traverse(node.children);
           });
         };
-        if (user.access_tree && user.access_tree.access) traverse(user.access_tree.access);
+        if (user?.access_tree?.access) traverse(user.access_tree.access);
         url += `&assigned_employee_id=${Array.from(allowedIds).join(',')}`;
       }
 

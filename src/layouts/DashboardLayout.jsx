@@ -59,44 +59,45 @@ export default function DashboardLayout() {
     });
   }, []);
 
-  // WebSocket auto-connects as soon as userId is available — just like Archive
-  const { sendLocation } = useLocationSocket(currentUserId, handleLiveUpdate);
-
-  // GPS auto-starts once user is loaded
-  const { position } = useGeolocation(!!currentUserId);
-
-  // Auto-call /location/start once user is available
-  useEffect(() => {
-    if (!currentUserId || trackingStarted) return;
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    fetch('/location/start', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data) {
-          console.log('[AutoTrack] Tracking started for user:', currentUserId);
-          setTrackingStarted(true);
-        }
-      })
-      .catch(() => {
-        // Backend might already have it started — mark as started anyway
-        setTrackingStarted(true);
-      });
-  }, [currentUserId, trackingStarted]);
-
-  // Send GPS position via WebSocket whenever it updates
-  useEffect(() => {
-    if (!position || !currentUserId || !trackingStarted) return;
-    sendLocation(position.latitude, position.longitude, {
-      accuracy: position.accuracy,
-      speed: position.speed,
-      heading: position.heading,
-    });
-  }, [position, currentUserId, trackingStarted, sendLocation]);
+  // --- GPS Tracking Temporarily Disabled ---
+  // // WebSocket auto-connects as soon as userId is available — just like Archive
+  // const { sendLocation } = useLocationSocket(currentUserId, handleLiveUpdate);
+  //
+  // // GPS auto-starts once user is loaded
+  // const { position } = useGeolocation(!!currentUserId);
+  //
+  // // Auto-call /location/start once user is available
+  // useEffect(() => {
+  //   if (!currentUserId || trackingStarted) return;
+  //   const token = localStorage.getItem('token');
+  //   if (!token) return;
+  //
+  //   fetch('/location/start', {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+  //   })
+  //     .then(r => r.ok ? r.json() : null)
+  //     .then(data => {
+  //       if (data) {
+  //         console.log('[AutoTrack] Tracking started for user:', currentUserId);
+  //         setTrackingStarted(true);
+  //       }
+  //     })
+  //     .catch(() => {
+  //       // Backend might already have it started — mark as started anyway
+  //       setTrackingStarted(true);
+  //     });
+  // }, [currentUserId, trackingStarted]);
+  //
+  // // Send GPS position via WebSocket whenever it updates
+  // useEffect(() => {
+  //   if (!position || !currentUserId || !trackingStarted) return;
+  //   sendLocation(position.latitude, position.longitude, {
+  //     accuracy: position.accuracy,
+  //     speed: position.speed,
+  //     heading: position.heading,
+  //   });
+  // }, [position, currentUserId, trackingStarted, sendLocation]);
 
   // Fetch logged-in user profile
   useEffect(() => {
@@ -121,11 +122,11 @@ export default function DashboardLayout() {
     fetchUser();
   }, []);
 
-  const showToast = (msg, type = 'success') => {
+  const showToast = useCallback((msg, type = 'success') => {
     if (!msg || typeof msg !== 'string') return;
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
-  };
+  }, []);
 
   const cfg = toast ? (TOAST_CONFIG[toast.type] || TOAST_CONFIG.success) : null;
   const ToastIcon = cfg?.icon;

@@ -1,17 +1,20 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// Change only this one URL to point all API calls to a different server
-const API_BASE_URL = 'https://api.sadapoorna.in/'
-
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [
-    react(), 
+export default defineConfig(({ mode }) => {
+  // Load env file based on `mode` in the current working directory.
+  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
+  const env = loadEnv(mode, process.cwd(), '')
+  const API_BASE_URL = env.VITE_API_URL || ''
+
+  return {
+    plugins: [
+    react(),
     tailwindcss(),
-    VitePWA({ 
+    VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png'],
       manifest: {
@@ -37,8 +40,8 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       // Single catch-all proxy — all API requests go to API_BASE_URL
-      // location removed temporarily per user request
-      '^/(branches|masters|users|auth|data-access-hierarchy|access|customer|customers|product-units|attributes|products|variants|get|packing-types|whatsapp|whatsapp-webhook|warehouses|vehicles|vendors|orders|inventory|beats|accounting)/': {
+      // added location back to proxy
+      '^/(location|branches|masters|users|auth|data-access-hierarchy|access|customer|customers|product-units|attributes|products|variants|get|packing-types|whatsapp|whatsapp-webhook|warehouses|vehicles|vendors|orders|inventory|beats|accounting)/': {
         target: API_BASE_URL,
         changeOrigin: true,
         ws: true,
@@ -52,5 +55,6 @@ export default defineConfig({
         }
       },
     }
+  }
   }
 })
