@@ -57,11 +57,9 @@ const StepBadge = ({ step, currentStep, label, icon: Icon }) => {
 // ─── Order Card ───────────────────────────────────────────────────────────────
 const OrderCard = ({ order, isSelected, onToggle }) => {
   const orderId = order.id || order._id || order.mongo_id;
-  const custName =
-    order.customer?.company_name ||
-    order.customer?.business_name ||
-    order.customer?.name ||
-    "Unknown Customer";
+  const company = order.customer?.company_name || order.company_name || order.customer?.business_name || order.business_name;
+  const person = order.customer?.name || order.customer_name || order.name;
+  const custName = company ? `${company} (${person || ""})` : (person || "Unknown Customer");
   const total =
     order.grand_total ||
     order.total ||
@@ -94,7 +92,17 @@ const OrderCard = ({ order, isSelected, onToggle }) => {
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
               #{orderNo}
             </p>
-            <p className="font-bold text-slate-800 text-sm mt-0.5 truncate">{custName}</p>
+            <p 
+              className="font-bold text-slate-800 text-sm mt-0.5 truncate cursor-pointer hover:text-indigo-600 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (order.customer_id || order.customer?._id || order.customer?.id) {
+                  window.location.href = `/view-customer/${order.customer_id || order.customer?._id || order.customer?.id}`;
+                }
+              }}
+            >
+              {custName}
+            </p>
           </div>
           <div className="text-right shrink-0">
             <p className="text-xs font-black text-slate-900">₹{total.toLocaleString("en-IN")}</p>

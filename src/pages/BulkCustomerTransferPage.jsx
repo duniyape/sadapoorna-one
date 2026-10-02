@@ -80,7 +80,7 @@ export default function BulkCustomerTransferPage() {
             setCustomers(json.data.map(c => ({
               mongo_id: c._id || c.mongo_id || (c.id && c.id.length === 24 ? c.id : null), // strictly capture 24-char hex if possible
               id: c.id || c.mongo_id,
-              name: c.company_name || c.name || 'Unknown',
+              name: c.company_name ? `${c.company_name} (${c.name || ""})` : (c.name || c.business_name || 'Unknown'),
               owner: c.name || 'N/A',
               type: c.customer_type || 'business',
               customer_id: c.id || c.customer_id || 'N/A', 
@@ -320,7 +320,13 @@ export default function BulkCustomerTransferPage() {
                       {c.name.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-[150px] lg:w-[150px] overflow-hidden">
-                      <div className="font-bold text-slate-800 text-xs truncate" title={c.name}>{c.name}</div>
+                      <div 
+                        className="font-bold text-slate-800 text-xs truncate cursor-pointer hover:text-indigo-600 transition-colors" 
+                        title={c.name}
+                        onClick={(e) => { e.stopPropagation(); window.location.href = `/view-customer/${c.mongo_id || c.id}`; }}
+                      >
+                        {c.name}
+                      </div>
                       <div className="text-[10px] text-slate-500 truncate" title={c.owner}>{c.owner}</div>
                     </div>
 

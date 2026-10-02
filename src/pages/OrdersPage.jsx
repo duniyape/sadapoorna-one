@@ -25,6 +25,7 @@ import {
   Zap,
   BarChart3,
   RefreshCw,
+  User,
 } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import FinanceReceiptModal from "../components/FinanceReceiptModal";
@@ -655,7 +656,8 @@ export default function OrdersPage() {
           ) : (
             ordersList.map((ord) => {
               const orderId = ord.id || ord._id;
-              const custName = ord.customer?.company_name ? `${ord.customer.company_name} (${ord.customer.name || ""})` : (ord.customer?.name || ord.customer?.business_name || "Unknown");
+              const company = ord.customer?.shop_name || ord.customer?.company_name || ord.company_name || ord.customer?.business_name || ord.business_name;
+              const person = ord.customer?.name || ord.customer_name || ord.name;
               const itemsStr = `${ord.items?.length || 0} Items`;
               const totalAmt =
                 ord.grand_total || ord.total ||
@@ -674,7 +676,7 @@ export default function OrdersPage() {
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center flex-wrap gap-2">
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                           Order {ord.order_no || ord.invoice_no || orderId.slice(-6)}
                         </div>
@@ -682,12 +684,20 @@ export default function OrdersPage() {
                         <div className="text-[10px] font-semibold text-slate-500">
                           {formatDate(ord.invoice_date || ord.created_at || ord.createdAt || ord.date)}
                         </div>
+                        <div className="text-[10px] text-slate-400">&bull;</div>
+                        <div className="text-[10px] font-semibold text-slate-500 flex items-center gap-1" title="Created By">
+                          <User className="w-3 h-3" />
+                          {ord.assigned_employee_name}
+                        </div>
                       </div>
                       <div 
-                        className="font-bold text-slate-900 text-sm mt-0.5 cursor-pointer hover:text-indigo-600 transition-colors"
+                        className="cursor-pointer hover:opacity-80 transition-opacity mt-0.5"
                         onClick={() => navigate(`/view-customer/${ord.customer_id || ord.customer?._id || ord.customer?.id}`)}
                       >
-                        {custName}
+                        <div className="font-bold text-slate-900 text-sm">{company || person || "Unknown"}</div>
+                        {company && person && company !== person && (
+                          <div className="text-[11px] font-semibold text-slate-500 mt-0.5">{person}</div>
+                        )}
                       </div>
                     </div>
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border h-fit ${ord.invoice_no ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
@@ -771,7 +781,8 @@ export default function OrdersPage() {
               ) : (
                 ordersList.map((ord) => {
                   const orderId = ord.id || ord._id;
-                  const custName = ord.customer?.company_name ? `${ord.customer.company_name} (${ord.customer.name || ""})` : (ord.customer?.name || ord.customer?.business_name || "Unknown");
+                  const company = ord.customer?.shop_name || ord.customer?.company_name || ord.company_name || ord.customer?.business_name || ord.business_name;
+                  const person = ord.customer?.name || ord.customer_name || ord.name;
                   const itemsStr = `${ord.items?.length || 0} Items`;
                   const totalAmt =
                     ord.grand_total || ord.total ||
@@ -795,13 +806,20 @@ export default function OrdersPage() {
                           <Calendar className="w-3 h-3" />
                           {formatDate(ord.invoice_date || ord.created_at || ord.createdAt || ord.date)}
                         </div>
+                        <div className="text-[10px] text-slate-400 mt-0.5 font-semibold flex items-center gap-1" title="Created By">
+                          <User className="w-3 h-3" />
+                          {ord.assigned_employee_name}
+                        </div>
                       </td>
                       <td className="p-4">
                         <div 
-                          className="font-bold text-slate-800 cursor-pointer hover:text-indigo-600 transition-colors"
+                          className="cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() => navigate(`/view-customer/${ord.customer_id || ord.customer?._id || ord.customer?.id}`)}
                         >
-                          {custName}
+                          <div className="font-bold text-slate-800">{company || person || "Unknown"}</div>
+                          {company && person && company !== person && (
+                            <div className="text-[11px] font-semibold text-slate-500 mt-0.5">{person}</div>
+                          )}
                         </div>
                       </td>
                       <td className="p-4">
@@ -947,7 +965,7 @@ export default function OrdersPage() {
             <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 custom-scrollbar space-y-6">
 
               {/* Quick Info Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-3 hover:border-indigo-200 transition-colors">
                   <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
                     <Handshake className="w-4 h-4 text-indigo-500" />
@@ -961,7 +979,11 @@ export default function OrdersPage() {
                         if(custId) navigate(`/view-customer/${custId}`);
                       }}
                     >
-                      {selectedOrder.customer?.company_name ? `${selectedOrder.customer.company_name} (${selectedOrder.customer.name || ""})` : (selectedOrder.customer?.name || selectedOrder.customer?.business_name || "Unknown")}
+                      {(() => {
+                        const company = selectedOrder.customer?.shop_name || selectedOrder.customer?.company_name || selectedOrder.company_name || selectedOrder.customer?.business_name || selectedOrder.business_name;
+                        const person = selectedOrder.customer?.name || selectedOrder.customer_name || selectedOrder.name;
+                        return company ? `${company} (${person || ""})` : (person || "Unknown");
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -984,6 +1006,17 @@ export default function OrdersPage() {
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Items</div>
                     <div className="text-sm font-black text-slate-800 leading-tight mt-0.5">
                       {selectedOrder.items?.length || 0}
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-3 hover:border-emerald-200 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
+                    <User className="w-4 h-4 text-slate-500" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Created By</div>
+                    <div className="text-xs font-bold text-slate-800 leading-tight mt-0.5 truncate">
+                      {selectedOrder.assigned_employee_name}
                     </div>
                   </div>
                 </div>

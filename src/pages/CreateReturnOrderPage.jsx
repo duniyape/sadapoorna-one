@@ -332,7 +332,7 @@ export default function CreateReturnOrderPage() {
                 <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Order Found</div>
                 <div className="font-bold text-slate-800 mt-1">Order No: {originalOrder.order_no || originalOrder.invoice_no || originalOrder.id || originalOrder._id}</div>
                 <div className="text-xs text-slate-600 mt-0.5">
-                  Customer: {originalOrder.customer?.company_name || originalOrder.customer?.name || 'Unknown'} | Date: {new Date(originalOrder.invoice_date).toLocaleDateString()}
+                  Customer: <span className="font-bold cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => { const custId = originalOrder.customer_id || originalOrder.customer?._id || originalOrder.customer?.id; if(custId) window.location.href = `/view-customer/${custId}`; }}>{originalOrder.customer?.company_name ? `${originalOrder.customer.company_name} (${originalOrder.customer.name || ""})` : (originalOrder.customer?.name || originalOrder.customer?.business_name || 'Unknown')}</span> | Date: {new Date(originalOrder.invoice_date).toLocaleDateString()}
                 </div>
               </div>
             </div>
