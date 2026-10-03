@@ -41,12 +41,20 @@ export default defineConfig(({ mode }) => {
     proxy: {
       // Single catch-all proxy — all API requests go to API_BASE_URL
       // added location back to proxy
-      '^/(location|branches|masters|users|auth|data-access-hierarchy|access|customer|customers|product-units|attributes|products|variants|get|packing-types|whatsapp|whatsapp-webhook|warehouses|vehicles|vendors|orders|inventory|beats|accounting)/': {
+      '^/(addresses|location|branches|masters|users|auth|data-access-hierarchy|access|customer|customers|product-units|attributes|products|variants|get|packing-types|whatsapp|whatsapp-webhook|warehouses|vehicles|vendors|orders|inventory|beats|accounting)(\\/|\\?|$)': {
         target: API_BASE_URL,
         changeOrigin: true,
         ws: true,
         headers: {
           'ngrok-skip-browser-warning': 'true'
+        },
+        bypass: (req, res, options) => {
+          // If it's a browser navigation request for HTML, don't proxy it.
+          // This allows SPA routing (e.g. /orders) to work on hard refresh.
+          if (req.headers.accept && req.headers.accept.includes('text/html')) {
+            console.log('Skipping proxy for browser request:', req.url);
+            return req.url;
+          }
         },
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {

@@ -6,6 +6,21 @@ import Navbar from '../components/Navbar';
 import { useLocationSocket } from '../hooks/useLocationSocket';
 import { useGeolocation } from '../hooks/useGeolocation';
 
+// ── Helper: Calculate distance in meters using Haversine formula ──────────────
+const calculateDistanceMeters = (lat1, lon1, lat2, lon2) => {
+  const R = 6371e3; // Earth radius in meters
+  const p1 = lat1 * Math.PI / 180;
+  const p2 = lat2 * Math.PI / 180;
+  const dp = (lat2 - lat1) * Math.PI / 180;
+  const dl = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(dp / 2) * Math.sin(dp / 2) +
+            Math.cos(p1) * Math.cos(p2) *
+            Math.sin(dl / 2) * Math.sin(dl / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
 // ── Page loader fallback ──────────────────────────────────────────────────────
 const PageLoader = () => (
   <div className="flex items-center justify-center w-full h-64">
@@ -59,45 +74,65 @@ export default function DashboardLayout() {
     });
   }, []);
 
-  // --- GPS Tracking Temporarily Disabled ---
-  // // WebSocket auto-connects as soon as userId is available — just like Archive
-  // const { sendLocation } = useLocationSocket(currentUserId, handleLiveUpdate);
-  //
-  // // GPS auto-starts once user is loaded
-  // const { position } = useGeolocation(!!currentUserId);
-  //
-  // // Auto-call /location/start once user is available
-  // useEffect(() => {
-  //   if (!currentUserId || trackingStarted) return;
-  //   const token = localStorage.getItem('token');
-  //   if (!token) return;
-  //
-  //   fetch('/location/start', {
-  //     method: 'POST',
-  //     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-  //   })
-  //     .then(r => r.ok ? r.json() : null)
-  //     .then(data => {
-  //       if (data) {
-  //         console.log('[AutoTrack] Tracking started for user:', currentUserId);
-  //         setTrackingStarted(true);
-  //       }
-  //     })
-  //     .catch(() => {
-  //       // Backend might already have it started — mark as started anyway
-  //       setTrackingStarted(true);
-  //     });
-  // }, [currentUserId, trackingStarted]);
-  //
-  // // Send GPS position via WebSocket whenever it updates
-  // useEffect(() => {
-  //   if (!position || !currentUserId || !trackingStarted) return;
-  //   sendLocation(position.latitude, position.longitude, {
-  //     accuracy: position.accuracy,
-  //     speed: position.speed,
-  //     heading: position.heading,
-  //   });
-  // }, [position, currentUserId, trackingStarted, sendLocation]);
+  // --- GPS Tracking Activated ---
+  // WebSocket auto-connects as soon as userId is available
+  const { sendLocation } = useLocationSocket(currentUserId, handleLiveUpdate);
+
+  // GPS auto-starts once user is loaded
+  const { position } = useGeolocation(!!currentUserId);
+
+  // Auto-call /location/start once user is available
+  useEffect(() => {
+    if (!currentUserId || trackingStarted) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    fetch('/location/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          console.log('[AutoTrack] Tracking started for user:', currentUserId);
+          setTrackingStarted(true);
+        }
+      })
+      .catch(() => {
+        // Backend might already have it started — mark as started anyway
+        setTrackingStarted(true);
+      });
+  }, [currentUserId, trackingStarted]);
+
+  const lastSentPosRef = useRef(null);
+
+  // Send GPS position via WebSocket whenever it updates, but only if moved > 10 meters
+  useEffect(() => {
+    if (!position || !currentUserId || !trackingStarted) return;
+
+    if (lastSentPosRef.current) {
+      const distance = calculateDistanceMeters(
+        lastSentPosRef.current.latitude,
+        lastSentPosRef.current.longitude,
+        position.latitude,
+        position.longitude
+      );
+
+      // Don't send if distance is less than 10 meters
+      if (distance < 10) return;
+    }
+
+    sendLocation(position.latitude, position.longitude, {
+      accuracy: position.accuracy,
+      speed: position.speed,
+      heading: position.heading,
+    });
+
+    lastSentPosRef.current = {
+      latitude: position.latitude,
+      longitude: position.longitude
+    };
+  }, [position, currentUserId, trackingStarted, sendLocation]);
 
   // Fetch logged-in user profile
   useEffect(() => {

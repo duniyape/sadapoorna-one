@@ -62,6 +62,7 @@ const VehicleInPage              = lazyWithRetry(() => import("./pages/VehicleIn
 const AddOrderPage               = lazyWithRetry(() => import("./pages/AddOrderPage"));
 const CreateReturnOrderPage      = lazyWithRetry(() => import("./pages/CreateReturnOrderPage"));
 const MainInventoryPage          = lazyWithRetry(() => import("./pages/MainInventoryPage"));
+const AddressesMasterPage        = lazyWithRetry(() => import("./pages/AddressesMasterPage"));
 const VehicleAllocationsPage     = lazyWithRetry(() => import("./pages/VehicleAllocationsPage"));
 const WhatsAppChatPage           = lazyWithRetry(() => import("./pages/WhatsAppChatPage"));
 const BeatManagementPage         = lazyWithRetry(() => import("./pages/BeatManagementPage"));
@@ -157,18 +158,20 @@ const App = () => (
                 <Route path="batch-stock"         element={<BatchStockPage />} />
                 <Route path="allocations"         element={<AllocationsPage />} />
 
-                {/* ── Warehouses ────────────────────────────────── */}
+                {/* ── Warehouses & Addresses ────────────────────── */}
                 <Route path="warehouses"          element={<WarehousesDirectoryPage />} />
                 <Route path="warehouse-allocations" element={<WarehouseAllocationsPage />} />
                 <Route path="warehouse-allocations/:warehouse_id" element={<WarehouseAllocationsPage />} />
                 <Route path="add-warehouse"       element={<AddWarehousePage />} />
                 <Route path="edit-warehouse/:id"  element={<AddWarehousePage />} />
+                <Route path="addresses-master"    element={<AddressesMasterPage />} />
 
                 {/* ── Vehicles ──────────────────────────────────── */}
                 <Route path="vehicles"            element={<VehiclesDirectoryPage />} />
                 <Route path="add-vehicle"         element={<AddVehiclePage />} />
                 <Route path="edit-vehicle/:id"    element={<AddVehiclePage />} />
                 <Route path="delivery-master"     element={<DeliveryMasterPage />} />
+                <Route path="live-location"       element={<LiveLocationPage />} />
 
                 {/* ── Vendors ───────────────────────────────────── */}
                 <Route path="vendors"             element={<VendorsDirectoryPage />} />

@@ -174,6 +174,7 @@ export default function OrdersPage() {
   const canCollectPayment = orderPermissions.includes('Collect Payment');
   const canPDFBill = orderPermissions.includes('PDF Bill');
   const canResendBill = orderPermissions.includes('Resend Bill');
+  const canCancel = orderPermissions.includes('Cancel Order');
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -1315,7 +1316,7 @@ export default function OrdersPage() {
                               }}
                             />
                           )}
-                          {(!selectedOrder.status || !["delivered", "cancelled"].includes(selectedOrder.status?.toLowerCase())) && (
+                          {(!selectedOrder.status || !["delivered", "cancelled"].includes(selectedOrder.status?.toLowerCase())) && canCancel && (
                             <button
                               onClick={() => {
                                 handleStatusChange(selectedOrder.id || selectedOrder._id, "Cancelled");

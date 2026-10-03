@@ -83,7 +83,7 @@ export const MASTER_MODULES = [
     label: 'Orders & Bills', title: 'Orders & Invoices',
     icon: CheckSquare, color: 'bg-sky-100 text-sky-600 border-sky-200',
     badge: null, desc: 'Process new orders & invoices', route: '/orders',
-    key: ['Edit', 'View', 'Confirm', 'Pack', 'Dispatch', 'Deliver', 'Assign Employee', 'Create Return Order', 'Trip Sheets', 'Bulk Out for Delivery', 'Create New Order', 'Bill Generated', 'Collect Payment', 'PDF Bill', 'Resend Bill'],
+    key: ['Edit', 'View', 'Confirm', 'Pack', 'Dispatch', 'Deliver', 'Assign Employee', 'Create Return Order', 'Trip Sheets', 'Bulk Out for Delivery', 'Create New Order', 'Bill Generated', 'Collect Payment', 'PDF Bill', 'Resend Bill', 'Cancel Order'],
     dashboardGroup: 'Sales & Billing', sidebarGroup: 'Sales & Billing',
   },
   {
@@ -223,6 +223,13 @@ export const MASTER_MODULES = [
     label: 'Warehouses', title: 'Warehouses',
     icon: Building2, color: 'bg-blue-100 text-blue-600 border-blue-200',
     badge: 'New', desc: 'Manage warehouses & storage', route: '/warehouses',
+    dashboardGroup: 'Inventory Master', sidebarGroup: 'Inventory Master',
+  },
+  {
+    id: 'addresses',
+    label: 'Addresses', title: 'Addresses',
+    icon: MapPin, color: 'bg-emerald-100 text-emerald-600 border-emerald-200',
+    badge: 'New', desc: 'Manage addresses and locations', route: '/addresses-master',
     dashboardGroup: 'Inventory Master', sidebarGroup: 'Inventory Master',
   },
   {
