@@ -6,70 +6,92 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import DashboardLayout from "./layouts/DashboardLayout";
 import LoginPage from "./pages/LoginPage";
 
+// ── Utility: Auto-retry lazy loaded chunks to prevent network errors ──────────
+const lazyWithRetry = (componentImport, retries = 3, interval = 1000) => {
+  return React.lazy(() => {
+    return new Promise((resolve, reject) => {
+      let attempts = 0;
+      const attemptImport = () => {
+        componentImport()
+          .then(resolve)
+          .catch((error) => {
+            attempts++;
+            if (attempts < retries) {
+              setTimeout(attemptImport, interval);
+            } else {
+              reject(error);
+            }
+          });
+      };
+      attemptImport();
+    });
+  });
+};
+
 // ── All pages: lazy-loaded → Vite auto code-splits each into its own chunk ────
-const Home                       = React.lazy(() => import("./pages/Home"));
-const AddCustomerPage            = React.lazy(() => import("./pages/AddCustomerPage"));
-const OrdersPage                 = React.lazy(() => import("./pages/OrdersPage"));
-const CustomersDirectoryPage     = React.lazy(() => import("./pages/CustomersDirectoryPage"));
-const BulkCustomerTransferPage   = React.lazy(() => import("./pages/BulkCustomerTransferPage"));
-const AiSuitePage                = React.lazy(() => import("./pages/AiSuitePage"));
-const BranchProfilePage          = React.lazy(() => import("./pages/BranchProfilePage"));
-const DepartmentPage             = React.lazy(() => import("./pages/DepartmentPage"));
-const DesignationPage            = React.lazy(() => import("./pages/DesignationPage"));
-const GenericModulePage          = React.lazy(() => import("./pages/GenericModulePage"));
-const AddProductPage             = React.lazy(() => import("./pages/AddProductPage"));
-const UserPage                   = React.lazy(() => import("./pages/UserPage"));
-const ProfilePage                = React.lazy(() => import("./pages/ProfilePage"));
-const AccessibilityPage          = React.lazy(() => import("./pages/AccessibilityPage"));
-const DataAccessPage             = React.lazy(() => import("./pages/DataAccessPage"));
-const ProductUnitPage            = React.lazy(() => import("./pages/ProductUnitPage"));
-const ProductAttributesPage      = React.lazy(() => import("./pages/ProductAttributesPage"));
-const PackingTypePage            = React.lazy(() => import("./pages/PackingTypePage"));
-const WarehousesDirectoryPage    = React.lazy(() => import("./pages/WarehousesDirectoryPage"));
-const WarehouseAllocationsPage   = React.lazy(() => import("./pages/WarehouseAllocationsPage"));
-const AddWarehousePage           = React.lazy(() => import("./pages/AddWarehousePage"));
-const VehiclesDirectoryPage      = React.lazy(() => import("./pages/VehiclesDirectoryPage"));
-const AddVehiclePage             = React.lazy(() => import("./pages/AddVehiclePage"));
-const VendorsDirectoryPage       = React.lazy(() => import("./pages/VendorsDirectoryPage"));
-const AddVendorPage              = React.lazy(() => import("./pages/AddVendorPage"));
-const PurchaseOrdersDirectoryPage= React.lazy(() => import("./pages/PurchaseOrdersDirectoryPage"));
-const AddPurchaseOrderPage       = React.lazy(() => import("./pages/AddPurchaseOrderPage"));
-const WarehouseInPage            = React.lazy(() => import("./pages/WarehouseInPage"));
-const WarehouseInventoryPage     = React.lazy(() => import("./pages/WarehouseInventoryPage"));
-const VehicleInPage              = React.lazy(() => import("./pages/VehicleInPage"));
-const AddOrderPage               = React.lazy(() => import("./pages/AddOrderPage"));
-const CreateReturnOrderPage      = React.lazy(() => import("./pages/CreateReturnOrderPage"));
-const MainInventoryPage          = React.lazy(() => import("./pages/MainInventoryPage"));
-const VehicleAllocationsPage     = React.lazy(() => import("./pages/VehicleAllocationsPage"));
-const WhatsAppChatPage           = React.lazy(() => import("./pages/WhatsAppChatPage"));
-const BeatManagementPage         = React.lazy(() => import("./pages/BeatManagementPage"));
-const AccountsMasterPage         = React.lazy(() => import("./pages/AccountsMasterPage"));
-const AccountingVouchersPage     = React.lazy(() => import("./pages/AccountingVouchersPage"));
-const AddVoucherPage             = React.lazy(() => import("./pages/AddVoucherPage"));
-const EmployeeCashBalancesPage   = React.lazy(() => import("./pages/EmployeeCashBalancesPage"));
-const ChequeManagementPage       = React.lazy(() => import("./pages/ChequeManagementPage"));
-const FinanceCollectionsPage     = React.lazy(() => import("./pages/FinanceCollectionsPage"));
-const FinanceClearancesPage      = React.lazy(() => import("./pages/FinanceClearancesPage"));
-const BankVerificationPage       = React.lazy(() => import("./pages/BankVerificationPage"));
-const CustomerKhataPage          = React.lazy(() => import("./pages/CustomerKhataPage"));
-const DueCollectionsPage         = React.lazy(() => import("./pages/DueCollectionsPage"));
-const BulkDispatchPage           = React.lazy(() => import("./pages/BulkDispatchPage"));
-const ManifestsPage              = React.lazy(() => import("./pages/ManifestsPage"));
-const ManifestDetailsPage        = React.lazy(() => import("./pages/ManifestDetailsPage"));
-const StockLedgerPage            = React.lazy(() => import("./pages/StockLedgerPage"));
-const BatchTimelinePage          = React.lazy(() => import("./pages/BatchTimelinePage"));
-const BatchStockPage             = React.lazy(() => import("./pages/BatchStockPage"));
-const AllocationsPage            = React.lazy(() => import("./pages/AllocationsPage"));
-const StockInwardingPage         = React.lazy(() => import("./pages/StockInwardingPage"));
-const LiveLocationPage           = React.lazy(() => import("./pages/LiveLocationPage"));
-const DeliveryMasterPage         = React.lazy(() => import("./pages/DeliveryMasterPage"));
+const Home                       = lazyWithRetry(() => import("./pages/Home"));
+const AddCustomerPage            = lazyWithRetry(() => import("./pages/AddCustomerPage"));
+const OrdersPage                 = lazyWithRetry(() => import("./pages/OrdersPage"));
+const CustomersDirectoryPage     = lazyWithRetry(() => import("./pages/CustomersDirectoryPage"));
+const BulkCustomerTransferPage   = lazyWithRetry(() => import("./pages/BulkCustomerTransferPage"));
+const AiSuitePage                = lazyWithRetry(() => import("./pages/AiSuitePage"));
+const BranchProfilePage          = lazyWithRetry(() => import("./pages/BranchProfilePage"));
+const DepartmentPage             = lazyWithRetry(() => import("./pages/DepartmentPage"));
+const DesignationPage            = lazyWithRetry(() => import("./pages/DesignationPage"));
+const GenericModulePage          = lazyWithRetry(() => import("./pages/GenericModulePage"));
+const AddProductPage             = lazyWithRetry(() => import("./pages/AddProductPage"));
+const UserPage                   = lazyWithRetry(() => import("./pages/UserPage"));
+const ProfilePage                = lazyWithRetry(() => import("./pages/ProfilePage"));
+const AccessibilityPage          = lazyWithRetry(() => import("./pages/AccessibilityPage"));
+const DataAccessPage             = lazyWithRetry(() => import("./pages/DataAccessPage"));
+const ProductUnitPage            = lazyWithRetry(() => import("./pages/ProductUnitPage"));
+const ProductAttributesPage      = lazyWithRetry(() => import("./pages/ProductAttributesPage"));
+const PackingTypePage            = lazyWithRetry(() => import("./pages/PackingTypePage"));
+const WarehousesDirectoryPage    = lazyWithRetry(() => import("./pages/WarehousesDirectoryPage"));
+const WarehouseAllocationsPage   = lazyWithRetry(() => import("./pages/WarehouseAllocationsPage"));
+const AddWarehousePage           = lazyWithRetry(() => import("./pages/AddWarehousePage"));
+const VehiclesDirectoryPage      = lazyWithRetry(() => import("./pages/VehiclesDirectoryPage"));
+const AddVehiclePage             = lazyWithRetry(() => import("./pages/AddVehiclePage"));
+const VendorsDirectoryPage       = lazyWithRetry(() => import("./pages/VendorsDirectoryPage"));
+const AddVendorPage              = lazyWithRetry(() => import("./pages/AddVendorPage"));
+const PurchaseOrdersDirectoryPage= lazyWithRetry(() => import("./pages/PurchaseOrdersDirectoryPage"));
+const AddPurchaseOrderPage       = lazyWithRetry(() => import("./pages/AddPurchaseOrderPage"));
+const WarehouseInPage            = lazyWithRetry(() => import("./pages/WarehouseInPage"));
+const WarehouseInventoryPage     = lazyWithRetry(() => import("./pages/WarehouseInventoryPage"));
+const VehicleInPage              = lazyWithRetry(() => import("./pages/VehicleInPage"));
+const AddOrderPage               = lazyWithRetry(() => import("./pages/AddOrderPage"));
+const CreateReturnOrderPage      = lazyWithRetry(() => import("./pages/CreateReturnOrderPage"));
+const MainInventoryPage          = lazyWithRetry(() => import("./pages/MainInventoryPage"));
+const VehicleAllocationsPage     = lazyWithRetry(() => import("./pages/VehicleAllocationsPage"));
+const WhatsAppChatPage           = lazyWithRetry(() => import("./pages/WhatsAppChatPage"));
+const BeatManagementPage         = lazyWithRetry(() => import("./pages/BeatManagementPage"));
+const AccountsMasterPage         = lazyWithRetry(() => import("./pages/AccountsMasterPage"));
+const AccountingVouchersPage     = lazyWithRetry(() => import("./pages/AccountingVouchersPage"));
+const AddVoucherPage             = lazyWithRetry(() => import("./pages/AddVoucherPage"));
+const EmployeeCashBalancesPage   = lazyWithRetry(() => import("./pages/EmployeeCashBalancesPage"));
+const ChequeManagementPage       = lazyWithRetry(() => import("./pages/ChequeManagementPage"));
+const FinanceCollectionsPage     = lazyWithRetry(() => import("./pages/FinanceCollectionsPage"));
+const FinanceClearancesPage      = lazyWithRetry(() => import("./pages/FinanceClearancesPage"));
+const BankVerificationPage       = lazyWithRetry(() => import("./pages/BankVerificationPage"));
+const CustomerKhataPage          = lazyWithRetry(() => import("./pages/CustomerKhataPage"));
+const DueCollectionsPage         = lazyWithRetry(() => import("./pages/DueCollectionsPage"));
+const BulkDispatchPage           = lazyWithRetry(() => import("./pages/BulkDispatchPage"));
+const ManifestsPage              = lazyWithRetry(() => import("./pages/ManifestsPage"));
+const ManifestDetailsPage        = lazyWithRetry(() => import("./pages/ManifestDetailsPage"));
+const StockLedgerPage            = lazyWithRetry(() => import("./pages/StockLedgerPage"));
+const BatchTimelinePage          = lazyWithRetry(() => import("./pages/BatchTimelinePage"));
+const BatchStockPage             = lazyWithRetry(() => import("./pages/BatchStockPage"));
+const AllocationsPage            = lazyWithRetry(() => import("./pages/AllocationsPage"));
+const StockInwardingPage         = lazyWithRetry(() => import("./pages/StockInwardingPage"));
+const LiveLocationPage           = lazyWithRetry(() => import("./pages/LiveLocationPage"));
+const DeliveryMasterPage         = lazyWithRetry(() => import("./pages/DeliveryMasterPage"));
 
 // ── Customer 360° — layout + 5 separate tab pages ────────────────────────────
-const CustomerProfileLayout = React.lazy(() => import("./pages/CustomerProfileLayout"));
-const CustomerProfileTab    = React.lazy(() => import("./pages/CustomerProfileTab"));
-const CustomerOrdersTab     = React.lazy(() => import("./pages/CustomerOrdersTab"));
-const CustomerStatementTab  = React.lazy(() => import("./pages/CustomerStatementTab"));
-const CustomerKhataTab      = React.lazy(() => import("./pages/CustomerKhataTab"));
+const CustomerProfileLayout = lazyWithRetry(() => import("./pages/CustomerProfileLayout"));
+const CustomerProfileTab    = lazyWithRetry(() => import("./pages/CustomerProfileTab"));
+const CustomerOrdersTab     = lazyWithRetry(() => import("./pages/CustomerOrdersTab"));
+const CustomerStatementTab  = lazyWithRetry(() => import("./pages/CustomerStatementTab"));
+const CustomerKhataTab      = lazyWithRetry(() => import("./pages/CustomerKhataTab"));
 
 // ── Route guard ───────────────────────────────────────────────────────────────
 const ProtectedRoute = ({ children }) => {

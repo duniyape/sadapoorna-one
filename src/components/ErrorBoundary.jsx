@@ -12,9 +12,15 @@ export class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // Check if it's a dynamic import failure (new version deployed while user had app open)
+    // Check if it's a dynamic import failure (new version deployed while user had app open, or network error)
+    const errorMsg = error?.message?.toLowerCase() || '';
     const isChunkLoadError = error?.name === 'ChunkLoadError' || 
-      (error?.message && error.message.includes('Failed to fetch dynamically imported module'));
+      errorMsg.includes('failed to fetch dynamically imported module') ||
+      errorMsg.includes('importing a module script failed') ||
+      errorMsg.includes('networkerror') ||
+      errorMsg.includes('network error') ||
+      errorMsg.includes('failed to fetch') ||
+      errorMsg.includes('load failed');
 
     if (isChunkLoadError) {
       const reloadKey = 'chunk_reload_attempt';
