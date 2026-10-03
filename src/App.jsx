@@ -7,6 +7,8 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import LoginPage from "./pages/LoginPage";
 
 // ── Utility: Auto-retry lazy loaded chunks to prevent network errors ──────────
+// On new deploys, old chunk hashes become invalid. After retries fail, we do a
+// single hard reload (guarded by sessionStorage to avoid infinite reload loops).
 const lazyWithRetry = (componentImport, retries = 3, interval = 1000) => {
   return React.lazy(() => {
     return new Promise((resolve, reject) => {
@@ -19,7 +21,18 @@ const lazyWithRetry = (componentImport, retries = 3, interval = 1000) => {
             if (attempts < retries) {
               setTimeout(attemptImport, interval);
             } else {
-              reject(error);
+              // All retries exhausted — likely a stale chunk after a new deploy.
+              // Do ONE hard reload to let the browser pick up fresh chunks.
+              const RELOAD_KEY = 'chunk_reload_attempted';
+              const alreadyReloaded = sessionStorage.getItem(RELOAD_KEY);
+              if (!alreadyReloaded) {
+                sessionStorage.setItem(RELOAD_KEY, '1');
+                window.location.reload();
+              } else {
+                // Already tried a reload — clear flag and reject to show error boundary.
+                sessionStorage.removeItem(RELOAD_KEY);
+                reject(error);
+              }
             }
           });
       };
@@ -93,6 +106,7 @@ const CustomerProfileTab    = lazyWithRetry(() => import("./pages/CustomerProfil
 const CustomerOrdersTab     = lazyWithRetry(() => import("./pages/CustomerOrdersTab"));
 const CustomerStatementTab  = lazyWithRetry(() => import("./pages/CustomerStatementTab"));
 const CustomerKhataTab      = lazyWithRetry(() => import("./pages/CustomerKhataTab"));
+const SuccessPage           = lazyWithRetry(() => import("./pages/SuccessPage"));
 
 // ── Route guard ───────────────────────────────────────────────────────────────
 const ProtectedRoute = ({ children }) => {
@@ -141,6 +155,7 @@ const App = () => (
                 <Route path="orders"              element={<OrdersPage />} />
                 <Route path="add-order"           element={<AddOrderPage />} />
                 <Route path="edit-order/:id"      element={<AddOrderPage />} />
+                <Route path="order-success"       element={<SuccessPage />} />
                 <Route path="create-return-order" element={<CreateReturnOrderPage />} />
                 <Route path="bulk-dispatch"       element={<BulkDispatchPage />} />
                 <Route path="manifests"           element={<ManifestsPage />} />
