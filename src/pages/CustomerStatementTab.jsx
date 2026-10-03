@@ -4,7 +4,7 @@ import { FileText, Calendar, Loader2, ArrowDownLeft, ArrowUpRight, CheckCircle2 
 import { authHdr, fmt, fmtMoney, Skeleton, daysAgo, todayStr } from '../utils/customerHelpers';
 
 export default function CustomerStatementTab() {
-  const { id } = useOutletContext();
+  const { id, displayName } = useOutletContext();
   const hasFetched = useRef(false);
 
   const [transactions, setTransactions] = useState([]);
@@ -142,7 +142,7 @@ export default function CustomerStatementTab() {
               <FileText className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-black text-slate-900 tracking-wide">LEDGER STATEMENT</h2>
+              <h2 className="text-sm font-black text-slate-900 tracking-wide">LEDGER STATEMENT — {displayName}</h2>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Showing all transactions</p>
             </div>
           </div>

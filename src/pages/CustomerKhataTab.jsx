@@ -31,7 +31,7 @@ function calculateFifoPreview(openBills, amountToPay) {
 
 export default function CustomerKhataTab() {
   const navigate = useNavigate();
-  const { showToast, customer } = useOutletContext();
+  const { showToast, customer, displayName } = useOutletContext();
   const targetCustomerId = customer?.mongo_id || customer?._id || customer?.id;
 
   const [isFetching, setIsFetching] = useState(false);
@@ -229,8 +229,8 @@ export default function CustomerKhataTab() {
               <div className="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center mb-4 border border-teal-100">
                 <Building2 className="w-6 h-6 text-teal-600" />
               </div>
-              <h2 className="text-xl font-black text-slate-900 leading-tight mb-1">{khata.customer_name}</h2>
-              <p className="text-sm font-semibold text-slate-500 mb-6">ID: {khata.customer_id}</p>
+              <h2 className="text-xl font-black text-slate-900 leading-tight mb-1">{displayName}</h2>
+              <p className="text-sm font-semibold text-slate-500 mb-6">ID: {customer?.id || khata.customer_id}</p>
 
               <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 mb-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5">
@@ -337,11 +337,8 @@ export default function CustomerKhataTab() {
                   </p>
                 </div>
                 <div className="flex gap-4 mt-4 w-full max-w-md">
-                  <button onClick={handleCloseModal} className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold flex justify-center items-center gap-2">
+                  <button onClick={handleCloseModal} className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold flex justify-center items-center gap-2">
                     Done
-                  </button>
-                  <button className="flex-1 py-3 bg-teal-50 text-teal-600 border border-teal-200 rounded-xl font-bold flex justify-center items-center gap-2">
-                    <Printer className="w-4 h-4" /> Print
                   </button>
                 </div>
               </div>
@@ -350,7 +347,7 @@ export default function CustomerKhataTab() {
                 <div className="px-6 py-4 border-b bg-slate-50 flex items-center justify-between shrink-0">
                   <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                     <Wallet className="w-5 h-5 text-teal-600" />
-                    Collect Payment — {khata?.customer_name}
+                    Collect Payment — {displayName}
                   </h2>
                   <button onClick={handleCloseModal} className="p-2 rounded-full hover:bg-slate-200 text-slate-500">
                     <X className="w-5 h-5" />
@@ -437,8 +434,9 @@ export default function CustomerKhataTab() {
                             <input 
                               type="text" 
                               required
-                              minLength={6}
-                              placeholder="e.g. 320188..."
+                              minLength={12}
+                              maxLength={12}
+                              placeholder="e.g. 320188123456"
                               value={formData.transactionRef}
                               onChange={(e) => setFormData({...formData, transactionRef: e.target.value})}
                               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-teal-500 text-sm font-bold bg-slate-50"

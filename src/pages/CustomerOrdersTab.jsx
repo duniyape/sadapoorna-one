@@ -5,7 +5,7 @@ import { authHdr, fmt, fmtMoney, Skeleton, StatusBadge } from '../utils/customer
 import ViewOrderModal from '../components/ViewOrderModal';
 
 export default function CustomerOrdersTab() {
-  const { customer } = useOutletContext();
+  const { customer, displayName } = useOutletContext();
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +42,7 @@ export default function CustomerOrdersTab() {
       <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ShoppingCart className="w-4 h-4 text-indigo-600" />
-          <h2 className="text-xs font-black text-slate-800 uppercase tracking-wider">Order History</h2>
+          <h2 className="text-xs font-black text-slate-800 uppercase tracking-wider">Order History — {displayName}</h2>
           {!loading && (
             <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold border border-indigo-100">
               {orders.length} orders

@@ -96,7 +96,18 @@ export default function CustomerProfileLayout() {
   );
 
   const isBiz = customer.customer_type === 'business';
-  const displayName = (isBiz && customer.company_name) ? customer.company_name : customer.name;
+  const company = customer.shop_name || customer.company_name || customer.business_name;
+  const person = customer.name;
+  
+  let displayName = '';
+  if (company && person && company !== person) {
+    displayName = `${company} (${person})`;
+  } else if (company) {
+    displayName = company;
+  } else {
+    displayName = person || 'Unnamed Customer';
+  }
+
   const initial = displayName?.charAt(0)?.toUpperCase() || '?';
 
   // ── Context passed to ALL child tab pages via Outlet ───────────────────────

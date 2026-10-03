@@ -302,9 +302,10 @@ export default function CustomersDirectoryPage() {
             {filteredCustomers.map((c, i) => (
               <div 
                 key={c.id || i} 
+                onClick={() => canView && navigate(`/view-customer/${c.id || c.customer_id}`)}
                 className={`flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-3 px-4 py-3 lg:py-2.5 rounded-xl border shadow-sm hover:shadow-md transition-all text-xs group ${
                   c.status === 'inactive' ? 'bg-slate-50 border-slate-200 opacity-75 grayscale-[20%]' : 'bg-white border-slate-100'
-                }`}
+                } ${canView ? 'cursor-pointer hover:border-indigo-200 hover:bg-indigo-50/30' : ''}`}
               >
                 
                 {/* Mobile Top Row / Desktop Left side */}
@@ -385,8 +386,8 @@ export default function CustomersDirectoryPage() {
                       </button>
                     )}
                     {canView && (
-                      <button onClick={(e) => { e.stopPropagation(); navigate(`/view-customer/${c.id || c.customer_id}`); }} className="px-3 py-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold border border-indigo-100 uppercase tracking-wider transition-colors" title="View Details">
-                        VIEW
+                      <button onClick={(e) => { e.stopPropagation(); navigate(`/view-customer/${c.id || c.customer_id}`); }} className="px-3 py-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold border border-indigo-100 uppercase tracking-wider transition-colors flex items-center gap-1" title="View Details">
+                        VIEW <ChevronRight className="w-3 h-3" />
                       </button>
                     )}
                   </div>
