@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
-import { CheckCircle2, X, AlertCircle, Info } from 'lucide-react';
+import { CheckCircle2, X, AlertCircle, Info, RefreshCw } from 'lucide-react';
+import { useVersionCheck } from '../hooks/useVersionCheck';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import { useLocationSocket } from '../hooks/useLocationSocket';
@@ -31,11 +32,26 @@ const PageLoader = () => (
   </div>
 );
 
-// Toast config per type
+// Premium Toast config
 const TOAST_CONFIG = {
-  success: { icon: CheckCircle2, bg: 'bg-slate-900', iconColor: 'text-emerald-400', border: 'border-slate-700' },
-  error:   { icon: AlertCircle,  bg: 'bg-rose-950',  iconColor: 'text-rose-400',    border: 'border-rose-800' },
-  info:    { icon: Info,         bg: 'bg-slate-900', iconColor: 'text-sky-400',     border: 'border-slate-700' },
+  success: { 
+    icon: CheckCircle2, 
+    containerClass: 'bg-emerald-500 border-emerald-400 shadow-[0_20px_50px_-10px_rgba(16,185,129,0.7)]',
+    iconContainer: 'bg-emerald-600 text-white',
+    textColor: 'text-white'
+  },
+  error: { 
+    icon: AlertCircle,  
+    containerClass: 'bg-rose-600 border-rose-500 shadow-[0_20px_50px_-10px_rgba(225,29,72,0.7)]',
+    iconContainer: 'bg-rose-700 text-white',
+    textColor: 'text-white'
+  },
+  info: { 
+    icon: Info,         
+    containerClass: 'bg-blue-600 border-blue-500 shadow-[0_20px_50px_-10px_rgba(37,99,235,0.7)]',
+    iconContainer: 'bg-blue-700 text-white',
+    textColor: 'text-white'
+  },
 };
 
 export default function DashboardLayout() {
@@ -45,6 +61,10 @@ export default function DashboardLayout() {
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState(null);
   const [trackingStarted, setTrackingStarted] = useState(false);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+
+  // ── Version polling: detect new deploys while user is active ─────────────────
+  useVersionCheck(() => setUpdateAvailable(true));
 
   const currentUserId = user?.id || user?._id || localStorage.getItem('userId');
 
@@ -160,7 +180,7 @@ export default function DashboardLayout() {
   const showToast = useCallback((msg, type = 'success') => {
     if (!msg || typeof msg !== 'string') return;
     setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
+    setTimeout(() => setToast(null), 3600);
   }, []);
 
   const cfg = toast ? (TOAST_CONFIG[toast.type] || TOAST_CONFIG.success) : null;
@@ -169,15 +189,42 @@ export default function DashboardLayout() {
   return (
     <div className="min-h-screen bg-[#F4F6FA] text-slate-800 font-sans flex flex-col md:flex-row antialiased overflow-x-hidden">
 
-      {/* Toast Notification Banner */}
-      {toast && (
-        <div className={`fixed top-4 left-4 right-4 sm:left-auto sm:right-6 z-[9999] ${cfg.bg} text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-between sm:justify-start gap-3 border ${cfg.border} animate-in fade-in`}>
+      {/* New Deploy Banner — shown when version.json changes while user is active */}
+      {updateAvailable && (
+        <div className="fixed top-0 left-0 right-0 z-[10000] bg-indigo-600 text-white px-4 py-2.5 flex items-center justify-between gap-3 shadow-lg">
           <div className="flex items-center gap-2.5">
-            <ToastIcon className={`w-5 h-5 shrink-0 ${cfg.iconColor}`} />
-            <span className="text-xs sm:text-sm font-medium">{toast.msg}</span>
+            <RefreshCw className="w-4 h-4 shrink-0 animate-spin" />
+            <span className="text-sm font-medium">New update available! Refresh to get the latest version.</span>
           </div>
-          <button onClick={() => setToast(null)} className="p-1 text-slate-400 hover:text-white shrink-0">
-            <X className="w-4 h-4" />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="text-xs font-semibold bg-white text-indigo-600 px-3 py-1 rounded-full hover:bg-indigo-50 transition-colors"
+            >
+              Refresh Now
+            </button>
+            <button
+              onClick={() => setUpdateAvailable(false)}
+              className="p-1 text-indigo-200 hover:text-white transition-colors"
+              aria-label="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Premium Top-Centered Toast Banner */}
+      {toast && (
+        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[10000] flex items-center p-2 sm:p-3 rounded-full border-2 pointer-events-auto max-w-[95vw] sm:max-w-2xl w-max animate-in slide-in-from-top-10 fade-in duration-300 zoom-in ${cfg.containerClass}`}>
+          <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shrink-0 shadow-inner ${cfg.iconContainer}`}>
+            <ToastIcon className="w-7 h-7 sm:w-10 sm:h-10" />
+          </div>
+          <span className={`px-5 sm:px-8 text-base sm:text-xl font-black flex-1 text-center sm:text-left leading-tight tracking-wide ${cfg.textColor}`}>
+            {toast.msg}
+          </span>
+          <button onClick={() => setToast(null)} className="p-3 text-white/70 hover:text-white shrink-0 bg-black/10 hover:bg-black/30 rounded-full transition-colors ml-2">
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
       )}
