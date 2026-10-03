@@ -3,12 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
+import { getApiBaseUrl } from './utils/api';
+
 // Automatically prepend backend API URL to API endpoints in production (via env variables)
 const originalFetch = window.fetch;
 // In development, this is empty, so relative URLs hit the Vite Proxy.
 // In production, set VITE_API_URL in your deployment platform (e.g., Netlify/Vercel).
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
-const apiRegex = /^\/(addresses|branches|masters|users|auth|data-access-hierarchy|access|customer|customers|product-units|attributes|products|variants|get|packing-types|whatsapp|whatsapp-webhook|warehouses|vehicles|vendors|orders|inventory|beats|accounting)(\/|\?|$)/;
+const API_BASE_URL = getApiBaseUrl();
+const apiRegex = /^\/(addresses|location|branches|masters|users|auth|data-access-hierarchy|access|customer|customers|product-units|attributes|products|variants|get|packing-types|whatsapp|whatsapp-webhook|warehouses|vehicles|vendors|orders|inventory|beats|accounting)(\/|\?|$)/;
 
 window.fetch = async (input, init) => {
   if (typeof input === 'string' && apiRegex.test(input) && API_BASE_URL) {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
+import { getWebSocketUrl } from "../utils/api";
 
 export function useLocationSocket(userId, onUpdate) {
   const wsRef = useRef(null);
@@ -13,22 +14,7 @@ export function useLocationSocket(userId, onUpdate) {
     if (!userId) return;
 
     let reconnectTimeout = null;
-
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    let wsUrl = '';
-    const apiBase = import.meta.env.VITE_API_URL;
-    
-    // Attempt to use API URL host, otherwise fallback to current host (Vite proxy)
-    if (apiBase) {
-      try {
-        const url = new URL(apiBase);
-        wsUrl = `${url.protocol === 'https:' ? 'wss:' : 'ws:'}//${url.host}/location/ws/${userId}`;
-      } catch (e) {
-        wsUrl = `${protocol}//${window.location.host}/location/ws/${userId}`;
-      }
-    } else {
-      wsUrl = `${protocol}//${window.location.host}/location/ws/${userId}`;
-    }
+    const wsUrl = getWebSocketUrl(`/location/ws/${userId}`);
 
     const connect = () => {
       console.log('[AutoTrack] Attempting WS connection to', wsUrl);

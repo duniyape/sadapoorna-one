@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker,
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapPin, Navigation, Clock, Activity, Wifi, WifiOff, Users, Crosshair, Calendar, X } from 'lucide-react';
+import { getWebSocketUrl } from '../utils/api';
 
 // Fix Leaflet's default icon path issues in React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -182,18 +183,7 @@ export default function LiveLocationPage() {
     const userId = user.id || user._id || user.mongo_id;
     if (!userId) return;
 
-    // Use ws:// for http, wss:// for https
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // Get backend host from import.meta.env or guess from current location
-    let wsUrl = '';
-    const apiBase = import.meta.env.VITE_API_URL;
-    if (apiBase) {
-      const url = new URL(apiBase);
-      wsUrl = `${url.protocol === 'https:' ? 'wss:' : 'ws:'}//${url.host}/location/ws/${userId}`;
-    } else {
-      // Fallback to proxy via same host
-      wsUrl = `${protocol}//${window.location.host}/location/ws/${userId}`;
-    }
+    const wsUrl = getWebSocketUrl(`/location/ws/${userId}`);
 
     const socket = new WebSocket(wsUrl);
 

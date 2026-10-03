@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { getWebSocketUrl } from '../utils/api';
 
 // We use relative paths so Vite's proxy can forward the requests properly 
 
@@ -52,8 +53,7 @@ export const useLiveLocation = () => {
           // --------------------------------------
           // WebSocket Setup
           // --------------------------------------
-          const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-          const wsUrl = `${protocol}//${window.location.host}/location/ws/${userId}`;
+          const wsUrl = getWebSocketUrl(`/location/ws/${userId}`);
           
           const ws = new WebSocket(wsUrl);
           socketRef.current = ws;
