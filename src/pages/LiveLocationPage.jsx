@@ -191,8 +191,8 @@ export default function LiveLocationPage() {
       const url = new URL(apiBase);
       wsUrl = `${url.protocol === 'https:' ? 'wss:' : 'ws:'}//${url.host}/location/ws/${userId}`;
     } else {
-      // Assuming backend runs on 8000 locally
-      wsUrl = `ws://localhost:8000/location/ws/${userId}`;
+      // Fallback to proxy via same host
+      wsUrl = `${protocol}//${window.location.host}/location/ws/${userId}`;
     }
 
     const socket = new WebSocket(wsUrl);
