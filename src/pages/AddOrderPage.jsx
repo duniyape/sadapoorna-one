@@ -11,7 +11,8 @@ export default function AddOrderPage() {
   const { hasActionPermission } = usePermissions(user);
   
   const isEditMode = !!id;
-  const canAssignEmployee = hasActionPermission('orders', 'Assign Employee');
+  const canAssignEmployee   = hasActionPermission('orders', 'Assign Employee');
+  const canEditInvoiceDate  = hasActionPermission('orders', 'Edit Invoice Date');
 
   // Customer pre-selected when arriving from CustomerProfilePage
   const preselectedCustomer = location.state?.preselectedCustomer || null;
@@ -88,13 +89,26 @@ export default function AddOrderPage() {
         const bRes = await fetch('/branches/v1', { headers });
         if (bRes.ok) {
           const bData = await bRes.json();
-          setBranches(Array.isArray(bData) ? bData : (bData.data || bData.branches || []));
+          const branchesList = Array.isArray(bData) ? bData : (bData.data || bData.branches || []);
+          setBranches(branchesList);
+          
+          const bhopal = branchesList.find(b => (b.name || b.branch_name || '').toLowerCase().includes('bhopal'));
+          if (bhopal) {
+            setFormData(prev => ({ ...prev, branch_id: prev.branch_id || bhopal.id || bhopal._id }));
+          }
         }
 
         const wRes = await fetch('/warehouses/get', { headers });
         if (wRes.ok) {
           const wData = await wRes.json();
-          if (wData.data) setWarehouses(wData.data);
+          if (wData.data) {
+            setWarehouses(wData.data);
+            
+            const ashoka = wData.data.find(w => (w.name || '').toLowerCase().includes('ashoka garden') || (w.name || '').toLowerCase().includes('ashkon garden'));
+            if (ashoka) {
+              setFormData(prev => ({ ...prev, warehouse_id: prev.warehouse_id || ashoka.id || ashoka._id }));
+            }
+          }
         }
       } catch (err) {
         console.error("Failed to fetch reference data", err);
@@ -388,17 +402,53 @@ export default function AddOrderPage() {
       });
 
       if (!payload.customer_id) {
-        showToast("Customer is required");
+        showToast("Please select a customer first.", "error");
         setIsSaving(false);
         return;
       }
       if (payload.items.length === 0) {
-        showToast("At least one item is required");
+        showToast("Please add at least one item to the order.", "error");
         setIsSaving(false);
         return;
       }
 
-      console.log(payload)
+      // Items validation
+      for (let i = 0; i < payload.items.length; i++) {
+        const item = payload.items[i];
+        if (!item.product_id) {
+          showToast(`Please select a Product for Item ${i + 1}`, "error");
+          setIsSaving(false);
+          return;
+        }
+        if (!item.variant_id) {
+          showToast(`Please select a Variant for Item ${i + 1}`, "error");
+          setIsSaving(false);
+          return;
+        }
+        if (!item.quantity || item.quantity <= 0) {
+          showToast(`Please enter a valid Quantity for Item ${i + 1}`, "error");
+          setIsSaving(false);
+          return;
+        }
+        if (!item.rate || item.rate <= 0) {
+          showToast(`Please enter a valid Rate for Item ${i + 1}`, "error");
+          setIsSaving(false);
+          return;
+        }
+        
+        const originalItem = formData.items[i];
+        const itemVariants = variants[originalItem.product_id] || [];
+        const variant = itemVariants.find(v => (v.id || v._id) === originalItem.variant_id);
+        const sellingPrice = parseFloat(variant?.selling_price) || 0;
+        
+        if (item.rate < sellingPrice) {
+          showToast(`Rate for Item ${i + 1} cannot be less than Selling Price (₹${sellingPrice})`, "error");
+          setIsSaving(false);
+          return;
+        }
+      }
+
+      console.log(payload);
 
       const endpoint = isEditMode ? `/orders/update/v1/${id}` : '/orders/v1';
 
@@ -414,19 +464,25 @@ export default function AddOrderPage() {
       const data = await res.json().catch(() => ({}));
 
       if (res.ok && (data.success || data.status)) {
-        showToast(`Sales order ${isEditMode ? 'updated' : 'created'} successfully!`);
-        navigate('/orders');
+        navigate('/order-success', { 
+          state: { 
+            title: isEditMode ? 'Order Updated!' : 'Order Created!', 
+            message: 'Redirecting to orders page...',
+            redirectUrl: '/orders',
+            duration: 1500
+          } 
+        });
       } else {
         let errMsg = data.message || data.detail || `Failed to ${isEditMode ? 'update' : 'create'} order`;
         if (Array.isArray(data.detail)) {
           errMsg = data.detail.map(err => `${err.loc?.join('.') || 'Field'}: ${err.msg}`).join(' | ');
         }
-        showToast(errMsg);
+        showToast(errMsg, "error");
+        setIsSaving(false);
       }
     } catch (err) {
       console.error(err);
-      showToast('Network error occurred while saving.');
-    } finally {
+      showToast("Network error occurred while saving. Please check your connection.", "error");
       setIsSaving(false);
     }
   };
@@ -550,13 +606,21 @@ export default function AddOrderPage() {
               )}
             </div>
 
-            <div className="lg:col-span-2">
-              <label className={labelClass}>Invoice Date</label>
-              <div className="relative">
-                <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                <input type="date" value={formData.invoice_date} onChange={e => handleChange('invoice_date', e.target.value)} className={`${inputClass} pl-9`} />
+            {/* Invoice Date — only shown to roles with "Edit Invoice Date" permission */}
+            {canEditInvoiceDate && (
+              <div className="lg:col-span-2">
+                <label className={labelClass}>Invoice Date</label>
+                <div className="relative">
+                  <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="date"
+                    value={formData.invoice_date}
+                    onChange={e => handleChange('invoice_date', e.target.value)}
+                    className={`${inputClass} pl-9`}
+                  />
+                </div>
               </div>
-            </div>
+            )}
             <div className="lg:col-span-2">
               <label className={labelClass}>GST Calculation</label>
               <select disabled value={formData.gst_type} onChange={e => handleChange('gst_type', e.target.value)} className={`${inputClass} opacity-70 bg-slate-50 cursor-not-allowed text-slate-500`}>
@@ -576,18 +640,22 @@ export default function AddOrderPage() {
 
             <div className="lg:col-span-1">
               <label className={labelClass}>Branch / Hub *</label>
-              <select required value={formData.branch_id} onChange={e => handleChange('branch_id', e.target.value)} className={inputClass}>
-                <option value="">Select Branch...</option>
-                {branches.map(b => <option key={b.id || b._id} value={b.id || b._id}>{b.name || b.branch_name}</option>)}
-              </select>
+              <input 
+                type="text" 
+                value="Bhopal" 
+                disabled 
+                className={`${inputClass} opacity-70 bg-slate-50 cursor-not-allowed text-slate-500 font-bold`} 
+              />
             </div>
 
             <div className="lg:col-span-1">
               <label className={labelClass}>Warehouse *</label>
-              <select required value={formData.warehouse_id} onChange={e => handleChange('warehouse_id', e.target.value)} className={inputClass}>
-                <option value="">Select Warehouse...</option>
-                {warehouses.map(w => <option key={w.id || w._id} value={w.id || w._id}>{w.name}</option>)}
-              </select>
+              <input 
+                type="text" 
+                value="Ashoka Garden" 
+                disabled 
+                className={`${inputClass} opacity-70 bg-slate-50 cursor-not-allowed text-slate-500 font-bold`} 
+              />
             </div>
 
             {canAssignEmployee && (
@@ -613,119 +681,128 @@ export default function AddOrderPage() {
             <h2 className="text-xs font-black text-slate-800 uppercase tracking-wider flex-1">2. Order Items</h2>
           </div>
 
-          <div className="overflow-x-auto pb-2">
-            <table className="w-full text-left border-collapse min-w-[1000px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                  <th className="p-3 min-w-[250px] w-[30%]">Product *</th>
-                  <th className="p-3 min-w-[250px] w-[30%]">Variant *</th>
-                  <th className="p-3 min-w-[120px] w-[12%]">Qty *</th>
-                  <th className="p-3 min-w-[140px] w-[13%]">Rate (₹) *</th>
-                  <th className="p-3 min-w-[140px] w-[15%] text-right">Total (₹)</th>
-                  <th className="p-3 w-10 text-center"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {formData.items.map((item, index) => {
-                  const itemVariants = variants[item.product_id] || [];
-                  return (
-                    <tr key={item.id} className="hover:bg-slate-50/50 align-top transition-colors">
-                      <td className="p-3">
-                        <select required value={item.product_id} onChange={e => handleItemChange(index, 'product_id', e.target.value)} className={`${inputClass} !py-2 truncate`}>
-                          <option value="">Select Product...</option>
-                          {products.map(p => <option key={p.id || p._id} value={p.id || p._id}>{p.name}</option>)}
-                        </select>
-                      </td>
-                      <td className="p-3">
-                        <select required value={item.variant_id} onChange={e => handleItemChange(index, 'variant_id', e.target.value)} className={`${inputClass} !py-2 truncate`} disabled={!item.product_id}>
-                          <option value="">Select Variant...</option>
-                          {itemVariants.map(v => <option key={v.id || v._id} value={v.id || v._id}>{v.name} ({v.sku})</option>)}
-                        </select>
-                      </td>
-                      <td className="p-3">
-                        <input type="number" min="0.01" step="0.01" required value={item.quantity === 0 ? '' : item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className={`${inputClass} !py-2`} />
-                        
-                        {(() => {
-                          const v = itemVariants.find(v => (v.id || v._id) === item.variant_id);
-                          if (!v) return null;
-                          const pkgName = v.packaging_type?.name || 'Package';
-                          const unitSymbol = v.unit?.symbol || v.base_unit || 'Unit';
-                          const qtyPerPkg = v.quantity_per_package || 1;
-                          return (
-                            <div className="text-[9px] text-slate-500 mt-1.5 font-bold uppercase tracking-wider">
-                              {pkgName}s ({qtyPerPkg} {unitSymbol} / {pkgName})
-                            </div>
-                          );
-                        })()}
+          <div className="p-4 space-y-4">
+            {formData.items.map((item, index) => {
+              const itemVariants = variants[item.product_id] || [];
+              const selectedVariant = itemVariants.find(v => (v.id || v._id) === item.variant_id);
+              const sellingPrice = parseFloat(selectedVariant?.selling_price) || 0;
 
-                        {item.variant_id && stockInventory[item.variant_id] !== undefined && (
-                          <div className={`text-[10px] mt-1 font-semibold ${stockInventory[item.variant_id] > 0 || stockInventory[item.variant_id] === 'loading' ? 'text-emerald-600' : 'text-rose-500'}`}>
-                            {stockInventory[item.variant_id] === 'loading' ? 'Loading stock...' : `Stock: ${stockInventory[item.variant_id]}`}
-                          </div>
-                        )}
-                      </td>
-                      <td className="p-3">
-                        <input type="number" min="0" step="0.01" required value={item.rate === 0 ? '' : item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} className={`${inputClass} !py-2`} />
-                        {(() => {
-                          const v = itemVariants.find(v => (v.id || v._id) === item.variant_id);
-                          if (!v) return null;
-                          const rateType = v.rate_type || 'per_package';
-                          const pkgName = v.packaging_type?.name || 'Package';
-                          const unitSymbol = v.unit?.symbol || v.base_unit || 'Unit';
-                          return (
-                            <div className="text-[9px] text-indigo-500 mt-1.5 font-bold uppercase tracking-wider">
-                              {rateType === 'per_unit' ? `Enter Rate per ${unitSymbol}` : `Enter Rate per ${pkgName}`}
-                            </div>
-                          );
-                        })()}
-                      </td>
-                      <td className="p-3 font-black text-slate-800 text-right">
-                        <div>
-                          ₹{(() => {
-                            const qtyPerPkg = parseFloat(itemVariants.find(v => (v.id || v._id) === item.variant_id)?.quantity_per_package) || 1;
-                            const rateType = itemVariants.find(v => (v.id || v._id) === item.variant_id)?.rate_type || 'per_package';
-                            const multiplier = rateType === 'per_unit' ? qtyPerPkg : 1;
-                            return ((parseFloat(item.quantity) || 0) * multiplier * (parseFloat(item.rate) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                          })()}
+              return (
+                <div key={item.id} className="relative border border-slate-200 bg-slate-50 rounded-2xl p-4 md:p-5 flex flex-col gap-4 shadow-sm hover:shadow-md transition-shadow">
+                  {/* Remove Button (Absolute Top Right on Mobile, or normal on Desktop) */}
+                  {formData.items.length > 1 && (
+                    <button 
+                      type="button" 
+                      onClick={() => removeItem(index)} 
+                      className="absolute right-3 top-3 p-1.5 bg-white text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg border border-slate-200 transition-colors shadow-sm z-10" 
+                      title="Remove Item"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                    
+                    {/* Product */}
+                    <div className="lg:col-span-2">
+                      <label className={labelClass}>Product *</label>
+                      <select required value={item.product_id} onChange={e => handleItemChange(index, 'product_id', e.target.value)} className={`${inputClass} !py-2 truncate`}>
+                        <option value="">Select Product...</option>
+                        {products.map(p => <option key={p.id || p._id} value={p.id || p._id}>{p.name}</option>)}
+                      </select>
+                    </div>
+
+                    {/* Variant */}
+                    <div className="lg:col-span-2">
+                      <label className={labelClass}>Variant *</label>
+                      <select required value={item.variant_id} onChange={e => handleItemChange(index, 'variant_id', e.target.value)} className={`${inputClass} !py-2 truncate`} disabled={!item.product_id}>
+                        <option value="">Select Variant...</option>
+                        {itemVariants.map(v => <option key={v.id || v._id} value={v.id || v._id}>{v.name} ({v.sku})</option>)}
+                      </select>
+                    </div>
+
+                    {/* Qty */}
+                    <div className="lg:col-span-1">
+                      <label className={labelClass}>Qty *</label>
+                      <input type="number" min="0.01" step="0.01" required value={item.quantity === 0 ? '' : item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className={`${inputClass} !py-2`} />
+                      
+                      {selectedVariant && (
+                        <div className="text-[9px] text-slate-500 mt-1.5 font-bold uppercase tracking-wider">
+                          {selectedVariant.packaging_type?.name || 'Package'}s ({(selectedVariant.quantity_per_package || 1)} {selectedVariant.unit?.symbol || selectedVariant.base_unit || 'Unit'} / {selectedVariant.packaging_type?.name || 'Package'})
                         </div>
-                        {(() => {
-                          const v = itemVariants.find(v => (v.id || v._id) === item.variant_id);
-                          if (!v) return null;
-                          const rateType = v.rate_type || 'per_package';
-                          const qtyPerPkg = parseFloat(v.quantity_per_package) || 1;
+                      )}
+
+                      {item.variant_id && stockInventory[item.variant_id] !== undefined && (
+                        <div className={`text-[10px] mt-1 font-semibold ${stockInventory[item.variant_id] > 0 || stockInventory[item.variant_id] === 'loading' ? 'text-emerald-600' : 'text-rose-500'}`}>
+                          {stockInventory[item.variant_id] === 'loading' ? 'Loading stock...' : `Stock: ${stockInventory[item.variant_id]}`}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Rate */}
+                    <div className="lg:col-span-1">
+                      <label className={labelClass}>Rate (₹) *</label>
+                      <input type="number" min={sellingPrice || "0"} step="0.01" required value={item.rate === 0 ? '' : item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} className={`${inputClass} !py-2`} />
+                      
+                      {selectedVariant && (
+                        <div className="flex flex-col mt-1.5 gap-1">
+                          <div className="text-[9px] text-indigo-500 font-bold uppercase tracking-wider">
+                            {(selectedVariant.rate_type || 'per_package') === 'per_unit' ? `Per ${selectedVariant.unit?.symbol || selectedVariant.base_unit || 'Unit'}` : `Per ${selectedVariant.packaging_type?.name || 'Package'}`}
+                          </div>
+                          <div className="text-[10px] text-amber-600 font-bold">
+                            Selling Price: ₹{sellingPrice}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+
+                  {/* Total row at the bottom of the card */}
+                  <div className="border-t border-slate-200/60 pt-3 flex items-center justify-between mt-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Item Total</span>
+                    </div>
+                    
+                    <div className="text-right">
+                      <div className="font-black text-slate-800 text-lg">
+                        ₹{(() => {
+                          const qtyPerPkg = parseFloat(selectedVariant?.quantity_per_package) || 1;
+                          const rateType = selectedVariant?.rate_type || 'per_package';
+                          const multiplier = rateType === 'per_unit' ? qtyPerPkg : 1;
+                          return ((parseFloat(item.quantity) || 0) * multiplier * (parseFloat(item.rate) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        })()}
+                      </div>
+                      {selectedVariant && (
+                        (() => {
+                          const rateType = selectedVariant.rate_type || 'per_package';
+                          const qtyPerPkg = parseFloat(selectedVariant.quantity_per_package) || 1;
                           const qty = parseFloat(item.quantity) || 0;
                           const rate = parseFloat(item.rate) || 0;
-                          const pkgName = v.packaging_type?.name || 'pkg';
-                          const unitSymbol = v.unit?.symbol || v.base_unit || 'unit';
+                          const pkgName = selectedVariant.packaging_type?.name || 'pkg';
+                          const unitSymbol = selectedVariant.unit?.symbol || selectedVariant.base_unit || 'unit';
                           
                           if (rateType === 'per_unit' && qtyPerPkg !== 1) {
                             return (
-                              <div className="text-[10px] text-slate-500 mt-1 font-semibold leading-tight">
-                                {qty} {pkgName} × {qtyPerPkg} {unitSymbol} = {qty * qtyPerPkg} {unitSymbol}s <br/>
-                                {qty * qtyPerPkg} × ₹{rate}
+                              <div className="text-[9px] text-slate-400 font-semibold leading-tight">
+                                {qty * qtyPerPkg} {unitSymbol}s × ₹{rate}
                               </div>
                             );
                           } else {
                             return (
-                              <div className="text-[10px] text-slate-500 mt-1 font-semibold leading-tight">
+                              <div className="text-[9px] text-slate-400 font-semibold leading-tight">
                                 {qty} {pkgName} × ₹{rate}
                               </div>
                             );
                           }
-                        })()}
-                      </td>
-                      <td className="p-3 text-center">
-                        {formData.items.length > 1 && (
-                          <button type="button" onClick={() => removeItem(index)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors mt-1" title="Remove Item">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        })()
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
           <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
             <button type="button" onClick={addItem} className="px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-colors border border-emerald-200 shadow-sm">
