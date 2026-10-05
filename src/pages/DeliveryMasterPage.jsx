@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
-import { Truck, MapPin, CheckCircle, Package, ArrowUp, ArrowDown, Save, Play, XSquare, Clock, Route, ExternalLink, Map, CreditCard, UserCircle } from 'lucide-react';
+import { useOutletContext, useNavigate } from 'react-router-dom';
+import { Truck, MapPin, CheckCircle, Package, ArrowUp, ArrowDown, Save, Play, XSquare, Clock, Route, ExternalLink, Map, CreditCard, UserCircle, IndianRupee } from 'lucide-react';
 
 export default function DeliveryMasterPage() {
   const { showToast, user } = useOutletContext();
+  const navigate = useNavigate();
   
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState('');
@@ -265,6 +266,12 @@ export default function DeliveryMasterPage() {
       setLocalStops(prev => prev.map(stop => 
         stop.order_id === orderId ? { ...stop, current_status: "Delivered" } : stop
       ));
+      setSelectedOrderDetails(prev => {
+        if (prev && (prev.id === orderId || prev.order_id === orderId || prev._id === orderId || prev.mongo_id === orderId)) {
+          return { ...prev, status: "Delivered" };
+        }
+        return prev;
+      });
     } catch (error) {
       console.error(error);
       showToast(error.message || "Failed to update order status", "error");
@@ -508,15 +515,20 @@ export default function DeliveryMasterPage() {
               
               <div className="p-4 space-y-3 flex-1 max-h-[600px] overflow-y-auto custom-scrollbar">
                 {localStops.map((stop, idx) => (
-                  <div key={stop.order_id} className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl p-3 shadow-sm hover:border-indigo-300 transition-colors group">
+                  <div 
+                    key={stop.order_id} 
+                    onClick={() => handleViewOrder(stop.order_id)}
+                    className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl p-3 shadow-sm hover:border-indigo-300 transition-colors group cursor-pointer"
+                  >
                     <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-black text-xs shrink-0 border border-slate-200 shadow-inner">
                       {idx + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <p className="font-bold text-slate-900 text-sm truncate" title={stop.customer_name}>
-                            {stop.customer_name || 'Unknown Customer'}
+                          <p className="font-bold text-slate-900 text-sm truncate" title={stop.company_name ? `${stop.company_name} (${stop.customer_name})` : stop.customer_name}>
+                            {stop.company_name ? `${stop.company_name} ` : ''}
+                            {stop.customer_name ? (stop.company_name ? <span className="text-slate-500 font-medium text-xs">({stop.customer_name})</span> : stop.customer_name) : 'Unknown Customer'}
                           </p>
                           <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-wider">
                             #{stop.order_no}
@@ -549,16 +561,17 @@ export default function DeliveryMasterPage() {
                           </div>
                           
                           <div className="flex items-center gap-1.5 shrink-0">
-                            {stop.location && (
-                              <a 
-                                href={`https://www.google.com/maps?q=${stop.location.lat},${stop.location.lng}`} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="px-2 py-1.5 bg-sky-50 text-sky-600 hover:bg-sky-100 border border-sky-100 rounded-lg text-[9px] font-bold flex items-center gap-1 transition-colors shadow-sm"
-                              >
-                                <Map className="w-3 h-3" /> Map
-                              </a>
-                            )}
+                            <a 
+                              href={stop.location 
+                                ? `https://www.google.com/maps?q=${stop.location.lat},${stop.location.lng}` 
+                                : `https://www.google.com/maps?q=${encodeURIComponent(typeof stop.address === 'object' && stop.address !== null ? [stop.address.address, stop.address.city, stop.address.pincode].filter(Boolean).join(', ') : (stop.address || stop.customer_name || ''))}`}
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="px-2 py-1.5 bg-sky-50 text-sky-600 hover:bg-sky-100 border border-sky-100 rounded-lg text-[9px] font-bold flex items-center gap-1 transition-colors shadow-sm"
+                            >
+                              <Map className="w-3 h-3" /> Map
+                            </a>
                             <button 
                               onClick={() => handleViewOrder(stop.order_id)}
                               disabled={isOrderLoading || isActionLoading}
@@ -566,15 +579,6 @@ export default function DeliveryMasterPage() {
                             >
                               <ExternalLink className="w-3 h-3" /> View
                             </button>
-                            {stop.current_status !== 'Delivered' && (
-                              <button 
-                                onClick={() => setDeliverConfirmOrderId(stop.order_id)}
-                                disabled={isActionLoading}
-                                className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-[9px] font-bold flex items-center gap-1 transition-colors shadow-sm disabled:opacity-50"
-                              >
-                                <CheckCircle className="w-3 h-3" /> Deliver
-                              </button>
-                            )}
                             {stop.current_status === 'Delivered' && (
                               <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-sm">
                                 <CheckCircle className="w-3 h-3" /> Delivered
@@ -587,14 +591,14 @@ export default function DeliveryMasterPage() {
                     {canReorderRoute && (
                       <div className="flex flex-col gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
-                          onClick={() => handleMoveUp(idx)} 
+                          onClick={(e) => { e.stopPropagation(); handleMoveUp(idx); }} 
                           disabled={idx === 0}
                           className="p-1 rounded bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                         >
                           <ArrowUp className="w-3 h-3" />
                         </button>
                         <button 
-                          onClick={() => handleMoveDown(idx)} 
+                          onClick={(e) => { e.stopPropagation(); handleMoveDown(idx); }} 
                           disabled={idx === localStops.length - 1}
                           className="p-1 rounded bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                         >
@@ -754,6 +758,33 @@ export default function DeliveryMasterPage() {
                       <span className="text-lg font-black text-indigo-600">₹{selectedOrderDetails.grand_total || selectedOrderDetails.total || 0}</span>
                     </div>
                  </div>
+               </div>
+
+               <div className="bg-slate-50 p-4 border-t border-slate-100 flex flex-wrap items-center justify-end gap-3 mt-4 rounded-xl">
+                 {(!selectedOrderDetails.status || (selectedOrderDetails.status !== 'Delivered' && selectedOrderDetails.status !== 'Cancelled' && selectedOrderDetails.status !== 'Rejected')) && (
+                    <button 
+                      onClick={() => {
+                        const orderId = selectedOrderDetails.id || selectedOrderDetails.order_id || selectedOrderDetails._id || selectedOrderDetails.mongo_id;
+                        setDeliverConfirmOrderId(orderId);
+                      }}
+                      disabled={isActionLoading}
+                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-200 transition-colors disabled:opacity-50"
+                    >
+                      <CheckCircle className="w-4 h-4" /> Mark as Delivered
+                    </button>
+                 )}
+                 {selectedOrderDetails.status === 'Delivered' && (
+                    <button 
+                      onClick={() => {
+                        const custId = selectedOrderDetails.customer_id || selectedOrderDetails.customer?._id || selectedOrderDetails.customer?.id;
+                        if (custId) navigate(`/view-customer/${custId}/khata`, { state: { autoOpenPaymentModal: true } });
+                        else showToast("Customer ID not found");
+                      }}
+                      className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-colors"
+                    >
+                      <IndianRupee className="w-4 h-4" /> Collect Payment
+                    </button>
+                 )}
                </div>
             </div>
           </div>
