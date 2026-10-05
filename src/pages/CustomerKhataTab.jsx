@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Search, Building2, User, FileText, Banknote, Landmark, CreditCard, Send, CheckCircle2, X, Wallet, ShieldCheck, Printer } from 'lucide-react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext, useLocation } from 'react-router-dom';
 import { authHdr, fmt } from '../utils/customerHelpers';
 
 // Helper to calculate Live FIFO preview
@@ -31,6 +31,7 @@ function calculateFifoPreview(openBills, amountToPay) {
 
 export default function CustomerKhataTab() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast, customer, displayName } = useOutletContext();
   const targetCustomerId = customer?.mongo_id || customer?._id || customer?.id;
 
@@ -135,6 +136,13 @@ export default function CustomerKhataTab() {
   useEffect(() => {
     fetchKhata();
   }, [fetchKhata]);
+
+  useEffect(() => {
+    if (khata && location.state?.autoOpenPaymentModal) {
+      handleOpenModal();
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [khata, location.state, location.pathname, navigate]);
 
   const handleOpenModal = () => {
     setFormData({

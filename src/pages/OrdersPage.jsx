@@ -1354,7 +1354,11 @@ export default function OrdersPage() {
                                   )}
                                   {canCollectPayment && (
                                     <button
-                                      onClick={() => setShowFinanceModal(true)}
+                                      onClick={() => {
+                                        const custId = selectedOrder.customer_id || selectedOrder.customer?._id || selectedOrder.customer?.id;
+                                        if (custId) navigate(`/view-customer/${custId}/khata`, { state: { autoOpenPaymentModal: true } });
+                                        else showToast("Customer ID not found for this order.");
+                                      }}
                                       className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
                                     >
                                       <IndianRupee className="w-4 h-4" />
@@ -1366,7 +1370,11 @@ export default function OrdersPage() {
                                 <>
                                   {canCollectPayment && (
                                     <button
-                                      onClick={() => setShowFinanceModal(true)}
+                                      onClick={() => {
+                                        const custId = selectedOrder.customer_id || selectedOrder.customer?._id || selectedOrder.customer?.id;
+                                        if (custId) navigate(`/view-customer/${custId}/khata`, { state: { autoOpenPaymentModal: true } });
+                                        else showToast("Customer ID not found for this order.");
+                                      }}
                                       className="w-full px-4 py-3 rounded-xl text-xs font-black bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all border border-indigo-200 flex items-center justify-center gap-2"
                                     >
                                       <IndianRupee className="w-4 h-4" /> Collect Payment
