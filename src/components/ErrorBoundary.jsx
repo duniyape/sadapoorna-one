@@ -42,9 +42,9 @@ export class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-          <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-rose-100 p-8 text-center">
-            <div className="w-16 h-16 bg-rose-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
-              <AlertTriangle className="w-8 h-8 text-rose-600" />
+          <div className="max-w-sm w-full bg-white rounded-2xl shadow-sm border border-rose-100 p-6 text-center">
+            <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center mx-auto mb-4 border border-rose-100">
+              <AlertTriangle className="w-6 h-6 text-rose-500" />
             </div>
             <h2 className="text-2xl font-black text-slate-900 mb-2">Something went wrong</h2>
             <p className="text-slate-500 text-sm font-medium mb-6">

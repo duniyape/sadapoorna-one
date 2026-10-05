@@ -100,6 +100,14 @@ export const MASTER_MODULES = [
     badge: null, desc: 'Manage beats & routing', route: '/beat-mgmt',
     dashboardGroup: 'Sales & Billing', sidebarGroup: 'Sales & Billing',
   },
+  {
+    id: 'my-visits',
+    label: 'My Visits', title: 'My Daily Beats',
+    icon: MapPin, color: 'bg-orange-100 text-orange-600 border-orange-200',
+    badge: 'Live', desc: 'View and mark today\'s visits', route: '/my-visits',
+    key: ['View', 'Mark Visit'],
+    dashboardGroup: 'Sales & Billing', sidebarGroup: 'Sales & Billing',
+  },
 
   // ── Inventory & Fleet ────────────────────────────────────────────────────────
   {
@@ -340,6 +348,14 @@ export const MASTER_MODULES = [
     label: 'Data Access', title: 'Data Access',
     icon: FolderLock, color: 'bg-blue-100 text-blue-600 border-blue-200',
     badge: 'New', desc: 'Manage reporting hierarchy', route: '/data-access',
+    dashboardGroup: 'System & HR', sidebarGroup: 'System & HR',
+  },
+  {
+    id: 'visit-logs',
+    label: 'Visit Reports', title: 'Visit Dashboard',
+    icon: Activity, color: 'bg-emerald-100 text-emerald-600 border-emerald-200',
+    badge: 'Admin', desc: 'Track employee visit performance', route: '/visit-logs',
+    key: ['View All', 'Dashboard'],
     dashboardGroup: 'System & HR', sidebarGroup: 'System & HR',
   },
 ];

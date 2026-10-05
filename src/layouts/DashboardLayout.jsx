@@ -36,21 +36,24 @@ const PageLoader = () => (
 const TOAST_CONFIG = {
   success: { 
     icon: CheckCircle2, 
-    containerClass: 'bg-emerald-500 border-emerald-400 shadow-[0_20px_50px_-10px_rgba(16,185,129,0.7)]',
-    iconContainer: 'bg-emerald-600 text-white',
-    textColor: 'text-white'
+    containerClass: 'bg-white border-slate-100 shadow-[0_10px_40px_-15px_rgba(16,185,129,0.3)]',
+    iconContainer: 'bg-emerald-50 text-emerald-600',
+    textColor: 'text-slate-800',
+    closeColor: 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
   },
   error: { 
     icon: AlertCircle,  
-    containerClass: 'bg-rose-600 border-rose-500 shadow-[0_20px_50px_-10px_rgba(225,29,72,0.7)]',
-    iconContainer: 'bg-rose-700 text-white',
-    textColor: 'text-white'
+    containerClass: 'bg-white border-slate-100 shadow-[0_10px_40px_-15px_rgba(225,29,72,0.3)]',
+    iconContainer: 'bg-rose-50 text-rose-600',
+    textColor: 'text-slate-800',
+    closeColor: 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
   },
   info: { 
     icon: Info,         
-    containerClass: 'bg-blue-600 border-blue-500 shadow-[0_20px_50px_-10px_rgba(37,99,235,0.7)]',
-    iconContainer: 'bg-blue-700 text-white',
-    textColor: 'text-white'
+    containerClass: 'bg-white border-slate-100 shadow-[0_10px_40px_-15px_rgba(37,99,235,0.3)]',
+    iconContainer: 'bg-blue-50 text-blue-600',
+    textColor: 'text-slate-800',
+    closeColor: 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
   },
 };
 
@@ -180,7 +183,7 @@ export default function DashboardLayout() {
   const showToast = useCallback((msg, type = 'success') => {
     if (!msg || typeof msg !== 'string') return;
     setToast({ msg, type });
-    setTimeout(() => setToast(null), 3600);
+    setTimeout(() => setToast(null), 6000);
   }, []);
 
   const cfg = toast ? (TOAST_CONFIG[toast.type] || TOAST_CONFIG.success) : null;
@@ -216,15 +219,15 @@ export default function DashboardLayout() {
 
       {/* Premium Top-Centered Toast Banner */}
       {toast && (
-        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[10000] flex items-center p-2 sm:p-3 rounded-full border-2 pointer-events-auto max-w-[95vw] sm:max-w-2xl w-max animate-in slide-in-from-top-10 fade-in duration-300 zoom-in ${cfg.containerClass}`}>
-          <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shrink-0 shadow-inner ${cfg.iconContainer}`}>
-            <ToastIcon className="w-7 h-7 sm:w-10 sm:h-10" />
+        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[10000] flex items-center p-2 rounded-2xl border pointer-events-auto max-w-[95vw] sm:max-w-lg w-max animate-in slide-in-from-top-10 fade-in duration-300 zoom-in ${cfg.containerClass}`}>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${cfg.iconContainer}`}>
+            <ToastIcon className="w-5 h-5" />
           </div>
-          <span className={`px-5 sm:px-8 text-base sm:text-xl font-black flex-1 text-center sm:text-left leading-tight tracking-wide ${cfg.textColor}`}>
+          <span className={`px-4 sm:px-5 text-sm sm:text-sm font-bold flex-1 text-center sm:text-left leading-tight tracking-wide ${cfg.textColor}`}>
             {toast.msg}
           </span>
-          <button onClick={() => setToast(null)} className="p-3 text-white/70 hover:text-white shrink-0 bg-black/10 hover:bg-black/30 rounded-full transition-colors ml-2">
-            <X className="w-5 h-5 sm:w-6 sm:h-6" />
+          <button onClick={() => setToast(null)} className={`p-2 rounded-xl transition-colors ml-2 ${cfg.closeColor}`}>
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}

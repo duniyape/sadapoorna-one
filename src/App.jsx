@@ -99,6 +99,8 @@ const AllocationsPage            = lazyWithRetry(() => import("./pages/Allocatio
 const StockInwardingPage         = lazyWithRetry(() => import("./pages/StockInwardingPage"));
 const LiveLocationPage           = lazyWithRetry(() => import("./pages/LiveLocationPage"));
 const DeliveryMasterPage         = lazyWithRetry(() => import("./pages/DeliveryMasterPage"));
+const MyVisitsPage               = lazyWithRetry(() => import("./pages/MyVisitsPage"));
+const VisitReportsPage           = lazyWithRetry(() => import("./pages/VisitReportsPage"));
 
 // ── Customer 360° — layout + 5 separate tab pages ────────────────────────────
 const CustomerProfileLayout = lazyWithRetry(() => import("./pages/CustomerProfileLayout"));
@@ -142,6 +144,10 @@ const App = () => (
                 <Route path="add-customer"        element={<AddCustomerPage />} />
                 <Route path="edit-customer/:id"   element={<AddCustomerPage />} />
                 <Route path="bulk-customer-transfer" element={<BulkCustomerTransferPage />} />
+                
+                {/* ── Visits & Beat Planning ─────────────────────── */}
+                <Route path="my-visits"           element={<MyVisitsPage />} />
+                <Route path="visit-logs"          element={<VisitReportsPage />} />
 
                 {/* Customer 360° — nested layout + tab pages */}
                 <Route path="view-customer/:id"   element={<CustomerProfileLayout />}>
