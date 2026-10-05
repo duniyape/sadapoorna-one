@@ -247,8 +247,6 @@ export default function FinanceCollectionsPage() {
                       className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm font-bold text-slate-800 bg-slate-50"
                     >
                       <option value="FINANCE">FINANCE</option>
-                      <option value="LOAN">LOAN</option>
-                      <option value="NBFC">NBFC</option>
                     </select>
                   </div>
 
